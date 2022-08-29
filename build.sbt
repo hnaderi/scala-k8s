@@ -12,7 +12,17 @@ ThisBuild / tlSonatypeUseLegacyHost := false
 ThisBuild / tlSitePublishBranch := Some("main")
 ThisBuild / scalaVersion := "2.12.16"
 
-lazy val root = project.aggregate(plugin, docs)
+lazy val root = project.aggregate(lib, plugin, docs)
+
+lazy val lib = project
+  .in(file("lib"))
+  .enablePlugins(AutomateHeaderPlugin)
+  .settings(
+    name := "k8s-objects",
+    libraryDependencies ++= Seq(
+      "com.goyeau" %% "kubernetes-client" % "0.8.1"
+    )
+  )
 
 lazy val plugin = project
   .in(file("."))
@@ -20,15 +30,12 @@ lazy val plugin = project
   .settings(
     name := "sbt-k8s",
     sbtPlugin := true,
-    libraryDependencies ++= Seq(
-      "com.goyeau" %% "kubernetes-client" % "0.8.1"
-    ),
     pluginCrossBuild / sbtVersion := {
       scalaBinaryVersion.value match {
         case "2.12" => "1.2.8" // set minimum sbt version
       }
     }
-  )
+  ).dependsOn(lib)
 
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.9")
 
