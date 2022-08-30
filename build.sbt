@@ -8,11 +8,19 @@ ThisBuild / developers := List(
   tlGitHubDev("hnaderi", "Hossein Naderi")
 )
 
+val scala212 = "2.12.16"
+val scala213 = "2.13.8"
+val scala3 = "3.1.3"
+
 ThisBuild / tlSonatypeUseLegacyHost := false
 ThisBuild / tlSitePublishBranch := Some("main")
-ThisBuild / scalaVersion := "2.12.16"
+ThisBuild / scalaVersion := scala212
+ThisBuild / crossScalaVersions := Seq(scala212, scala213, scala3)
 
-lazy val root = project.aggregate(lib, plugin, docs)
+lazy val root =
+  project
+    .aggregate(lib, plugin, docs)
+    .enablePlugins(NoPublishPlugin)
 
 lazy val lib = project
   .in(file("lib"))
@@ -30,12 +38,10 @@ lazy val plugin = project
   .settings(
     name := "sbt-k8s",
     sbtPlugin := true,
-    pluginCrossBuild / sbtVersion := {
-      scalaBinaryVersion.value match {
-        case "2.12" => "1.2.8" // set minimum sbt version
-      }
-    }
-  ).dependsOn(lib)
+    crossScalaVersions := Seq(scala212),
+    pluginCrossBuild / sbtVersion := "1.2.8" // set minimum sbt version
+  )
+  .dependsOn(lib)
 
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.9")
 

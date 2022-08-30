@@ -32,6 +32,12 @@ sealed trait K8SObject {
 }
 
 object K8SObject {
+  private implicit class MapOps(m: Map[String, Data]){
+    def vMap[T](f: Data=> T):Option[Map[String, T]] =
+      if(m.isEmpty) None
+      else Some(m.map{case (k, v)=> (k, f(v))}.toMap)
+  }
+
   case class Deployment(metadata: Metadata, spec: DeploymentSpec)
       extends K8SObject {
     def build = apps.v1.Deployment(
@@ -112,8 +118,8 @@ object K8SObject {
       apiVersion = Some("v1"),
       kind = Some("ConfigMap"),
       metadata = metadata.build,
-      binaryData = binaryData.mapValues(_.getBase64Content),
-      data = data.mapValues(_.getContent),
+      binaryData = binaryData.vMap(_.getBase64Content),
+      data = data.vMap(_.getContent),
       immutable = immutable
     )
     def buildManifest: Json = build.asJson
@@ -139,8 +145,8 @@ object K8SObject {
       apiVersion = Some("v1"),
       kind = Some("Secret"),
       metadata = metadata.build,
-      data = data.mapValues(_.getBase64Content),
-      stringData = stringData.mapValues(_.getContent),
+      data = data.vMap(_.getBase64Content),
+      stringData = stringData.vMap(_.getContent),
       immutable = immutable,
       `type` = `type`
     )
