@@ -30,4 +30,9 @@ package object sbtk8s {
   implicit def convertToStringValueOpt(s: String): Option[IntOrString] = Some(
     StringValue(s)
   )
+
+  import java.io.File
+  implicit class FileStringContext(val ctx: StringContext) extends AnyVal {
+    def file(): File = new File(ctx.parts.mkString)
+  }
 }

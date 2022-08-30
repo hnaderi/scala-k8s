@@ -17,6 +17,7 @@
 package dev.hnaderi.sbtk8s
 
 import com.typesafe.sbt.packager.Keys._
+import com.typesafe.sbt.packager.docker.DockerPlugin
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.Docker
 import sbt.AutoPlugin
 import sbt.Keys._
@@ -27,9 +28,9 @@ object K8SBasicPlugin extends AutoPlugin {
     val namespace: SettingKey[String] = settingKey("namespace")
     val image: SettingKey[String] = settingKey("container image")
 
-    val configs: SettingKey[Seq[String]] = settingKey("config names")
-    val secrets: SettingKey[Seq[String]] = settingKey("secret names")
-    val variables: SettingKey[Seq[(String, String)]] = settingKey(
+    val configs: SettingKey[Map[String, Data]] = settingKey("config names")
+    val secrets: SettingKey[Map[String, Data]] = settingKey("secret names")
+    val variables: SettingKey[Map[String, String]] = settingKey(
       "environment variables"
     )
 
@@ -53,27 +54,27 @@ object K8SBasicPlugin extends AutoPlugin {
       val name = (Docker / dockerAlias).value
       s"$reg$name"
     },
-    K8S / configs := Nil,
-    K8S / secrets := Nil,
-    K8S / variables := Nil,
+    K8S / configs := Map.empty,
+    K8S / secrets := Map.empty,
+    K8S / variables := Map.empty,
     K8S / port := None,
     K8S / host := None,
     K8S / path := None,
     K8S / deployment := K8SDeployment(
-      // name = (K8S / name).value,
-      // namespace = (K8S / namespace).value,
-      // image = (K8S / image).value,
-      // configs = (K8S / configs).value,
-      // secrets = (K8S / secrets).value,
-      // variables = (K8S / variables).value.toMap,
-      // port = (K8S / port).value,
-      // host = (K8S / host).value,
-      // path = (K8S / path).value
+      name = (K8S / name).value,
+      namespace = (K8S / namespace).value,
+      image = (K8S / image).value,
+      configs = (K8S / configs).value,
+      secrets = (K8S / secrets).value,
+      variables = (K8S / variables).value.toMap,
+      port = (K8S / port).value,
+      host = (K8S / host).value,
+      path = (K8S / path).value
     )
   )
 
   override def trigger = noTrigger
-  override def requires = K8SPlugin
+  override def requires = K8SPlugin && DockerPlugin
 
   override val projectSettings =
     sbt.inConfig(K8S)(deploymentSettings)

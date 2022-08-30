@@ -90,7 +90,7 @@ object K8SObject {
   }
   case class Service(metadata: Metadata, spec: ServiceSpec) extends K8SObject {
     def build = core.v1.Service(
-      apiVersion = Some("core/v1"),
+      apiVersion = Some("v1"),
       kind = Some("Service"),
       metadata = metadata.build,
       spec = spec
@@ -104,42 +104,43 @@ object K8SObject {
 
   case class ConfigMap(
       metadata: Metadata,
-      binaryData: Option[Map[String, String]] = None,
-      data: Option[Map[String, String]] = None,
+      binaryData: Map[String, Data] = Map.empty,
+      data: Map[String, Data] = Map.empty,
       immutable: Option[Boolean] = None
   ) extends K8SObject {
     def build = core.v1.ConfigMap(
-      apiVersion = Some("core/v1"),
+      apiVersion = Some("v1"),
       kind = Some("ConfigMap"),
       metadata = metadata.build,
-      binaryData = binaryData,
-      data = data,
+      binaryData = binaryData.mapValues(_.getBase64Content),
+      data = data.mapValues(_.getContent),
       immutable = immutable
     )
     def buildManifest: Json = build.asJson
 
     def withMetadata(metadata: Metadata): ConfigMap =
       copy(metadata = metadata)
-    def addData(values: (String, String)*): ConfigMap =
-      copy(data = Some(data.fold(values.toMap)(_ ++ values)))
-    def addBinaryData(values: (String, String)*): ConfigMap =
-      copy(binaryData = Some(binaryData.fold(values.toMap)(_ ++ values)))
+    def addData(values: (String, Data)*): ConfigMap =
+      copy(data = data ++ values)
+    def addBinaryData(values: (String, Data)*): ConfigMap =
+      copy(binaryData = binaryData ++ values)
+
     def toImmutable: ConfigMap = copy(immutable = Some(true))
     def toMutable: ConfigMap = copy(immutable = Some(false))
   }
   case class Secret(
       metadata: Metadata,
-      data: Option[Map[String, String]] = None,
+      data: Map[String, Data] = Map.empty,
+      stringData: Map[String, Data] = Map.empty,
       immutable: Option[Boolean] = None,
-      stringData: Option[Map[String, String]] = None,
       `type`: Option[String] = None
   ) extends K8SObject {
     def build = core.v1.Secret(
-      apiVersion = Some("core/v1"),
+      apiVersion = Some("v1"),
       kind = Some("Secret"),
       metadata = metadata.build,
-      data = data,
-      stringData = stringData,
+      data = data.mapValues(_.getBase64Content),
+      stringData = stringData.mapValues(_.getContent),
       immutable = immutable,
       `type` = `type`
     )
@@ -147,11 +148,11 @@ object K8SObject {
 
     def withMetadata(metadata: Metadata): Secret =
       copy(metadata = metadata)
-    def addStringData(values: (String, String)*): Secret =
-      copy(stringData = Some(stringData.fold(values.toMap)(_ ++ values)))
+    def addStringData(values: (String, Data)*): Secret =
+      copy(stringData = stringData ++ values)
     def addData(
-        values: (String, String)*
-    ): Secret = copy(data = Some(data.fold(values.toMap)(_ ++ values)))
+        values: (String, Data)*
+    ): Secret = copy(data = data ++ values)
     def toImmutable: Secret = copy(immutable = Some(true))
     def toMutable: Secret = copy(immutable = Some(false))
     def withType(tpe: String): Secret = copy(`type` = Some(tpe))
@@ -159,7 +160,7 @@ object K8SObject {
 
   case class Ingress(metadata: Metadata, spec: IngressSpec) extends K8SObject {
     def build = networking.v1.Ingress(
-      apiVersion = Some("networking/v1"),
+      apiVersion = Some("networking.k8s.io/v1"),
       kind = Some("Ingress"),
       metadata = metadata.build,
       spec = spec
@@ -173,7 +174,7 @@ object K8SObject {
 
   final case class Metadata(
       name: String,
-      namespace: String,
+      namespace: String = "default",
       annotations: Option[Map[String, String]] = None,
       labels: Option[Map[String, String]] = None
   ) {

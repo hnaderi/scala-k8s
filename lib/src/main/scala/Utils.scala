@@ -19,7 +19,13 @@ package dev.hnaderi.sbtk8s
 import io.circe.Json
 import io.circe.yaml.syntax._
 
+import java.nio.charset.StandardCharsets
+import java.util.Base64
+
 object Utils {
   def toManifest(js: Json*) =
     js.map(_.deepDropNullValues.asYaml.spaces2).mkString("\n---\n")
+
+  def base64(value: String): String =
+    Base64.getEncoder.encodeToString(value.getBytes(StandardCharsets.UTF_8))
 }
