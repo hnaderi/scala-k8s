@@ -16,7 +16,6 @@
 
 package dev.hnaderi.sbtk8s
 
-import _root_.io.circe.Json
 import sbt.Keys._
 import sbt._
 
@@ -24,15 +23,13 @@ import java.io.PrintWriter
 
 object K8SPlugin extends AutoPlugin {
   object autoImport {
-    val K8S: Configuration = config("k8s")
-
-    val spec: SettingKey[Seq[K8SObject]] = SettingKey(
+    val manifestObjects: SettingKey[Seq[K8SObject]] = SettingKey(
       "k8s objects to create"
     )
-    val manifestName: SettingKey[String] = SettingKey("manifest file name")
+    val manifestFileName: SettingKey[String] = SettingKey("manifest file name")
 
-    val print = taskKey[Unit]("prints kubernetes manifests")
-    val gen = taskKey[Unit]("generate kubernetes manifest")
+    val manifestPrint = taskKey[Unit]("prints kubernetes manifests")
+    val manifestGen = taskKey[Unit]("generate kubernetes manifest")
   }
 
   import autoImport._
@@ -40,33 +37,42 @@ object K8SPlugin extends AutoPlugin {
   override def trigger = noTrigger
   override def requires = sbt.plugins.JvmPlugin
 
-  override val projectSettings =
-    sbt.inConfig(K8S)(deploymentSettings)
+  override val projectSettings = Seq(
+    manifestObjects := Nil,
+    manifestGen / target := (ThisProject / target).value / "k8s",
+    manifestFileName := "manifest.yml",
+    manifestPrint := {
+      println(s"staging files for ${name.value}")
+      printManifest(manifestObjects.value)
+    },
+    manifestGen := {
+      generateManifest(
+        manifestObjects.value,
+        (manifestGen / target).value,
+        manifestFileName.value
+      )
+    }
+  )
 
   private def generateManifest(
       objs: Seq[K8SObject],
       target: File,
       fileName: String
-  ) = {
+  ) = writeOutput(target, fileName)(manifestFor(objs))
+
+  private def manifestFor(objs: Seq[K8SObject]): String = {
     val jsons = objs.map(_.buildManifest)
-    writeManifests(target, fileName)(jsons: _*)
+    Utils.toManifest(jsons: _*)
   }
 
-  private def printManifest(objs: Seq[K8SObject]) = {
-    val jsons = objs.map(_.buildManifest)
-    val manifest = Utils.toManifest(jsons: _*)
+  private def printManifest(objs: Seq[K8SObject]) = println(manifestFor(objs))
 
-    println(manifest)
-  }
-
-  private def writeManifests(buildTarget: File, outName: String)(
-      manifests: Json*
+  private def writeOutput(buildTarget: File, outName: String)(
+      content: String
   ) = {
     buildTarget.mkdirs()
     val file = new File(buildTarget, outName)
     val printWriter = new PrintWriter(file)
-
-    val content = Utils.toManifest(manifests: _*)
 
     try {
       printWriter.println(content)
@@ -74,21 +80,4 @@ object K8SPlugin extends AutoPlugin {
       printWriter.close()
     }
   }
-
-  lazy val deploymentSettings: Seq[Def.Setting[_]] = Seq(
-    K8S / spec := Nil,
-    K8S / target := (ThisProject / target).value / "k8s",
-    K8S / manifestName := "manifest.yml",
-    K8S / print := {
-      println(s"staging files for ${name.value}")
-      printManifest((K8S / spec).value)
-    },
-    K8S / gen := {
-      generateManifest(
-        (K8S / spec).value,
-        (K8S / target).value,
-        (K8S / manifestName).value
-      )
-    }
-  )
 }

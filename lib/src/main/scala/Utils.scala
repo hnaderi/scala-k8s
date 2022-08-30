@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 object Utils {
-  def toManifest(js: Json*) =
+  def toManifest(js: Json*): String =
     js.map(_.deepDropNullValues.asYaml.spaces2).mkString("\n---\n")
 
   def base64(value: String): String =
