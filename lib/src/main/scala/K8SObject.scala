@@ -32,10 +32,10 @@ sealed trait K8SObject {
 }
 
 object K8SObject {
-  private implicit class MapOps(m: Map[String, Data]){
-    def vMap[T](f: Data=> T):Option[Map[String, T]] =
-      if(m.isEmpty) None
-      else Some(m.map{case (k, v)=> (k, f(v))}.toMap)
+  private implicit class MapOps(m: Map[String, Data]) {
+    def vMap[T](f: Data => T): Option[Map[String, T]] =
+      if (m.isEmpty) None
+      else Some(m.map { case (k, v) => (k, f(v)) }.toMap)
   }
 
   case class Deployment(metadata: Metadata, spec: DeploymentSpec)
