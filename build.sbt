@@ -16,7 +16,6 @@ val supportScalaVersions = Seq(scala212, scala213, scala3)
 ThisBuild / tlSonatypeUseLegacyHost := false
 ThisBuild / tlSitePublishBranch := Some("main")
 ThisBuild / scalaVersion := scala212
-ThisBuild / githubWorkflowScalaVersions := supportScalaVersions
 
 lazy val root =
   tlCrossRootProject
@@ -35,7 +34,6 @@ lazy val lib = project
 
 lazy val plugin = project
   .enablePlugins(AutomateHeaderPlugin, SbtPlugin)
-  .disablePlugins(TypelevelSettingsPlugin)
   .settings(
     name := "sbt-k8s",
     sbtPlugin := true,
