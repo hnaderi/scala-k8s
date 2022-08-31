@@ -1,3 +1,5 @@
+import org.typelevel.sbt.gha.WorkflowStep.Sbt
+
 ThisBuild / tlBaseVersion := "0.0"
 
 ThisBuild / organization := "dev.hnaderi"
@@ -16,10 +18,19 @@ val supportScalaVersions = Seq(scala212, scala213, scala3)
 ThisBuild / tlSonatypeUseLegacyHost := false
 ThisBuild / tlSitePublishBranch := Some("main")
 ThisBuild / scalaVersion := scala212
+ThisBuild / githubWorkflowBuildSbtStepPreamble := Nil
+ThisBuild / githubWorkflowBuild ~= {
+  _.map {
+    case Sbt(commands, id, Some("Test"), cond, env, params) =>
+      Sbt(List("+test"), name = Some("Test"))
+    case other => other
+  }
+}
 
 lazy val root =
-  tlCrossRootProject
-    .aggregate(lib, manifest, cookbook, core, docs)
+  project
+    .in(file("."))
+    .aggregate(lib, core, manifest, cookbook, docs)
     .enablePlugins(NoPublishPlugin)
 
 lazy val lib = project
@@ -29,6 +40,7 @@ lazy val lib = project
     libraryDependencies ++= Seq(
       "com.goyeau" %% "kubernetes-client" % "0.8.1"
     ),
+    scalaVersion := scala212, // this is required to force it not to use 3 as main version
     crossScalaVersions := supportScalaVersions
   )
 
