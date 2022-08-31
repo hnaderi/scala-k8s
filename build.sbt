@@ -30,7 +30,7 @@ ThisBuild / githubWorkflowBuild ~= {
 lazy val root =
   project
     .in(file("."))
-    .aggregate(lib, core, manifest, cookbook, docs, unidocs)
+    .aggregate(lib, core, manifest, cookbook, docs)
     .enablePlugins(NoPublishPlugin)
 
 lazy val lib = project
@@ -69,10 +69,3 @@ lazy val core = project
   .dependsOn(manifest, cookbook)
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
-
-lazy val unidocs = project
-  .in(file("unidocs"))
-  .enablePlugins(TypelevelUnidocPlugin)
-  .settings(
-    name := "sbt-k8s-docs"
-  )
