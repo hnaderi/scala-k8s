@@ -19,7 +19,7 @@ ThisBuild / scalaVersion := scala212
 
 lazy val root =
   tlCrossRootProject
-    .aggregate(lib, plugin, docs)
+    .aggregate(lib, manifest, cookbook, core, docs)
     .enablePlugins(NoPublishPlugin)
 
 lazy val lib = project
@@ -32,14 +32,28 @@ lazy val lib = project
     crossScalaVersions := supportScalaVersions
   )
 
-lazy val plugin = project
+lazy val manifest = project
+  .enablePlugins(AutomateHeaderPlugin, SbtPlugin)
+  .settings(
+    name := "sbt-k8s-manifest",
+    pluginCrossBuild / sbtVersion := "1.2.8" // set minimum sbt version
+  )
+  .dependsOn(lib)
+
+lazy val cookbook = project
+  .enablePlugins(AutomateHeaderPlugin, SbtPlugin)
+  .settings(
+    name := "sbt-k8s-cookbook",
+    pluginCrossBuild / sbtVersion := "1.2.8" // set minimum sbt version
+  )
+  .dependsOn(manifest)
+
+lazy val core = project
   .enablePlugins(AutomateHeaderPlugin, SbtPlugin)
   .settings(
     name := "sbt-k8s",
-    sbtPlugin := true,
-    pluginCrossBuild / sbtVersion := "1.2.8", // set minimum sbt version
-    crossScalaVersions := Seq(scala212)
+    pluginCrossBuild / sbtVersion := "1.2.8" // set minimum sbt version
   )
-  .dependsOn(lib)
+  .dependsOn(manifest, cookbook)
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
