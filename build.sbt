@@ -30,8 +30,22 @@ ThisBuild / githubWorkflowBuild ~= {
 lazy val root =
   project
     .in(file("."))
-    .aggregate(lib, core, manifest, cookbook, docs)
-    .enablePlugins(NoPublishPlugin)
+    .aggregate(objects, lib, core, manifest, cookbook, docs)
+    .enablePlugins(AutomateHeaderPlugin, NoPublishPlugin)
+
+lazy val circeVersion = "0.14.1"
+
+lazy val objects = project
+  .settings(
+    name := "k8s-objects-2",
+    libraryDependencies ++= Seq(
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion,
+      "io.circe" %% "circe-yaml" % circeVersion
+    )
+  )
+  .enablePlugins(NoPublishPlugin)
 
 lazy val lib = project
   .enablePlugins(AutomateHeaderPlugin)
