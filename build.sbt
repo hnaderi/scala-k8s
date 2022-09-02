@@ -43,9 +43,10 @@ lazy val objects = project
       "io.circe" %% "circe-generic" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,
       "io.circe" %% "circe-yaml" % circeVersion
-    )
+    ),
+    kubernetesVersion := "1.25.0"
   )
-  .enablePlugins(NoPublishPlugin)
+  .enablePlugins(NoPublishPlugin, KubernetesObjectGeneratorPlugin)
 
 lazy val lib = project
   .enablePlugins(AutomateHeaderPlugin)
