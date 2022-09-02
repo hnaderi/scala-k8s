@@ -21,7 +21,7 @@ abstract class ResourceKind {
   val kind: String
   val version: String
   final val apiVersion: String =
-    if (group.isBlank()) version else s"$group/$version"
+    if (group.isEmpty) version else s"$group/$version"
 }
 
 object ResourceKind {
