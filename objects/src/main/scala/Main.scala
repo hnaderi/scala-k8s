@@ -77,6 +77,7 @@ object Main extends App {
 // """)
 //     }
 
-  val sources = dd.map(SourceCode(_))
-  sources.foreach(_.write(codeDir))
+  val scg = new SourceCodeGenerator(codeDir, codeDir)
+  val sources = dd.map { case (n, d) => DataModel(n, d) }
+  sources.foreach(_.write(scg))
 }

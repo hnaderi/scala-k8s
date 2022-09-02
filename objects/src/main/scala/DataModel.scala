@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-import java.io.File
-
 sealed trait DataModel {
   def print: String
-  def write(file: File): Unit = Utils.writeOutput(file, print)
-  def clean(file: File): Unit = file.delete()
+  def write(scg: SourceCodeGenerator): Unit
 }
 
 object DataModel {
@@ -78,6 +75,13 @@ ${Utils.generateDescription(desc)}"""
     .map(builderMethod(className, _))
     .mkString("\n")
 
+  def apply(name: String, definition: Definition): DataModel = {
+    val splitIdx = name.lastIndexOf(".")
+    val pkgName = name.take(splitIdx)
+    val fileName = name.drop(splitIdx + 1)
+    apply(pkg = pkgName, name = fileName, defs = definition)
+  }
+
   def apply(name: String, pkg: String, defs: Definition): DataModel = {
     val hw = new HeaderWriter(pkg, defs.description)
     defs.`type` match {
@@ -87,21 +91,22 @@ ${Utils.generateDescription(desc)}"""
         defs.`x-kubernetes-group-version-kind` match {
           case Some(kind :: Nil) if hasKindOrAPIVersion =>
             println(s"Resource $name $kind")
-            new Resource(name, hw, props, kind)
+            new Resource(name = name, pkg = pkg, hw, props, kind)
           case Some(kinds) if hasKindOrAPIVersion =>
-            new CommonResource(name, hw, props, kinds)
+            new CommonResource(name = name, pkg = pkg, hw, props, kinds)
           case other =>
             println(s"Others: $other")
-            new Object(name, hw, props)
+            new Object(name = name, pkg = pkg, hw, props)
         }
       case other =>
         println(s"Not object, $other")
-        new Other(name, hw)
+        new Other(name = name, pkg = pkg, hw)
     }
   }
 
   final class Object(
       name: String,
+      pkg: String,
       header: HeaderWriter,
       properties: Seq[ModelProperty]
   ) extends DataModel {
@@ -116,10 +121,14 @@ object $name {
 ${codecsFor(name)}
 }
 """
+
+    def write(scg: SourceCodeGenerator): Unit =
+      scg.managed(pkg, name).write(print)
   }
 
   final class Resource(
       name: String,
+      pkg: String,
       header: HeaderWriter,
       properties: Seq[ModelProperty],
       kind: Kind
@@ -140,10 +149,13 @@ object $name {
 ${codecsFor(name)}
 }
 """
+    def write(scg: SourceCodeGenerator): Unit =
+      scg.managed(pkg, name).write(print)
   }
 
   final class CommonResource(
       name: String,
+      pkg: String,
       header: HeaderWriter,
       properties: Seq[ModelProperty],
       kinds: Seq[Kind]
@@ -181,10 +193,13 @@ $supportedKinds
 ${codecsFor(name)}
 }
 """
+    def write(scg: SourceCodeGenerator): Unit =
+      scg.managed(pkg, name).write(print)
   }
 
   final class Other(
       name: String,
+      pkg: String,
       header: HeaderWriter
   ) extends DataModel {
     def print: String = s"""
@@ -194,9 +209,7 @@ object $name {
 
 }
 """
-    override def write(file: File): Unit = {
-      if (!file.exists()) Utils.writeOutput(file, print)
-    }
-    override def clean(file: File): Unit = ()
+    def write(scg: SourceCodeGenerator): Unit =
+      scg.unmanaged(pkg, name).write(print)
   }
 }

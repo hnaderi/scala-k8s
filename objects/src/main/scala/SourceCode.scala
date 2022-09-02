@@ -16,30 +16,30 @@
 
 import java.io.File
 
-object SourceCode {
-  def apply(t: (String, Definition)): SourceCode = SourceCode(t._1, t._2)
-  def apply(name: String, definition: Definition): SourceCode = {
-    val splitIdx = name.lastIndexOf(".")
-    val pkgName = name.take(splitIdx)
-    val fileName = name.drop(splitIdx + 1)
-    new SourceCode(pkg = pkgName, name = fileName, definition)
-  }
-}
-
-final class SourceCode(
-    val pkg: String,
-    val name: String,
-    definition: Definition
+final class SourceCodeGenerator(
+    managed: File,
+    unmanaged: File
 ) {
-  private val model = DataModel(name, pkg, definition)
-
-  def print: String = model.print
-  def write(base: File): Unit = {
+  private def fileName(base: File, pkg: String, name: String): File = {
     val pkgPath = pkg.replace('.', File.separatorChar)
     val dir = base.toPath().resolve(pkgPath)
     dir.toFile().mkdirs()
-    val file = dir.resolve(s"$name.scala").toFile()
-
-    model.write(file)
+    dir.resolve(s"$name.scala").toFile()
   }
+
+  def managed(pkg: String, name: String): SourceCode =
+    new ManagedSourceCode(fileName(managed, pkg, name))
+  def unmanaged(pkg: String, name: String): SourceCode =
+    new UnManagedSourceCode(fileName(unmanaged, pkg, name))
+}
+
+trait SourceCode {
+  def write(code: String): Unit
+}
+final class ManagedSourceCode(file: File) extends SourceCode {
+  def write(code: String): Unit = Utils.writeOutput(file, code)
+}
+final class UnManagedSourceCode(file: File) extends SourceCode {
+  def write(code: String): Unit =
+    if (!file.exists()) Utils.writeOutput(file, code)
 }
