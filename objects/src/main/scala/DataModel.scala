@@ -32,13 +32,8 @@ ${imports.map(s => s"import $s\n").mkString}
 ${Utils.generateDescription(desc)}"""
   }
 
-  def printProps: Seq[ModelProperty] => String = _.map { mprop =>
-// ${Utils.generateDescription(p.description)}
-    import mprop._
-    val defaultValue = default.map(v => s" = $v").getOrElse("")
-    s"""$name: $typeName${defaultValue}"""
-  }
-    .mkString(",\n  ")
+  def printProps: Seq[ModelProperty] => String =
+    _.map(_.asParam).mkString(",\n  ")
 
   private def codecsFor(name: String) = s"""
 //  import io.circe._
@@ -47,6 +42,20 @@ ${Utils.generateDescription(desc)}"""
 //  implicit val encoder: Encoder[$name] = deriveEncoder
 //  implicit val decoder: Decoder[$name] = deriveDecoder
 """
+
+  private def builderMethod(className: String, prop: ModelProperty): String = {
+    val capName =
+      prop.dashToCamelName.take(1).toUpperCase() + prop.dashToCamelName.drop(1)
+    val value = if (prop.required) "value" else "Some(value)"
+    s"""  def with$capName(value: ${prop.typeName}) : $className = copy(${prop.fieldName} = $value)"""
+  }
+  private def builderMethods(
+      className: String,
+      props: Seq[ModelProperty]
+  ): String = props
+    .filterNot(_.isKindOrAPIVersion)
+    .map(builderMethod(className, _))
+    .mkString("\n")
 
   def apply(name: String, pkg: String, defs: Definition): DataModel = {
     val hw = new HeaderWriter(pkg, defs.description)
@@ -79,7 +88,9 @@ ${Utils.generateDescription(desc)}"""
 ${header()}
 final case class $name(
   ${printProps(properties)}
-)
+) {
+${builderMethods(name, properties)}
+}
 object $name {
 ${codecsFor(name)}
 }
@@ -101,6 +112,8 @@ final case class $name(
    val group = "${kind.group}"
    val kind = "${kind.kind}"
    val version = "${kind.version}"
+
+${builderMethods(name, properties)}
 }
 object $name {
 ${codecsFor(name)}

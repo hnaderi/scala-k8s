@@ -1,3 +1,4 @@
+import scala.util.matching.Regex
 /*
  * Copyright 2022 Hossein Naderi
  *
@@ -17,9 +18,35 @@
 final case class ModelProperty(
     name: String,
     typeName: String,
-    default: Option[String] = None
+    required: Boolean,
+    default: Option[String] = None,
+    description: Option[String] = None
 ) {
-  def isKindOrAPIVersion: Boolean = name == "kind" || name == "apiVersion"
+  def isKindOrAPIVersion: Boolean =
+    name == "kind" || name == "apiVersion"
+  def fullTypename: String = if (required) typeName else s"Option[$typeName]"
+  def asParam: String = s"$fieldName : $fullTypename$defaultValue"
+  private def defaultValue = default.map(v => s" = $v").getOrElse("")
+
+  val dashToCamelName: String = ModelProperty.dashToCamel(name)
+
+  val fieldName: String = name match {
+    case "type"                       => "`type`"
+    case "object"                     => "`object`"
+    case other if other.contains('-') => s"`$other`"
+    case _                            => name
+  }
+}
+object ModelProperty {
+  private val pattern: Regex = """([^-]+)-([^-])""".r("head", "tail")
+  private def dashToCamel(str: String) = pattern.replaceAllIn(
+    str,
+    m => {
+      val tail = m.group("tail").toUpperCase()
+      s"${m.group("head")}$tail"
+    }
+  )
+
 }
 
 object ModelProperties {
@@ -28,9 +55,14 @@ object ModelProperties {
     val properties = defs.properties.getOrElse(Map.empty)
 
     def modelPropertyFor(name: String, p: Property): ModelProperty = {
-      val sname = sanitizeName(name)
-      if (required.contains(name)) ModelProperty(sname, typeName(p))
-      else ModelProperty(sname, s"Option[${typeName(p)}]", Some("None"))
+      val isRequired = required.contains(name)
+      ModelProperty(
+        name = name,
+        typeName = typeName(p),
+        required = isRequired,
+        default = if (isRequired) None else Some("None"),
+        description = p.description
+      )
     }
 
     val props = properties.map { case (n, p) => modelPropertyFor(n, p) }.toSeq
@@ -72,11 +104,5 @@ object ModelProperties {
       if (tpe.startsWith(prefix))
         Some(tpe.replace(prefix, "").replace('-', '_'))
       else None
-  }
-
-  private def sanitizeName(name: String) = name.replace('-', '_') match {
-    case "type"   => "`type`"
-    case "object" => "`object`"
-    case other    => other
   }
 }
