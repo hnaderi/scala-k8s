@@ -3,7 +3,9 @@ import sbt.Keys._
 
 object KubernetesObjectGeneratorPlugin extends AutoPlugin {
   object autoImport {
-    val kubernetesObjectGenerate: TaskKey[Seq[File]] = taskKey(      "Generates all objects from spec"    )
+    val kubernetesObjectGenerate: TaskKey[Seq[File]] = taskKey(
+      "Generates all objects from spec"
+    )
   }
 
   import autoImport._
