@@ -20,11 +20,17 @@ final class SourceCodeGenerator(
     managed: File,
     unmanaged: File
 ) {
+  private var _createdFiles: List[File] = Nil
+  def createdFiles: Seq[File] = _createdFiles
+
   private def fileName(base: File, pkg: String, name: String): File = {
     val pkgPath = pkg.replace('.', File.separatorChar)
     val dir = base.toPath().resolve(pkgPath)
     dir.toFile().mkdirs()
-    dir.resolve(s"$name.scala").toFile()
+    val out = dir.resolve(s"$name.scala").toFile()
+    _createdFiles = _createdFiles :+ out
+
+    out
   }
 
   def managed(pkg: String, name: String): SourceCode =

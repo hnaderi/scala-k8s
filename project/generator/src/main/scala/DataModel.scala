@@ -90,16 +90,13 @@ ${Utils.generateDescription(desc)}"""
 
         defs.`x-kubernetes-group-version-kind` match {
           case Some(kind :: Nil) if hasKindOrAPIVersion =>
-            println(s"Resource $name $kind")
             new Resource(name = name, pkg = pkg, hw, props, kind)
           case Some(kinds) if hasKindOrAPIVersion =>
             new CommonResource(name = name, pkg = pkg, hw, props, kinds)
           case other =>
-            println(s"Others: $other")
             new Object(name = name, pkg = pkg, hw, props)
         }
       case other =>
-        println(s"Not object, $other")
         new Other(name = name, pkg = pkg, hw)
     }
   }

@@ -41,7 +41,8 @@ lazy val objects = project
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-core" % circeVersion
     ),
-    kubernetesVersion := "1.25.0"
+    kubernetesVersion := "1.25.0",
+    Compile / kubernetesSpecFetch / target := file("./specifications")
   )
   .enablePlugins(NoPublishPlugin, KubernetesObjectGeneratorPlugin)
 
