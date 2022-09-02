@@ -39,10 +39,7 @@ lazy val objects = project
   .settings(
     name := "k8s-objects-2",
     libraryDependencies ++= Seq(
-      "io.circe" %% "circe-core" % circeVersion,
-      "io.circe" %% "circe-generic" % circeVersion,
-      "io.circe" %% "circe-parser" % circeVersion,
-      "io.circe" %% "circe-yaml" % circeVersion
+      "io.circe" %% "circe-core" % circeVersion
     ),
     kubernetesVersion := "1.25.0"
   )
