@@ -1,4 +1,3 @@
-import scala.util.matching.Regex
 /*
  * Copyright 2022 Hossein Naderi
  *
@@ -15,16 +14,19 @@ import scala.util.matching.Regex
  * limitations under the License.
  */
 
+import scala.util.matching.Regex
+
 final case class ModelProperty(
     name: String,
-    typeName: String,
+    typeName: ModelPropertyType,
     required: Boolean,
     default: Option[String] = None,
     description: Option[String] = None
 ) {
   def isKindOrAPIVersion: Boolean =
     name == "kind" || name == "apiVersion"
-  def fullTypename: String = if (required) typeName else s"Option[$typeName]"
+  def fullTypename: String =
+    if (required) typeName.name else s"Option[${typeName.name}]"
   def asParam: String = s"$fieldName : $fullTypename$defaultValue"
   private def defaultValue = default.map(v => s" = $v").getOrElse("")
 
@@ -37,6 +39,7 @@ final case class ModelProperty(
     case _                            => name
   }
 }
+
 object ModelProperty {
   private val pattern: Regex = """([^-]+)-([^-])""".r("head", "tail")
   private def dashToCamel(str: String) = pattern.replaceAllIn(
@@ -47,9 +50,6 @@ object ModelProperty {
     }
   )
 
-}
-
-object ModelProperties {
   def apply(defs: Definition): (Seq[ModelProperty], Boolean) = {
     val required = defs.required.getOrElse(Nil).toSet
     val properties = defs.properties.getOrElse(Map.empty)
@@ -58,7 +58,7 @@ object ModelProperties {
       val isRequired = required.contains(name)
       ModelProperty(
         name = name,
-        typeName = typeName(p),
+        typeName = ModelPropertyType(p),
         required = isRequired,
         default = if (isRequired) None else Some("None"),
         description = p.description
@@ -68,41 +68,5 @@ object ModelProperties {
     val props = properties.map { case (n, p) => modelPropertyFor(n, p) }.toSeq
     val hasKindOrAPIVersion = props.exists(_.isKindOrAPIVersion)
     (props.filterNot(_.isKindOrAPIVersion), hasKindOrAPIVersion)
-  }
-
-  private def typeName(prop: Property): String = {
-    baseTypeName(prop).getOrElse("") match {
-      case "object" =>
-        val valueType = prop.additionalProperties.map(typeName).get
-        s"Map[String, $valueType]"
-      case "array" =>
-        val itemType = prop.items.map(typeName).get
-        s"Seq[$itemType]"
-      case other => simpleTypeName(other, prop.format)
-    }
-  }
-  private def baseTypeName(prop: Property) = prop.$ref.orElse(prop.`type`)
-  private def simpleTypeName(
-      tpe: String,
-      format: Option[String] = None
-  ): String = tpe.trim match {
-    case RefName(name) => name
-    case "string"      => "String"
-    case "integer"     => "Integer"
-    case "boolean"     => "Boolean"
-    case "number" =>
-      format match {
-        case Some("int64")  => "Long"
-        case Some("double") => "Double"
-        case other => throw new Exception(s"Unknown number format $other")
-      }
-  }
-
-  private object RefName {
-    private val prefix = "#/definitions/"
-    def unapply(tpe: String): Option[String] =
-      if (tpe.startsWith(prefix))
-        Some(tpe.replace(prefix, "").replace('-', '_'))
-      else None
   }
 }

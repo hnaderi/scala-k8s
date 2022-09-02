@@ -47,7 +47,28 @@ ${Utils.generateDescription(desc)}"""
     val capName =
       prop.dashToCamelName.take(1).toUpperCase() + prop.dashToCamelName.drop(1)
     val value = if (prop.required) "value" else "Some(value)"
-    s"""  def with$capName(value: ${prop.typeName}) : $className = copy(${prop.fieldName} = $value)"""
+    import prop.fieldName
+    import prop.typeName
+
+    def result = {
+      val construct = if (typeName.isArray) "" else ".toMap"
+      if (prop.required) s"$fieldName ++ newValues"
+      else s"Some($fieldName.fold(newValues$construct)(_ ++ newValues))"
+    }
+
+    val helpers = typeName match {
+      case ModelPropertyType.Object(valueType) =>
+        s"""
+  def add$capName(newValues: (String, $valueType)*) : $className = copy($fieldName = $result)
+"""
+      case ModelPropertyType.List(valueType) =>
+        s"""
+  def add$capName(newValues: $valueType*) : $className = copy($fieldName = $result)
+"""
+      case _ => ""
+    }
+
+    s"""  def with$capName(value: ${typeName.name}) : $className = copy($fieldName = $value)$helpers"""
   }
   private def builderMethods(
       className: String,
@@ -61,7 +82,7 @@ ${Utils.generateDescription(desc)}"""
     val hw = new HeaderWriter(pkg, defs.description)
     defs.`type` match {
       case Some("object") =>
-        val (props, hasKindOrAPIVersion) = ModelProperties(defs)
+        val (props, hasKindOrAPIVersion) = ModelProperty(defs)
 
         defs.`x-kubernetes-group-version-kind` match {
           case Some(kind :: Nil) if hasKindOrAPIVersion =>
