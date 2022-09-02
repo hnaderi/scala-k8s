@@ -16,7 +16,7 @@
 
 package dev.hnaderi.k8s
 
-abstract class ResourceKind {
+abstract class ResourceKind extends Serializable with Product {
   val group: String
   val kind: String
   val version: String
@@ -25,14 +25,19 @@ abstract class ResourceKind {
 }
 
 object ResourceKind {
+  final case class ResourceKindData(
+      group: String,
+      kind: String,
+      version: String
+  ) extends ResourceKind
+
   def apply(
       _group: String,
       _kind: String,
       _version: String
-  ): ResourceKind =
-    new ResourceKind {
-      val group = _group
-      val kind = _kind
-      val version = _version
-    }
+  ): ResourceKind = ResourceKindData(
+    group = _group,
+    kind = _kind,
+    version = _version
+  )
 }
