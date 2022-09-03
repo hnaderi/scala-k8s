@@ -123,10 +123,17 @@ object $name {
 """
   }
 
-  def apply(): CodeGenerator = {
+  val print: CodeGenerator = {
     case o: Resource     => resource(o)
     case o: SubResource  => subResource(o)
     case o: MetaResource => metaResource(o)
     case o: Primitive    => primitive(o)
+  }
+
+  def write(scg: SourceCodeGenerator)(data: DataModel) = data match {
+    case p: Primitive =>
+      scg.unmanaged(pkg = p.pkg, name = p.name).write(print(p))
+    case other =>
+      scg.managed(pkg = other.pkg, name = other.name).write(print(other))
   }
 }
