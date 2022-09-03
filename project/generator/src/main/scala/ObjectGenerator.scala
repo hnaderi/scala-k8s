@@ -57,10 +57,8 @@ ${Utils.generateDescription(obj.description)}"""
     s"""${t.header("dev.hnaderi.k8s._")}
 final case class $name(
   ${printProps(properties.filterNot(_.isKindOrAPIVersion))}
-) extends ResourceKind {
-   val group = "${kind.group}"
-   val kind = "${kind.kind}"
-   val version = "${kind.version}"
+) extends KObject {
+  protected val _resourceKind = ResourceKind("${kind.group}", "${kind.kind}", "${kind.version}")
 
 ${builderMethods(name, properties)}
 }
@@ -80,7 +78,7 @@ ${builderMethods(name, properties)}
 
 sealed abstract case class $name(
   ${printProps(properties)}
-) extends ResourceKind
+) extends KObject
 
 object $name {
   def apply(
@@ -91,9 +89,7 @@ object $name {
   ) : $name = new $name(
    ${properties.map(_.name).map(n => s"      $n = $n").mkString(",\n")}
 ) {
-   val group = _group
-   val kind = _kind
-   val version = _version
+  protected val _resourceKind = ResourceKind(_group, _kind, _version)
 }
   val knownKinds = Seq(
 $supportedKinds

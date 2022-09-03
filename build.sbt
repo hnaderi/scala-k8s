@@ -1,3 +1,4 @@
+import dev.hnaderi.k8s.generator.KubernetesCirceCodecGenerator
 import org.typelevel.sbt.gha.WorkflowStep.Sbt
 
 ThisBuild / tlBaseVersion := "0.0"
@@ -43,12 +44,17 @@ lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .enablePlugins(NoPublishPlugin, KubernetesObjectGeneratorPlugin)
 
 lazy val circe = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
   .settings(
     name := "k8s-circe",
+    kubernetesVersion := "1.25.0",
+    k8sUnmanagedTarget := rootDir.value / "circe" / "src" / "main" / "scala",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion
+      "io.circe" %%% "circe-core" % circeVersion,
+      "io.circe" %%% "circe-generic" % circeVersion
     )
   )
+  .enablePlugins(KubernetesCirceCodecGenerator)
   .dependsOn(objects)
 
 lazy val manifests = crossProject(JVMPlatform)

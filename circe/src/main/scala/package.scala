@@ -16,17 +16,18 @@
 
 package dev.hnaderi.k8s
 
-final case class ResourceKind(
-    group: String,
-    kind: String,
-    version: String
-)
+import io.circe._
 
-trait KObject extends Serializable with Product {
-  protected val _resourceKind: ResourceKind
-  final val group: String = _resourceKind.group
-  final val kind: String = _resourceKind.kind
-  final val version: String = _resourceKind.version
-  final val apiVersion: String =
-    if (group.isEmpty) version else s"$group/$version"
+package object circe {
+  private[circe] implicit val resourceKindDecoder: Decoder[ResourceKind] =
+    (c: HCursor) =>
+      for {
+        apiVersion <- c.get[String]("apiVersion")
+        kind <- c.get[String]("kind")
+        (group, version) = apiVersion.splitAt(apiVersion.indexOf("/"))
+      } yield ResourceKind(
+        group = group,
+        kind = kind,
+        version = version.drop(1)
+      )
 }
