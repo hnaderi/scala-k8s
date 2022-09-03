@@ -34,18 +34,15 @@ final class SourceCodeGenerator(
   }
 
   def managed(pkg: String, name: String): SourceCode =
-    new ManagedSourceCode(fileName(managed, pkg, name))
+    new SourceCodeImpl(fileName(managed, pkg, name))
   def unmanaged(pkg: String, name: String): SourceCode =
-    new UnManagedSourceCode(fileName(unmanaged, pkg, name))
+    new SourceCodeImpl(fileName(unmanaged, pkg, name))
 }
 
 trait SourceCode {
   def write(code: String): Unit
 }
-final class ManagedSourceCode(file: File) extends SourceCode {
-  def write(code: String): Unit = Utils.writeOutput(file, code)
-}
-final class UnManagedSourceCode(file: File) extends SourceCode {
+final class SourceCodeImpl(file: File) extends SourceCode {
   def write(code: String): Unit =
     if (!file.exists()) Utils.writeOutput(file, code)
 }

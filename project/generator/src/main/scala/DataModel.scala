@@ -14,67 +14,13 @@
  * limitations under the License.
  */
 
-sealed trait DataModel {
-  def print: String
-  def write(scg: SourceCodeGenerator): Unit
+sealed trait DataModel extends Serializable with Product {
+  val name: String
+  val pkg: String
+  val description: Option[String]
 }
 
 object DataModel {
-  private final class HeaderWriter(pkg: String, desc: Option[String]) {
-    private val sanitizedPkg = pkg.replace('-', '_')
-    def apply(imports: String*): String = s"""
-package $sanitizedPkg
-
-${imports.map(s => s"import $s\n").mkString}
-${Utils.generateDescription(desc)}"""
-  }
-
-  def printProps: Seq[ModelProperty] => String =
-    _.map(_.asParam).mkString(",\n  ")
-
-  private def codecsFor(name: String) = s"""
-//  import io.circe._
-//  import io.circe.generic.semiauto._
-
-//  implicit val encoder: Encoder[$name] = deriveEncoder
-//  implicit val decoder: Decoder[$name] = deriveDecoder
-"""
-
-  private def builderMethod(className: String, prop: ModelProperty): String = {
-    val capName =
-      prop.dashToCamelName.take(1).toUpperCase() + prop.dashToCamelName.drop(1)
-    val value = if (prop.required) "value" else "Some(value)"
-    import prop.fieldName
-    import prop.typeName
-
-    def result = {
-      val construct = if (typeName.isArray) "" else ".toMap"
-      if (prop.required) s"$fieldName ++ newValues"
-      else s"Some($fieldName.fold(newValues$construct)(_ ++ newValues))"
-    }
-
-    val helpers = typeName match {
-      case ModelPropertyType.Object(valueType) =>
-        s"""
-  def add$capName(newValues: (String, $valueType)*) : $className = copy($fieldName = $result)
-"""
-      case ModelPropertyType.List(valueType) =>
-        s"""
-  def add$capName(newValues: $valueType*) : $className = copy($fieldName = $result)
-"""
-      case _ => ""
-    }
-
-    s"""  def with$capName(value: ${typeName.name}) : $className = copy($fieldName = $value)$helpers"""
-  }
-  private def builderMethods(
-      className: String,
-      props: Seq[ModelProperty]
-  ): String = props
-    .filterNot(_.isKindOrAPIVersion)
-    .map(builderMethod(className, _))
-    .mkString("\n")
-
   def apply(name: String, definition: Definition): DataModel = {
     val splitIdx = name.lastIndexOf(".")
     val pkgName = name.take(splitIdx)
@@ -83,123 +29,66 @@ ${Utils.generateDescription(desc)}"""
   }
 
   def apply(name: String, pkg: String, defs: Definition): DataModel = {
-    val hw = new HeaderWriter(pkg, defs.description)
     defs.`type` match {
       case Some("object") =>
         val (props, hasKindOrAPIVersion) = ModelProperty(defs)
 
         defs.`x-kubernetes-group-version-kind` match {
           case Some(kind :: Nil) if hasKindOrAPIVersion =>
-            new Resource(name = name, pkg = pkg, hw, props, kind)
+            new Resource(
+              name = name,
+              pkg = pkg,
+              description = defs.description,
+              props,
+              kind
+            )
           case Some(kinds) if hasKindOrAPIVersion =>
-            new CommonResource(name = name, pkg = pkg, hw, props, kinds)
+            new MetaResource(
+              name = name,
+              pkg = pkg,
+              description = defs.description,
+              props,
+              kinds
+            )
           case other =>
-            new Object(name = name, pkg = pkg, hw, props)
+            new SubResource(
+              name = name,
+              pkg = pkg,
+              description = defs.description,
+              props
+            )
         }
       case other =>
-        new Other(name = name, pkg = pkg, hw)
+        new Primitive(name = name, pkg = pkg, description = defs.description)
     }
   }
 
-  final class Object(
+  final case class SubResource(
       name: String,
       pkg: String,
-      header: HeaderWriter,
+      description: Option[String],
       properties: Seq[ModelProperty]
-  ) extends DataModel {
-    def print: String = s"""
-${header()}
-final case class $name(
-  ${printProps(properties)}
-) {
-${builderMethods(name, properties)}
-}
-"""
+  ) extends DataModel
 
-    def write(scg: SourceCodeGenerator): Unit =
-      scg.managed(pkg, name).write(print)
-  }
-
-  final class Resource(
+  final case class Resource(
       name: String,
       pkg: String,
-      header: HeaderWriter,
+      description: Option[String],
       properties: Seq[ModelProperty],
       kind: Kind
-  ) extends DataModel {
+  ) extends DataModel
 
-    def print: String = s"""
-${header("dev.hnaderi.k8s._")}
-final case class $name(
-  ${printProps(properties.filterNot(_.isKindOrAPIVersion))}
-) extends ResourceKind {
-   val group = "${kind.group}"
-   val kind = "${kind.kind}"
-   val version = "${kind.version}"
-
-${builderMethods(name, properties)}
-}
-"""
-    def write(scg: SourceCodeGenerator): Unit =
-      scg.managed(pkg, name).write(print)
-  }
-
-  final class CommonResource(
+  final case class MetaResource(
       name: String,
       pkg: String,
-      header: HeaderWriter,
+      description: Option[String],
       properties: Seq[ModelProperty],
       kinds: Seq[Kind]
-  ) extends DataModel {
-    val kind = kinds.head
-    private val supportedKinds = kinds
-      .map(k =>
-        s"""    ResourceKind("${k.group}", "${k.kind}", "${k.version}")"""
-      )
-      .mkString(",\n")
+  ) extends DataModel
 
-    def print: String = s"""
-${header("dev.hnaderi.k8s._")}
-
-sealed abstract case class $name(
-  ${printProps(properties)}
-) extends ResourceKind
-
-object $name {
-  def apply(
-    _group: String,
-    _kind: String,
-    _version: String,
-    ${printProps(properties)}
-  ) : $name = new $name(
-   ${properties.map(_.name).map(n => s"      $n = $n").mkString(",\n")}
-) {
-   val group = _group
-   val kind = _kind
-   val version = _version
-}
-  val knownKinds = Seq(
-$supportedKinds
-  )
-}
-"""
-    def write(scg: SourceCodeGenerator): Unit =
-      scg.managed(pkg, name).write(print)
-  }
-
-  final class Other(
+  final case class Primitive(
       name: String,
       pkg: String,
-      header: HeaderWriter
-  ) extends DataModel {
-    def print: String = s"""
-${header()}
-trait $name
-object $name {
-
-}
-"""
-    def write(scg: SourceCodeGenerator): Unit =
-      scg.unmanaged(pkg, name).write(print)
-  }
+      description: Option[String]
+  ) extends DataModel
 }

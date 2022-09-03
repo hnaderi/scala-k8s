@@ -37,7 +37,7 @@ object KubernetesObjectGeneratorPlugin extends AutoPlugin {
           throw err
         case Right(defs) =>
           val sources = defs.map { case (n, d) => DataModel(n, d) }
-          sources.foreach(_.write(scg))
+          sources.foreach(ObjectGenerator.write(scg))
       }
 
       scg.createdFiles
