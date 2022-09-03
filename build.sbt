@@ -16,69 +16,50 @@ val scala3 = "3.1.3"
 val supportScalaVersions = Seq(scala212, scala213, scala3)
 
 ThisBuild / tlSonatypeUseLegacyHost := false
-ThisBuild / tlSitePublishBranch := Some("main")
+ThisBuild / tlSitePublishBranch := None
 ThisBuild / scalaVersion := scala212
+ThisBuild / crossScalaVersions := supportScalaVersions
 ThisBuild / githubWorkflowBuildSbtStepPreamble := Nil
-ThisBuild / githubWorkflowBuild ~= {
-  _.map {
-    case Sbt(commands, id, Some("Test"), cond, env, params) =>
-      Sbt(List("+test"), name = Some("Test"))
-    case other => other
-  }
-}
 
 lazy val root =
-  project
-    .in(file("."))
-    .aggregate(objects, lib, core, manifest, cookbook, docs)
-    .enablePlugins(AutomateHeaderPlugin, NoPublishPlugin)
+  tlCrossRootProject
+    .aggregate(objects, circe, manifests, docs)
+    .enablePlugins(AutomateHeaderPlugin)
 
 lazy val circeVersion = "0.14.1"
 
-lazy val objects = project
-  .settings(
-    name := "k8s-objects-2",
-    libraryDependencies ++= Seq(
-      "io.circe" %% "circe-core" % circeVersion
-    ),
-    kubernetesVersion := "1.25.0",
-    Compile / kubernetesSpecFetch / target := file("./specifications")
-  )
-  .enablePlugins(NoPublishPlugin, KubernetesObjectGeneratorPlugin)
+val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
-lazy val lib = project
-  .enablePlugins(AutomateHeaderPlugin)
+lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
   .settings(
     name := "k8s-objects",
     libraryDependencies ++= Seq(
-      "com.goyeau" %% "kubernetes-client" % "0.8.1"
+      // "io.circe" %%% "circe-core" % circeVersion
     ),
-    scalaVersion := scala212, // this is required to force it not to use 3 as main version
-    crossScalaVersions := supportScalaVersions
+    k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala",
+    // k8sManagedTarget := rootDir.value / "objects" / "target" / "src_managed" / "main" / "scala",
+    kubernetesVersion := "1.25.0"
   )
+  .enablePlugins(NoPublishPlugin, KubernetesObjectGeneratorPlugin)
 
-lazy val manifest = project
-  .enablePlugins(AutomateHeaderPlugin, SbtPlugin)
+lazy val circe = crossProject(JVMPlatform, JSPlatform)
   .settings(
-    name := "sbt-k8s-manifest",
-    pluginCrossBuild / sbtVersion := "1.2.8" // set minimum sbt version
+    name := "k8s-circe",
+    libraryDependencies ++= Seq(
+      "io.circe" %%% "circe-core" % circeVersion
+    )
   )
-  .dependsOn(lib)
+  .dependsOn(objects)
 
-lazy val cookbook = project
-  .enablePlugins(AutomateHeaderPlugin, SbtPlugin)
+lazy val manifests = crossProject(JVMPlatform)
+  .in(file("lib"))
+  .enablePlugins(AutomateHeaderPlugin)
   .settings(
-    name := "sbt-k8s-cookbook",
-    pluginCrossBuild / sbtVersion := "1.2.8" // set minimum sbt version
+    name := "k8s-manifests",
+    libraryDependencies ++= Seq(
+      "com.goyeau" %% "kubernetes-client" % "0.8.1"
+    )
   )
-  .dependsOn(manifest)
-
-lazy val core = project
-  .enablePlugins(AutomateHeaderPlugin, SbtPlugin)
-  .settings(
-    name := "sbt-k8s",
-    pluginCrossBuild / sbtVersion := "1.2.8" // set minimum sbt version
-  )
-  .dependsOn(manifest, cookbook)
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)

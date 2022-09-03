@@ -12,6 +12,9 @@ object KubernetesSpecPlugin extends AutoPlugin {
     val kubernetesSpecFile: SettingKey[File] = settingKey(
       "Locally downloaded spec file"
     )
+    val kubernetesSpecificationDir: SettingKey[File] = settingKey(
+      "Directory where downloaded spec files are stored"
+    )
     val kubernetesSpecAddress: SettingKey[URI] = settingKey(
       "Version of kubernetes to support"
     )
@@ -23,13 +26,15 @@ object KubernetesSpecPlugin extends AutoPlugin {
   import autoImport._
   override def trigger = noTrigger
   override def requires = sbt.plugins.JvmPlugin
+  override val globalSettings = Seq(
+    kubernetesSpecificationDir := (ThisBuild / baseDirectory).value / "specifications"
+  )
   override val projectSettings = Seq(
     kubernetesSpecAddress := uri(
       s"https://github.com/kubernetes/kubernetes/raw/v${kubernetesVersion.value}/api/openapi-spec/swagger.json"
     ),
     kubernetesSpecFileName := s"kubernetes-spec-v${kubernetesVersion.value}.json",
-    Compile / kubernetesSpecFetch / target := resourceManaged.value / "spec",
-    kubernetesSpecFile := (Compile / kubernetesSpecFetch / target).value / kubernetesSpecFileName.value,
+    kubernetesSpecFile := kubernetesSpecificationDir.value / kubernetesSpecFileName.value,
     Compile / kubernetesSpecFetch := {
       val uri = kubernetesSpecAddress.value
       val targetFile = kubernetesSpecFile.value
@@ -47,7 +52,6 @@ object KubernetesSpecPlugin extends AutoPlugin {
       }
 
       targetFile
-    },
-    Compile / resourceGenerators += (Compile / kubernetesSpecFetch).map(Seq(_))
+    }
   )
 }

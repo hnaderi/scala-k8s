@@ -3,7 +3,13 @@ import sbt.Keys._
 
 object KubernetesObjectGeneratorPlugin extends AutoPlugin {
   object autoImport {
-    val kubernetesObjectGenerate: TaskKey[Seq[File]] = taskKey(
+    val k8sManagedTarget: SettingKey[File] = settingKey(
+      "Source codes that are managed by plugin"
+    )
+    val k8sUnmanagedTarget: SettingKey[File] = settingKey(
+      "Source codes that are not managed by plugin"
+    )
+    val k8sObjectGenerate: TaskKey[Seq[File]] = taskKey(
       "Generates all objects from spec"
     )
   }
@@ -14,11 +20,13 @@ object KubernetesObjectGeneratorPlugin extends AutoPlugin {
   override def trigger = noTrigger
   override def requires = KubernetesSpecPlugin
   override val projectSettings = Seq(
-    Compile / kubernetesObjectGenerate := {
+    k8sManagedTarget := (Compile / sourceManaged).value,
+    k8sUnmanagedTarget := (Compile / scalaSource).value,
+    Compile / k8sObjectGenerate := {
       val log = streams.value.log
       val spec = (Compile / kubernetesSpecFetch).value
-      val managed = (Compile / sourceManaged).value
-      val unmanaged = (Compile / sourceDirectory).value / "scala"
+      val managed = k8sManagedTarget.value
+      val unmanaged = k8sUnmanagedTarget.value
 
       log.info("Generating sources ...")
       val scg =
@@ -34,6 +42,6 @@ object KubernetesObjectGeneratorPlugin extends AutoPlugin {
 
       scg.createdFiles
     },
-    Compile / sourceGenerators += (Compile / kubernetesObjectGenerate)
+    Compile / sourceGenerators += (Compile / k8sObjectGenerate)
   )
 }
