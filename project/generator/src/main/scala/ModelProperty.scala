@@ -35,6 +35,7 @@ final case class ModelProperty(
   val fieldName: String = name match {
     case "type"                       => "`type`"
     case "object"                     => "`object`"
+    case "enum"                       => "`enum`"
     case other if other.contains('-') => s"`$other`"
     case _                            => name
   }
