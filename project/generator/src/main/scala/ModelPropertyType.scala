@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package dev.hnaderi.k8s.generator
+
 sealed abstract class ModelPropertyType {
   val name: String
   val isObject: Boolean

@@ -1,3 +1,5 @@
+package dev.hnaderi.k8s.generator
+
 import sbt._
 import sbt.Keys._
 
@@ -37,7 +39,7 @@ object KubernetesObjectGeneratorPlugin extends AutoPlugin {
           throw err
         case Right(defs) =>
           val sources = defs.map { case (n, d) => DataModel(n, d) }
-          sources.foreach(ObjectGenerator.write(scg))
+          sources.foreach(ObjectWriter(scg)(ObjectGenerator()))
       }
 
       scg.createdFiles

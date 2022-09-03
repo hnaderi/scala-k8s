@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package dev.hnaderi.k8s.generator
+
 import cats.implicits._
 import io.circe.Decoder
 import io.circe.Error

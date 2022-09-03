@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package dev.hnaderi.k8s.generator
+
 import java.io.File
 
 final class SourceCodeGenerator(

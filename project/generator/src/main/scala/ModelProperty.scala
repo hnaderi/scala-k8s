@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package dev.hnaderi.k8s.generator
+
 import scala.util.matching.Regex
 
 final case class ModelProperty(

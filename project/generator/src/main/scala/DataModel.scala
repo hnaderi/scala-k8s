@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package dev.hnaderi.k8s.generator
+
 sealed trait DataModel extends Serializable with Product {
   val name: String
   val pkg: String

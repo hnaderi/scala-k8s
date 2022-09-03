@@ -1,9 +1,6 @@
-import DataModel.{Resource, SubResource, MetaResource, Primitive}
+package dev.hnaderi.k8s.generator
 
-trait ObjectGenerator[T <: DataModel] {
-  def print(t: T): String
-  def write(t: T, scg: SourceCodeGenerator): Unit
-}
+import DataModel.{Resource, SubResource, MetaResource, Primitive}
 
 object ObjectGenerator {
   private implicit class HeaderWriter(val obj: DataModel) extends AnyVal {
@@ -19,14 +16,6 @@ ${Utils.generateDescription(obj.description)}"""
 
   def printProps: Seq[ModelProperty] => String =
     _.map(_.asParam).mkString(",\n  ")
-
-  private def codecsFor(name: String) = s"""
-//  import io.circe._
-//  import io.circe.generic.semiauto._
-
-//  implicit val encoder: Encoder[$name] = deriveEncoder
-//  implicit val decoder: Decoder[$name] = deriveDecoder
-"""
 
   private def builderMethod(className: String, prop: ModelProperty): String = {
     val capName =
@@ -63,11 +52,9 @@ ${Utils.generateDescription(obj.description)}"""
     .map(builderMethod(className, _))
     .mkString("\n")
 
-  private val resource: ObjectGenerator[Resource] =
-    new ObjectGenerator[Resource] {
-      override def print(t: Resource): String = {
-        import t._
-        s"""${t.header("dev.hnaderi.k8s._")}
+  private val resource: CodeGeneratorFor[Resource] = { t =>
+    import t._
+    s"""${t.header("dev.hnaderi.k8s._")}
 final case class $name(
   ${printProps(properties.filterNot(_.isKindOrAPIVersion))}
 ) extends ResourceKind {
@@ -78,23 +65,18 @@ final case class $name(
 ${builderMethods(name, properties)}
 }
 """
-      }
-      override def write(t: Resource, scg: SourceCodeGenerator): Unit =
-        scg.managed(t.pkg, t.name).write(print(t))
-    }
+  }
 
-  private val metaResource: ObjectGenerator[MetaResource] =
-    new ObjectGenerator[MetaResource] {
-      override def print(t: MetaResource): String = {
-        import t._
+  private val metaResource: CodeGeneratorFor[MetaResource] = { t =>
+    import t._
 
-        val supportedKinds = kinds
-          .map(k =>
-            s"""    ResourceKind("${k.group}", "${k.kind}", "${k.version}")"""
-          )
-          .mkString(",\n")
+    val supportedKinds = kinds
+      .map(k =>
+        s"""    ResourceKind("${k.group}", "${k.kind}", "${k.version}")"""
+      )
+      .mkString(",\n")
 
-        s"""${t.header("dev.hnaderi.k8s._")}
+    s"""${t.header("dev.hnaderi.k8s._")}
 
 sealed abstract case class $name(
   ${printProps(properties)}
@@ -118,53 +100,33 @@ $supportedKinds
   )
 }
 """
+  }
 
-      }
-      override def write(t: MetaResource, scg: SourceCodeGenerator): Unit =
-        scg.managed(t.pkg, t.name).write(print(t))
-    }
-
-  private val subResource: ObjectGenerator[SubResource] =
-    new ObjectGenerator[SubResource] {
-      override def print(t: SubResource): String = {
-        import t._
-        s"""${t.header()}
+  private val subResource: CodeGeneratorFor[SubResource] = { t =>
+    import t._
+    s"""${t.header()}
 final case class $name(
   ${printProps(properties)}
 ) {
 ${builderMethods(name, properties)}
 }
 """
-      }
-      override def write(t: SubResource, scg: SourceCodeGenerator): Unit =
-        scg.managed(t.pkg, t.name).write(print(t))
-    }
+  }
 
-  private val primitive: ObjectGenerator[Primitive] =
-    new ObjectGenerator[Primitive] {
-      override def print(t: Primitive): String = {
-        import t._
-        s"""${t.header()}
+  private val primitive: CodeGeneratorFor[Primitive] = { t =>
+    import t._
+    s"""${t.header()}
 trait $name
 object $name {
 
 }
 """
-      }
-      override def write(t: Primitive, scg: SourceCodeGenerator): Unit =
-        scg.unmanaged(t.pkg, t.name).write(print(t))
-    }
-
-  def write(scg: SourceCodeGenerator)(obj: DataModel) = obj match {
-    case o: Resource     => resource.write(o, scg)
-    case o: SubResource  => subResource.write(o, scg)
-    case o: MetaResource => metaResource.write(o, scg)
-    case o: Primitive    => primitive.write(o, scg)
   }
-  def print(obj: DataModel) = obj match {
-    case o: Resource     => resource.print(o)
-    case o: SubResource  => subResource.print(o)
-    case o: MetaResource => metaResource.print(o)
-    case o: Primitive    => primitive.print(o)
+
+  def apply(): CodeGenerator = {
+    case o: Resource     => resource(o)
+    case o: SubResource  => subResource(o)
+    case o: MetaResource => metaResource(o)
+    case o: Primitive    => primitive(o)
   }
 }

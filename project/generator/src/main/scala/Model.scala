@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package dev.hnaderi.k8s.generator
+
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 

@@ -1,3 +1,5 @@
+package dev.hnaderi.k8s.generator
+
 import sbt._
 import sbt.Keys._
 
