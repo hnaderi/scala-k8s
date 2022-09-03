@@ -114,9 +114,6 @@ final case class $name(
 ) {
 ${builderMethods(name, properties)}
 }
-object $name {
-${codecsFor(name)}
-}
 """
 
     def write(scg: SourceCodeGenerator): Unit =
@@ -141,9 +138,6 @@ final case class $name(
    val version = "${kind.version}"
 
 ${builderMethods(name, properties)}
-}
-object $name {
-${codecsFor(name)}
 }
 """
     def write(scg: SourceCodeGenerator): Unit =
@@ -187,7 +181,6 @@ object $name {
   val knownKinds = Seq(
 $supportedKinds
   )
-${codecsFor(name)}
 }
 """
     def write(scg: SourceCodeGenerator): Unit =

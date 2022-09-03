@@ -37,11 +37,7 @@ lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "k8s-objects",
-    libraryDependencies ++= Seq(
-      // "io.circe" %%% "circe-core" % circeVersion
-    ),
     k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala",
-    // k8sManagedTarget := rootDir.value / "objects" / "target" / "src_managed" / "main" / "scala",
     kubernetesVersion := "1.25.0"
   )
   .enablePlugins(NoPublishPlugin, KubernetesObjectGeneratorPlugin)
