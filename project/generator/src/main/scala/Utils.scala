@@ -53,6 +53,6 @@ object Utils {
   def generateDescription(description: Option[String]): String =
     description.fold("") { d =>
       val content = d.replace("*/", "*&#47;").replace("/*", "&#47;*")
-      s"/* $content */"
+      s"/** $content */"
     }
 }
