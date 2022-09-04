@@ -19,6 +19,7 @@ package circe
 
 import io.circe._
 import io.circe.syntax._
+import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSON
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSONSchemaProps
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSONSchemaPropsOrArray
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSONSchemaPropsOrBool
@@ -29,7 +30,6 @@ import io.k8s.apimachinery.pkg.apis.meta.v1.Time
 import io.k8s.apimachinery.pkg.util.intstr.IntOrString
 
 import InternalCodecs.io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaProps
-import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSON
 
 private[circe] object PrimitiveCodecs {
   implicit val intOrStringEncoder: Encoder[IntOrString] = {
@@ -70,7 +70,7 @@ private[circe] object PrimitiveCodecs {
   }
   implicit val jsonSchemaPropsOrArrayDecoder: Decoder[JSONSchemaPropsOrArray] =
     Decoder[Seq[JSONSchemaProps]]
-      .map(JSONSchemaPropsOrArray.MutipleValues)
+      .map(JSONSchemaPropsOrArray.MutipleValues(_))
       .or(Decoder[JSONSchemaProps].map(JSONSchemaPropsOrArray(_)))
 
   implicit val jsonSchemaPropsOrStringArrayEncoder
