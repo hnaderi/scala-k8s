@@ -20,7 +20,7 @@ object KubernetesSpecPlugin extends AutoPlugin {
     val kubernetesSpecAddress: SettingKey[URI] = settingKey(
       "Version of kubernetes to support"
     )
-    val kubernetesSpecFetch: TaskKey[File] = taskKey(
+    val kubernetesSpecFetch: TaskKey[Map[String, Definition]] = taskKey(
       "Fetch specified spec version from kubernetes repository"
     )
   }
@@ -51,7 +51,12 @@ object KubernetesSpecPlugin extends AutoPlugin {
         uri.toURL #> targetFile !
       }
 
-      targetFile
+      Utils.loadDefinitions(targetFile) match {
+        case Left(err) =>
+          log.error(s"Invalid kubernetes API specification!")
+          throw err
+        case Right(defs) => defs
+      }
     }
   )
 }

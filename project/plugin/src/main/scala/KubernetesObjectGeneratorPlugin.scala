@@ -27,14 +27,8 @@ object KubernetesObjectGeneratorPlugin extends AutoPlugin {
       log.info("Generating sources ...")
       val scg =
         new SourceCodeGenerator(managed = managed, unmanaged = unmanaged)
-      Utils.loadDefinitions(spec) match {
-        case Left(err) =>
-          log.error(s"Invalid kubernetes API specification!")
-          throw err
-        case Right(defs) =>
-          val sources = defs.map { case (n, d) => DataModel(n, d) }
-          sources.foreach(ObjectGenerator.write(scg))
-      }
+      val sources = spec.map { case (n, d) => DataModel(n, d) }
+      sources.foreach(ObjectGenerator.write(scg))
 
       scg.createdFiles
     },
