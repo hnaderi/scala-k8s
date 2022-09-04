@@ -30,7 +30,7 @@ enablePlugins(AutomateHeaderPlugin)
 
 lazy val root =
   tlCrossRootProject
-    .aggregate(objects, circe, manifests, docs)
+    .aggregate(objects, circe, manifests, docs, unidocs)
 
 lazy val circeVersion = "0.14.1"
 
@@ -62,8 +62,18 @@ lazy val manifests = crossProject(JVMPlatform)
   .settings(
     name := "k8s-manifests",
     libraryDependencies ++= Seq(
-      "com.goyeau" %% "kubernetes-client" % "0.8.1"
+      "io.circe" %%% "circe-yaml" % circeVersion,
+      "io.circe" %%% "circe-parser" % circeVersion
     )
   )
+  .dependsOn(circe)
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
+
+lazy val unidocs = project
+  .in(file("unidocs"))
+  .enablePlugins(TypelevelUnidocPlugin)
+  .settings(
+    name := "k8s-docs",
+    description := "unified docs for scala-k8s"
+  )
