@@ -16,9 +16,8 @@
 
 package dev.hnaderi
 
-import com.goyeau.kubernetes.client.IntOrString
-import com.goyeau.kubernetes.client.IntValue
-import com.goyeau.kubernetes.client.StringValue
+import io.k8s.apimachinery.pkg.util.intstr.IntOrString
+import io.k8s.apimachinery.pkg.util.intstr.IntOrString._
 
 package object sbtk8s {
   implicit def convertToOption[T](t: T): Option[T] = Some(t)
