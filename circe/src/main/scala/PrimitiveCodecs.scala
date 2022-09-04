@@ -93,7 +93,7 @@ private[circe] object PrimitiveCodecs {
   //
   // THESE ARE STUB TYPES THAT ARE POSSIBLY NOT IMPLEMENTED COMPLETELY
   //
-  private def stubEnc[T]: Encoder[T] = o => Json.Null
+  private def stubEnc[T]: Encoder[T] = _ => Json.Null
 
   implicit val customResourceSubresourceStatusEncoder
       : Encoder[CustomResourceSubresourceStatus] = stubEnc
