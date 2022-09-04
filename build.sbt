@@ -24,11 +24,13 @@ ThisBuild / tlSitePublishBranch := None
 ThisBuild / scalaVersion := scala212
 ThisBuild / crossScalaVersions := supportScalaVersions
 ThisBuild / githubWorkflowJavaVersions := Seq(PrimaryJava, LTSJava)
+ThisBuild / kubernetesVersion := "1.25.0"
+
+enablePlugins(AutomateHeaderPlugin)
 
 lazy val root =
   tlCrossRootProject
     .aggregate(objects, circe, manifests, docs)
-    .enablePlugins(AutomateHeaderPlugin)
 
 lazy val circeVersion = "0.14.1"
 
@@ -38,16 +40,14 @@ lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "k8s-objects",
-    k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala",
-    kubernetesVersion := "1.25.0"
+    k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala"
   )
-  .enablePlugins(NoPublishPlugin, KubernetesObjectGeneratorPlugin)
+  .enablePlugins(KubernetesObjectGeneratorPlugin)
 
 lazy val circe = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "k8s-circe",
-    kubernetesVersion := "1.25.0",
     k8sUnmanagedTarget := rootDir.value / "circe" / "src" / "main" / "scala",
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-core" % circeVersion,
@@ -60,7 +60,6 @@ lazy val circe = crossProject(JVMPlatform, JSPlatform)
 lazy val manifests = crossProject(JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("lib"))
-  .enablePlugins(AutomateHeaderPlugin)
   .settings(
     name := "k8s-manifests",
     libraryDependencies ++= Seq(

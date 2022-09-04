@@ -29,14 +29,12 @@ object KubernetesSpecPlugin extends AutoPlugin {
   override def trigger = noTrigger
   override def requires = sbt.plugins.JvmPlugin
   override val globalSettings = Seq(
-    kubernetesSpecificationDir := (ThisBuild / baseDirectory).value / "specifications"
-  )
-  override val projectSettings = Seq(
+    kubernetesSpecificationDir := (ThisBuild / baseDirectory).value / "specifications",
     kubernetesSpecAddress := uri(
-      s"https://github.com/kubernetes/kubernetes/raw/v${kubernetesVersion.value}/api/openapi-spec/swagger.json"
+      s"https://github.com/kubernetes/kubernetes/raw/v${(ThisBuild / kubernetesVersion).value}/api/openapi-spec/swagger.json"
     ),
-    kubernetesSpecFileName := s"kubernetes-spec-v${kubernetesVersion.value}.json",
-    kubernetesSpecFile := kubernetesSpecificationDir.value / kubernetesSpecFileName.value,
+    kubernetesSpecFileName := s"kubernetes-spec-v${(ThisBuild / kubernetesVersion).value}.json",
+    kubernetesSpecFile := (ThisBuild / kubernetesSpecificationDir).value / (ThisBuild / kubernetesSpecFileName).value,
     Compile / kubernetesSpecFetch := {
       val uri = kubernetesSpecAddress.value
       val targetFile = kubernetesSpecFile.value
