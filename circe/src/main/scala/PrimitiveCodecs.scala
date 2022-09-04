@@ -19,17 +19,23 @@ package circe
 
 import io.circe._
 import io.circe.syntax._
+import io.k8s.api.apiserverinternal.v1alpha1.StorageVersionSpec
+import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.CustomResourceSubresourceStatus
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSON
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSONSchemaProps
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSONSchemaPropsOrArray
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSONSchemaPropsOrBool
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSONSchemaPropsOrStringArray
 import io.k8s.apimachinery.pkg.api.resource.Quantity
+import io.k8s.apimachinery.pkg.apis.meta.v1.FieldsV1
 import io.k8s.apimachinery.pkg.apis.meta.v1.MicroTime
+import io.k8s.apimachinery.pkg.apis.meta.v1.Patch
 import io.k8s.apimachinery.pkg.apis.meta.v1.Time
+import io.k8s.apimachinery.pkg.runtime.RawExtension
 import io.k8s.apimachinery.pkg.util.intstr.IntOrString
 
-import InternalCodecs.io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaProps
+import InternalCodecs.io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaPropsEncoder
+import InternalCodecs.io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaPropsDecoder
 
 private[circe] object PrimitiveCodecs {
   implicit val intOrStringEncoder: Encoder[IntOrString] = {
@@ -83,4 +89,29 @@ private[circe] object PrimitiveCodecs {
     Decoder[JSONSchemaProps]
       .map(JSONSchemaPropsOrStringArray(_))
       .or(Decoder[Seq[String]].map(JSONSchemaPropsOrStringArray(_)))
+
+  //
+  // THESE ARE STUB TYPES THAT ARE POSSIBLY NOT IMPLEMENTED COMPLETELY
+  //
+  private def stubEnc[T]: Encoder[T] = o => Json.Null
+
+  implicit val customResourceSubresourceStatusEncoder
+      : Encoder[CustomResourceSubresourceStatus] = stubEnc
+  implicit val customResourceSubresourceStatusDecoder
+      : Decoder[CustomResourceSubresourceStatus] =
+    Decoder.const(CustomResourceSubresourceStatus())
+  implicit val apimachineryv1FieldsV1Encoder: Encoder[FieldsV1] = stubEnc
+  implicit val apimachineryv1FieldsV1Decoder: Decoder[FieldsV1] =
+    Decoder.const(FieldsV1())
+  implicit val apimachineryv1PatchEncoder: Encoder[Patch] = stubEnc
+  implicit val apimachineryv1PatchDecoder: Decoder[Patch] =
+    Decoder.const(Patch())
+  implicit val apimachineryruntimeRawExtensionEncoder: Encoder[RawExtension] =
+    stubEnc
+  implicit val apimachineryruntimeRawExtensionDecoder: Decoder[RawExtension] =
+    Decoder.const(RawExtension())
+  implicit val apiserverinternalv1alpha1StorageVersionSpecEncoder
+      : Encoder[StorageVersionSpec] = stubEnc
+  implicit val apiserverinternalv1alpha1StorageVersionSpecDecoder
+      : Decoder[StorageVersionSpec] = Decoder.const(StorageVersionSpec())
 }
