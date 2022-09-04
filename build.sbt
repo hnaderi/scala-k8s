@@ -58,6 +58,7 @@ lazy val circe = crossProject(JVMPlatform, JSPlatform)
   .dependsOn(objects)
 
 lazy val manifests = crossProject(JVMPlatform)
+  .crossType(CrossType.Pure)
   .in(file("lib"))
   .enablePlugins(AutomateHeaderPlugin)
   .settings(
