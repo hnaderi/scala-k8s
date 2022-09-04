@@ -12,9 +12,10 @@ import io.k8s.apimachinery.pkg.apis.meta.v1.MicroTime
 import io.k8s.apimachinery.pkg.apis.meta.v1.Time
 import io.k8s.apimachinery.pkg.util.intstr.IntOrString
 
-import codecs.io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaProps
+import InternalCodecs.io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaProps
+import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSON
 
-private[circe] object PrimitiveCodec {
+private[circe] object PrimitiveCodecs {
   implicit val intOrStringEncoder: Encoder[IntOrString] = {
     case IntOrString.IntValue(i)    => i.asJson
     case IntOrString.StringValue(s) => s.asJson
@@ -32,6 +33,10 @@ private[circe] object PrimitiveCodec {
   implicit val quantityEncoder: Encoder[Quantity] = t => t.value.asJson
   implicit val quantityDecoder: Decoder[Quantity] =
     Decoder[String].map(Quantity(_))
+
+  implicit val apiextensionsJSONEncoder: Encoder[JSON] = j => j.value.asJson
+  implicit val apiextensionsJSONDecoder: Decoder[JSON] =
+    Decoder[String].map(JSON(_))
 
   implicit val jsonSchemaPropsOrBoolEncoder: Encoder[JSONSchemaPropsOrBool] = {
     case JSONSchemaPropsOrBool.BoolValue(b)  => b.asJson

@@ -76,22 +76,14 @@ ${builderMethods(name, properties)}
 
     s"""${t.header("dev.hnaderi.k8s._")}
 
-sealed abstract case class $name(
+final case class $name(
+  kind: String,
+  apiVersion: String,
   ${printProps(properties)}
-) extends KObject
+)
 
 object $name {
-  def apply(
-    _group: String,
-    _kind: String,
-    _version: String,
-    ${printProps(properties)}
-  ) : $name = new $name(
-   ${properties.map(_.name).map(n => s"      $n = $n").mkString(",\n")}
-) {
-  protected val _resourceKind = ResourceKind(_group, _kind, _version)
-}
-  val knownKinds = Seq(
+  val knownKinds : Seq[ResourceKind] = Seq(
 $supportedKinds
   )
 }

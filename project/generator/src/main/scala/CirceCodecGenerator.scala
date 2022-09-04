@@ -10,24 +10,33 @@ object CirceCodecGenerator {
 
   private implicit val kindOrdering: Ordering[Kind] =
     Ordering.by(k => (k.group, k.kind, k.version))
+  private implicit val dataModelOrdering: Ordering[DataModel] = Ordering.by {
+    case _: DataModel.Primitive    => 0
+    case _: DataModel.SubResource  => 1
+    case _: DataModel.Resource     => 2
+    case _: DataModel.MetaResource => 3
+  }
 
-  private object BaseCodecs {
+  private object InternalCodecs {
     def apply(objs: Seq[DataModel]) = s"""package dev.hnaderi.k8s
 package circe
 
 import io.circe._
-import io.circe.syntax._
 import io.circe.generic.semiauto._
+import PrimitiveCodecs._
+import codecs._
 
-object codecs {
-${objs.map(body).mkString("\n")}
+private[circe] object InternalCodecs {
+${objs.sorted(dataModelOrdering)
+        .map(body)
+        .filterNot(_.isEmpty())
+        .mkString("\n")}
 }
 """
     private val body: CodeGenerator = {
-      case o: Resource     => resource(o)
       case o: SubResource  => subResource(o)
       case o: MetaResource => metaResource(o)
-      case o: Primitive    => primitive(o)
+      case _               => ""
     }
 
     private def encoderFieldFor(p: ModelProperty) =
@@ -37,7 +46,56 @@ ${objs.map(body).mkString("\n")}
       ps.map(encoderFieldFor).mkString(",\n    ")
 
     private def encoderFor(d: Resource) =
-      s""" implicit lazy val ${codecName(d)}Encoder : Encoder[${typeName(
+      s"""  implicit lazy val ${codecName(d)}Encoder : Encoder[${typeName(
+          d
+        )}] = Encoder.instance(o =>
+  Json.obj(
+    ${encoderBody(d.properties)},
+    "kind" -> o.kind.asJson,
+    "apiVersion" -> o.apiVersion.asJson
+  )
+)"""
+
+    private val subResource: CodeGeneratorFor[SubResource] = r =>
+      s"""  implicit lazy val ${codecName(r)} : Codec[${typeName(
+          r
+        )}] = deriveCodec"""
+    private val metaResource: CodeGeneratorFor[MetaResource] = r =>
+      s"""  implicit lazy val ${codecName(r)} : Codec[${typeName(
+          r
+        )}] = deriveCodec"""
+  }
+  private object ResourceCodecs {
+    def apply(objs: Seq[DataModel]) = s"""package dev.hnaderi.k8s
+package circe
+
+import io.circe._
+import io.circe.syntax._
+import io.circe.generic.semiauto._
+import PrimitiveCodecs._
+import InternalCodecs._
+
+trait ResourceCodecs {
+${objs.sorted(dataModelOrdering)
+        .map(body)
+        .filterNot(_.isEmpty())
+        .mkString("\n")}
+}
+object ResourceCodecs extends ResourceCodecs
+"""
+    private val body: CodeGenerator = {
+      case o: Resource => resource(o)
+      case _           => ""
+    }
+
+    private def encoderFieldFor(p: ModelProperty) =
+      s""""${p.name}" -> o.${p.fieldName}.asJson"""
+
+    private def encoderBody(ps: Seq[ModelProperty]) =
+      ps.map(encoderFieldFor).mkString(",\n    ")
+
+    private def encoderFor(d: Resource) =
+      s"""  implicit lazy val ${codecName(d)}Encoder : Encoder[${typeName(
           d
         )}] = Encoder.instance(o =>
   Json.obj(
@@ -52,19 +110,6 @@ ${objs.map(body).mkString("\n")}
           r
         )}] = deriveDecoder
   ${encoderFor(r)}"""
-
-    private val subResource: CodeGeneratorFor[SubResource] = r =>
-      s"""  private implicit lazy val ${codecName(r)} : Codec[${typeName(
-          r
-        )}] = deriveCodec"""
-    private val metaResource: CodeGeneratorFor[MetaResource] = r =>
-      s"""  private implicit lazy val ${codecName(r)} : Codec[${typeName(
-          r
-        )}] = ???"""
-    private val primitive: CodeGeneratorFor[Primitive] = r =>
-      s"""  private implicit lazy val ${codecName(r)} : Codec[${typeName(
-          r
-        )}] = ???"""
   }
   private object KObjectCodec {
     def apply(res: Seq[DataModel]) = {
@@ -75,10 +120,9 @@ package circe
 
 import io.circe._
 import io.circe.syntax._
-import codecs._
 import cats.implicits._
 
-object codecs2 {
+object codecs extends ResourceCodecs {
 ${resourceEncoder(sorted)}
 ${resourceDecoder(sorted)}
 }"""
@@ -140,16 +184,8 @@ $matchers
 
   def write(scg: SourceCodeGenerator)(models: Iterable[DataModel]) = {
     val mSeq = models.toSeq
-    scg.unmanaged("", "BaseCodecs").write(BaseCodecs(mSeq))
-    scg.unmanaged("", "KObjectCodecs").write(KObjectCodec(mSeq))
+    scg.managed("", "InternalCodecs").write(InternalCodecs(mSeq))
+    scg.managed("", "ResourceCodecs").write(ResourceCodecs(mSeq))
+    scg.managed("", "KObjectCodecs").write(KObjectCodec(mSeq))
   }
 }
-
-// val a :Encoder[Int]= Encoder.instance(i=> Json.obj(
-//                                         ""-> i.asJson,
-//                                         "a"-> i.asJson,
-//                                       ))
-// val c = Decoder.
-// val b: Decoder[Int]= (c:HCursor)=> for {
-//   _ <- c.as[Int]
-// }yield 1
