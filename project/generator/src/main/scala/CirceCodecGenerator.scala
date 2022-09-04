@@ -17,12 +17,75 @@ object CirceCodecGenerator {
     case _: DataModel.MetaResource => 3
   }
 
+  private def codecFor(model: DataModel): String = {
+    val baseName = codecName(model)
+    val tpe = typeName(model)
+    val (ps, hasAdditionalEnc, hasAdditionalDec) = model match {
+      case r: Resource      => (r.properties, true, false)
+      case sr: SubResource  => (sr.properties, false, false)
+      case mr: MetaResource => (mr.properties, false, true)
+      case _                => return ""
+    }
+
+    def encoderFieldFor(p: ModelProperty) =
+      s""""${p.name}" -> o.${p.fieldName}.asJson"""
+
+    val additionalFields =
+      if (hasAdditionalEnc)
+        Seq(
+          """"kind" -> o.kind.asJson""",
+          """"apiVersion" -> o.apiVersion.asJson"""
+        )
+      else Nil
+
+    val encoderFields =
+      (ps.map(encoderFieldFor) ++ additionalFields).mkString(",\n      ")
+
+    val encoder =
+      s"""
+    implicit lazy val ${baseName}Encoder : Encoder[$tpe] = o =>
+      Json.obj(
+        $encoderFields
+      )"""
+
+    def decoderField(p: ModelProperty) =
+      s""" ${p.fieldName} <- c.get[${p.fullTypename}]("${p.name}")"""
+
+    def decoderConstructorField(p: ModelProperty) =
+      s"${p.fieldName} = ${p.fieldName}"
+
+    val decoderExtractors = (ps
+      .map(decoderField) ++ (if (hasAdditionalDec)
+                               Seq(
+                                 "kind <- c.get[String](\"kind\")",
+                                 "apiVersion <- c.get[String](\"apiVersion\")"
+                               )
+                             else Nil)).mkString("\n      ")
+    val decoderConstructorFields =
+      (ps.map(decoderConstructorField) ++ (if (hasAdditionalDec)
+                                             Seq(
+                                               "kind = kind",
+                                               "apiVersion = apiVersion"
+                                             )
+                                           else Nil)).mkString(",\n      ")
+
+    val decoder =
+      s"""
+    implicit lazy val ${baseName}Decoder : Decoder[$tpe] = (c: HCursor) => for {
+      $decoderExtractors
+    } yield $tpe(
+      $decoderConstructorFields
+    )"""
+
+    s"$encoder$decoder"
+  }
+
   private object InternalCodecs {
     def apply(objs: Seq[DataModel]) = s"""package dev.hnaderi.k8s
 package circe
 
 import io.circe._
-import io.circe.generic.semiauto._
+import io.circe.syntax._
 import PrimitiveCodecs._
 import codecs._
 
@@ -34,36 +97,10 @@ ${objs.sorted(dataModelOrdering)
 }
 """
     private val body: CodeGenerator = {
-      case o: SubResource  => subResource(o)
-      case o: MetaResource => metaResource(o)
+      case o: SubResource  => codecFor(o)
+      case o: MetaResource => codecFor(o)
       case _               => ""
     }
-
-    private def encoderFieldFor(p: ModelProperty) =
-      s""""${p.name}" -> o.${p.fieldName}.asJson"""
-
-    private def encoderBody(ps: Seq[ModelProperty]) =
-      ps.map(encoderFieldFor).mkString(",\n    ")
-
-    private def encoderFor(d: Resource) =
-      s"""  implicit lazy val ${codecName(d)}Encoder : Encoder[${typeName(
-          d
-        )}] = Encoder.instance(o =>
-  Json.obj(
-    ${encoderBody(d.properties)},
-    "kind" -> o.kind.asJson,
-    "apiVersion" -> o.apiVersion.asJson
-  )
-)"""
-
-    private val subResource: CodeGeneratorFor[SubResource] = r =>
-      s"""  implicit lazy val ${codecName(r)} : Codec[${typeName(
-          r
-        )}] = deriveCodec"""
-    private val metaResource: CodeGeneratorFor[MetaResource] = r =>
-      s"""  implicit lazy val ${codecName(r)} : Codec[${typeName(
-          r
-        )}] = deriveCodec"""
   }
   private object ResourceCodecs {
     def apply(objs: Seq[DataModel]) = s"""package dev.hnaderi.k8s
@@ -71,7 +108,6 @@ package circe
 
 import io.circe._
 import io.circe.syntax._
-import io.circe.generic.semiauto._
 import PrimitiveCodecs._
 import InternalCodecs._
 
@@ -84,32 +120,9 @@ ${objs.sorted(dataModelOrdering)
 object ResourceCodecs extends ResourceCodecs
 """
     private val body: CodeGenerator = {
-      case o: Resource => resource(o)
+      case o: Resource => codecFor(o)
       case _           => ""
     }
-
-    private def encoderFieldFor(p: ModelProperty) =
-      s""""${p.name}" -> o.${p.fieldName}.asJson"""
-
-    private def encoderBody(ps: Seq[ModelProperty]) =
-      ps.map(encoderFieldFor).mkString(",\n    ")
-
-    private def encoderFor(d: Resource) =
-      s"""  implicit lazy val ${codecName(d)}Encoder : Encoder[${typeName(
-          d
-        )}] = Encoder.instance(o =>
-  Json.obj(
-    ${encoderBody(d.properties)},
-    "kind" -> o.kind.asJson,
-    "apiVersion" -> o.apiVersion.asJson
-  )
-)"""
-
-    private val resource: CodeGeneratorFor[Resource] = r =>
-      s"""  implicit lazy val ${codecName(r)}Decoder : Decoder[${typeName(
-          r
-        )}] = deriveDecoder
-  ${encoderFor(r)}"""
   }
   private object KObjectCodec {
     def apply(res: Seq[DataModel]) = {

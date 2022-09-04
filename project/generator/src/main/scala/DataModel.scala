@@ -36,7 +36,7 @@ object DataModel {
         val (props, hasKindOrAPIVersion) = ModelProperty(defs)
 
         defs.`x-kubernetes-group-version-kind` match {
-          case Some(kind :: Nil) if hasKindOrAPIVersion =>
+          case Some(kind :: Nil) if hasKindOrAPIVersion && props.nonEmpty =>
             new Resource(
               name = name,
               pkg = pkg,
@@ -44,7 +44,7 @@ object DataModel {
               props,
               kind
             )
-          case Some(kinds) if hasKindOrAPIVersion =>
+          case Some(kinds) if hasKindOrAPIVersion && props.nonEmpty =>
             new MetaResource(
               name = name,
               pkg = pkg,
@@ -52,15 +52,21 @@ object DataModel {
               props,
               kinds
             )
-          case other =>
+          case _ if props.nonEmpty =>
             new SubResource(
               name = name,
               pkg = pkg,
               description = defs.description,
               props
             )
+          case _ =>
+            new Primitive(
+              name = name,
+              pkg = pkg,
+              description = defs.description
+            )
         }
-      case other =>
+      case _ =>
         new Primitive(name = name, pkg = pkg, description = defs.description)
     }
   }

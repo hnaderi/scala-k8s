@@ -50,8 +50,7 @@ lazy val circe = crossProject(JVMPlatform, JSPlatform)
     name := "k8s-circe",
     k8sUnmanagedTarget := rootDir.value / "circe" / "src" / "main" / "scala",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion,
-      "io.circe" %%% "circe-generic" % circeVersion
+      "io.circe" %%% "circe-core" % circeVersion
     )
   )
   .enablePlugins(KubernetesCirceCodecGenerator)
