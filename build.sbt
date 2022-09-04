@@ -30,7 +30,7 @@ enablePlugins(AutomateHeaderPlugin)
 
 lazy val root =
   tlCrossRootProject
-    .aggregate(objects, circe, manifests, docs, unidocs)
+    .aggregate(objects, circe, manifests, docs)
 
 lazy val circeVersion = "0.14.1"
 
@@ -70,10 +70,10 @@ lazy val manifests = crossProject(JVMPlatform)
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
 
-lazy val unidocs = project
-  .in(file("unidocs"))
-  .enablePlugins(TypelevelUnidocPlugin)
-  .settings(
-    name := "k8s-docs",
-    description := "unified docs for scala-k8s"
-  )
+// lazy val unidocs = project
+//   .in(file("unidocs"))
+//   .enablePlugins(TypelevelUnidocPlugin)
+//   .settings(
+//     name := "k8s-docs",
+//     description := "unified docs for scala-k8s"
+//   )
