@@ -28,6 +28,9 @@ enablePlugins(AutomateHeaderPlugin)
 lazy val root =
   tlCrossRootProject
     .aggregate(objects, circe, manifests, docs, unidocs)
+    .settings(
+      name := "scala-k8s"
+    )
 
 lazy val circeVersion = "0.14.1"
 
@@ -36,7 +39,7 @@ val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .settings(
-    name := "k8s-objects",
+    name := "scala-k8s-objects",
     description := "data models for kubernetes",
     k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala"
   )
@@ -45,7 +48,7 @@ lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 lazy val circe = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
   .settings(
-    name := "k8s-circe",
+    name := "scala-k8s-circe",
     description := "circe codecs for kubernetes data models",
     k8sUnmanagedTarget := rootDir.value / "circe" / "src" / "main" / "scala",
     libraryDependencies ++= Seq(
@@ -59,7 +62,7 @@ lazy val manifests = crossProject(JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("lib"))
   .settings(
-    name := "k8s-manifests",
+    name := "scala-k8s-manifests",
     description := "kubernetes manifests utilities",
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-yaml" % circeVersion,
@@ -74,7 +77,7 @@ lazy val unidocs = project
   .in(file("unidocs"))
   .enablePlugins(TypelevelUnidocPlugin)
   .settings(
-    name := "k8s-docs",
+    name := "scala-k8s-docs",
     description := "unified docs for scala-k8s",
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
       objects.jvm,

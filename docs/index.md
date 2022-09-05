@@ -8,8 +8,8 @@ To use the latest version of library, include the following in your `build.sbt`:
 
 ```scala
 libraryDependencies ++= Seq(
-  "dev.hnaderi" %% "k8s-objects" % "@VERSION@", // JVM, JS, NATIVE
-  "dev.hnaderi" %% "k8s-circe" % "@VERSION@", // JVM, JS
-  "dev.hnaderi" %% "k8s-manifests" % "@VERSION@" // Under development
+  "dev.hnaderi" %% "scala-k8s-objects" % "@VERSION@", // JVM, JS, NATIVE
+  "dev.hnaderi" %% "scala-k8s-circe" % "@VERSION@", // JVM, JS
+  "dev.hnaderi" %% "scala-k8s-manifests" % "@VERSION@" // JVM
 )
 ```
