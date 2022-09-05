@@ -56,7 +56,7 @@ object ModelPropertyType {
   ): String = tpe.trim match {
     case RefName(name) => name
     case "string"      => "String"
-    case "integer"     => "Integer"
+    case "integer"     => "Int"
     case "boolean"     => "Boolean"
     case "number" =>
       format match {
