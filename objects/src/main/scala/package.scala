@@ -16,18 +16,17 @@
 
 package dev.hnaderi.k8s
 
-import dev.hnaderi.k8s.circe.codecs._
-import io.circe.Json
-import io.circe.syntax._
-import io.circe.yaml.syntax._
+import io.k8s.apimachinery.pkg.util.intstr.IntOrString
+import io.k8s.apimachinery.pkg.util.intstr.IntOrString._
 
-package object manifest {
-  implicit class KObjectsOps(val objs: Iterable[KObject]) extends AnyVal {
-    def asManifest: String =
-      objs.map(_.asManifest).mkString("\n---\n")
-  }
-  implicit class KObjectOps(val obj: KObject) extends AnyVal {
-    def asManifest: String = obj.asJsonManifest.asYaml.spaces2
-    def asJsonManifest: Json = obj.asJson.deepDropNullValues
-  }
+object implicits {
+  implicit def convertToOption[T](t: T): Option[T] = Some(t)
+  implicit def convertToIntValue(i: Int): IntOrString = IntValue(i)
+  implicit def convertToStringValue(s: String): IntOrString = StringValue(s)
+  implicit def convertToIntValueOpt(i: Int): Option[IntOrString] = Some(
+    IntValue(i)
+  )
+  implicit def convertToStringValueOpt(s: String): Option[IntOrString] = Some(
+    StringValue(s)
+  )
 }

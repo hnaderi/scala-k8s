@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.hnaderi.sbtk8s
+package dev.hnaderi.k8s.manifest
 
 import io.circe.Json
 import io.circe.yaml.syntax._
