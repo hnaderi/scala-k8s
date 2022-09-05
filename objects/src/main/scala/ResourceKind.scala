@@ -24,9 +24,9 @@ final case class ResourceKind(
 
 trait KObject extends Serializable with Product {
   protected val _resourceKind: ResourceKind
-  final val group: String = _resourceKind.group
-  final val kind: String = _resourceKind.kind
-  final val version: String = _resourceKind.version
-  final val apiVersion: String =
+  final def group: String = _resourceKind.group
+  final lazy val kind: String = _resourceKind.kind
+  final lazy val version: String = _resourceKind.version
+  final lazy val apiVersion: String =
     if (group.isEmpty) version else s"$group/$version"
 }
