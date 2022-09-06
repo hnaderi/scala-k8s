@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package dev.hnaderi.k8s.manifest
-
-import io.circe.Json
-import io.circe.yaml.syntax._
+package dev.hnaderi.k8s
 
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
 object Utils {
-  def toManifest(js: Json*): String =
-    js.map(_.deepDropNullValues.asYaml.spaces2).mkString("\n---\n")
-
   def base64(value: String): String =
     Base64.getEncoder.encodeToString(value.getBytes(StandardCharsets.UTF_8))
 }
