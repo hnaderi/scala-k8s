@@ -1,4 +1,4 @@
-## sbt-k8s
+## scala-k8s
 
 ### Usage
 
