@@ -33,16 +33,26 @@ ${Utils.generateDescription(obj.description)}"""
     val helpers = typeName match {
       case ModelPropertyType.Object(valueType) =>
         s"""
-  def add$capName(newValues: (String, $valueType)*) : $className = copy($fieldName = $result)
-"""
+  /** Adds new values to $fieldName */
+  def add$capName(newValues: (String, $valueType)*) : $className = copy($fieldName = $result)"""
       case ModelPropertyType.List(valueType) =>
         s"""
-  def add$capName(newValues: $valueType*) : $className = copy($fieldName = $result)
-"""
+  /** Appends new values to $fieldName */
+  def add$capName(newValues: $valueType*) : $className = copy($fieldName = $result)"""
       case _ => ""
     }
 
-    s"""  def with$capName(value: ${typeName.name}) : $className = copy($fieldName = $value)$helpers"""
+    val transforms =
+      if (prop.required) s"""
+  /** transforms $fieldName to result of function */
+  def map$capName(f: ${typeName.name} => ${typeName.name}) : $className = copy($fieldName = f($fieldName))"""
+      else s"""
+  /** if $fieldName has a value, transforms to the result of function*/
+  def map$capName(f: ${typeName.name} => ${typeName.name}) : $className = copy($fieldName = $fieldName.map(f))"""
+
+    s"""
+  /** Returns a new data with $fieldName set to new value */
+  def with$capName(value: ${typeName.name}) : $className = copy($fieldName = $value)$helpers$transforms"""
   }
   private def builderMethods(
       className: String,
