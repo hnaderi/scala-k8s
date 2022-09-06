@@ -23,7 +23,6 @@ ${Utils.generateDescription(obj.description)}"""
     val value = if (prop.required) "value" else "Some(value)"
     import prop.fieldName
     import prop.typeName
-    val escapedFieldName = s"`${fieldName.replaceAll("$", "")}`"
 
     def result = {
       val construct = if (typeName.isArray) "" else ".toMap"
@@ -34,25 +33,25 @@ ${Utils.generateDescription(obj.description)}"""
     val helpers = typeName match {
       case ModelPropertyType.Object(valueType) =>
         s"""
-  /** Adds new values to $escapedFieldName */
+  /** Adds new values to $fieldName */
   def add$capName(newValues: (String, $valueType)*) : $className = copy($fieldName = $result)"""
       case ModelPropertyType.List(valueType) =>
         s"""
-  /** Appends new values to $escapedFieldName */
+  /** Appends new values to $fieldName */
   def add$capName(newValues: $valueType*) : $className = copy($fieldName = $result)"""
       case _ => ""
     }
 
     val transforms =
       if (prop.required) s"""
-  /** transforms $escapedFieldName to result of function */
+  /** transforms $fieldName to result of function */
   def map$capName(f: ${typeName.name} => ${typeName.name}) : $className = copy($fieldName = f($fieldName))"""
       else s"""
-  /** if $escapedFieldName has a value, transforms to the result of function*/
+  /** if $fieldName has a value, transforms to the result of function*/
   def map$capName(f: ${typeName.name} => ${typeName.name}) : $className = copy($fieldName = $fieldName.map(f))"""
 
     s"""
-  /** Returns a new data with $escapedFieldName set to new value */
+  /** Returns a new data with $fieldName set to new value */
   def with$capName(value: ${typeName.name}) : $className = copy($fieldName = $value)$helpers$transforms"""
   }
   private def builderMethods(
