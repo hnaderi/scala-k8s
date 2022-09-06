@@ -20,11 +20,13 @@ import java.io.File
 import java.net.URI
 import java.nio.file.Path
 
+/** A type that represents data content */
 trait Data extends Any {
   def getContent: String
   def getBase64Content: String
 }
 
+/** A type that represents data content */
 object Data {
   final case class StringValue(value: String) extends AnyVal with Data {
     def getContent: String = value
@@ -44,15 +46,20 @@ object Data {
   def file(path: Path): FileValue = FileValue(path.toFile())
 }
 
+/** Utility for filling data in `ConfigMap` or `Secret` */
 object DataMap {
   private implicit class MapOps(m: Map[String, Data]) {
     def vMap[T](f: Data => T): Map[String, T] =
       m.map { case (k, v) => (k, f(v)) }.toMap
   }
 
+  /** String data map, useful for `ConfigMap` data and `Secret` stringData */
   def apply(values: (String, Data)*): Map[String, String] =
     values.toMap.vMap(_.getContent)
 
+  /** Binary base64 encoded data map, useful for `ConfigMap` binaryData and
+    * `Secret` data
+    */
   def binary(values: (String, Data)*): Map[String, String] =
     values.toMap.vMap(_.getBase64Content)
 }
