@@ -38,7 +38,7 @@ import io.k8s.api.core.v1.ServiceSpec
 import io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
 import io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
 
-import java.nio.file.Path
+import java.nio.file.Paths
 ```
 
 Now we can define any kubernetes object
@@ -61,7 +61,7 @@ val config = ConfigMap(
   ),
   binaryData = DataMap.binary(
     "blob" -> Data.file(".gitignore"),
-    "blob2" -> Path.of(".scalafmt.conf"),
+    "blob2" -> Paths.get(".scalafmt.conf"),
     "other inline data" -> "some other data"
   )
 )
