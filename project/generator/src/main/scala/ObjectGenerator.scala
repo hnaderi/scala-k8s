@@ -18,11 +18,10 @@ ${Utils.generateDescription(obj.description)}"""
     _.map(_.asParam).mkString(",\n  ")
 
   private def builderMethod(className: String, prop: ModelProperty): String = {
-    val capName =
-      prop.dashToCamelName.take(1).toUpperCase() + prop.dashToCamelName.drop(1)
     val value = if (prop.required) "value" else "Some(value)"
     import prop.fieldName
     import prop.typeName
+    import prop.capitalName
 
     def result = {
       val construct = if (typeName.isArray) "" else ".toMap"
@@ -34,25 +33,25 @@ ${Utils.generateDescription(obj.description)}"""
       case ModelPropertyType.Object(valueType) =>
         s"""
   /** Adds new values to $fieldName */
-  def add$capName(newValues: (String, $valueType)*) : $className = copy($fieldName = $result)"""
+  def add$capitalName(newValues: (String, $valueType)*) : $className = copy($fieldName = $result)"""
       case ModelPropertyType.List(valueType) =>
         s"""
   /** Appends new values to $fieldName */
-  def add$capName(newValues: $valueType*) : $className = copy($fieldName = $result)"""
+  def add$capitalName(newValues: $valueType*) : $className = copy($fieldName = $result)"""
       case _ => ""
     }
 
     val transforms =
       if (prop.required) s"""
   /** transforms $fieldName to result of function */
-  def map$capName(f: ${typeName.name} => ${typeName.name}) : $className = copy($fieldName = f($fieldName))"""
+  def map$capitalName(f: ${typeName.name} => ${typeName.name}) : $className = copy($fieldName = f($fieldName))"""
       else s"""
   /** if $fieldName has a value, transforms to the result of function*/
-  def map$capName(f: ${typeName.name} => ${typeName.name}) : $className = copy($fieldName = $fieldName.map(f))"""
+  def map$capitalName(f: ${typeName.name} => ${typeName.name}) : $className = copy($fieldName = $fieldName.map(f))"""
 
     s"""
   /** Returns a new data with $fieldName set to new value */
-  def with$capName(value: ${typeName.name}) : $className = copy($fieldName = $value)$helpers$transforms"""
+  def with$capitalName(value: ${typeName.name}) : $className = copy($fieldName = $value)$helpers$transforms"""
   }
   private def builderMethods(
       className: String,

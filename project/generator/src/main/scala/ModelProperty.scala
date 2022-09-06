@@ -32,14 +32,17 @@ final case class ModelProperty(
   def asParam: String = s"$fieldName : $fullTypename$defaultValue"
   private def defaultValue = default.map(v => s" = $v").getOrElse("")
 
-  val dashToCamelName: String = ModelProperty.dashToCamel(name)
+  private val camelName: String =
+    ModelProperty.dashToCamel(name.replaceAll("\\$", ""))
+  val capitalName = camelName.take(1).toUpperCase() + camelName.drop(1)
 
   val fieldName: String = name match {
-    case "type"                       => "`type`"
-    case "object"                     => "`object`"
-    case "enum"                       => "`enum`"
-    case other if other.contains('-') => s"`$other`"
-    case _                            => name
+    case "type"                         => "`type`"
+    case "object"                       => "`object`"
+    case "enum"                         => "`enum`"
+    case other if other.contains('-')   => s"`$other`"
+    case other if other.startsWith("$") => other.tail
+    case _                              => name
   }
 }
 
