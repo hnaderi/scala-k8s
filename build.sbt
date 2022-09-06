@@ -75,6 +75,12 @@ lazy val docs = project
   .in(file("site"))
   .enablePlugins(TypelevelSitePlugin)
   .dependsOn(manifests.jvm)
+  .settings(
+    tlSiteRelatedProjects := Seq(
+      "Kubernetes" -> url("https://github.com/kubernetes/kubernetes"),
+      "Circe" -> url("https://github.com/circe/circe")
+    )
+  )
 
 lazy val unidocs = project
   .in(file("unidocs"))
