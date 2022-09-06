@@ -68,7 +68,10 @@ object ModelProperty {
       )
     }
 
-    val props = properties.map { case (n, p) => modelPropertyFor(n, p) }.toSeq
+    val props = properties
+      .map { case (n, p) => modelPropertyFor(n, p) }
+      .toSeq
+      .sortBy(!_.required)
     val hasKindOrAPIVersion = props.exists(_.isKindOrAPIVersion)
     (props.filterNot(_.isKindOrAPIVersion), hasKindOrAPIVersion)
   }
