@@ -28,4 +28,7 @@ libraryDependencies ++= Seq(
 )
 ```
 
-visit [Project site](https://projects.hnaderi.dev/scala-k8s) to see more tutorials and docs.
+visit [project site](https://projects.hnaderi.dev/scala-k8s) to see more tutorials and docs.
+
+## sbt integration
+see [this project](https://github.com/hnaderi/sbt-k8s)
