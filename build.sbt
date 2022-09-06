@@ -71,7 +71,10 @@ lazy val manifests = crossProject(JVMPlatform)
   )
   .dependsOn(circe)
 
-lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
+lazy val docs = project
+  .in(file("site"))
+  .enablePlugins(TypelevelSitePlugin)
+  .dependsOn(manifests.jvm)
 
 lazy val unidocs = project
   .in(file("unidocs"))
