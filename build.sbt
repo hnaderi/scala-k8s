@@ -27,7 +27,7 @@ enablePlugins(AutomateHeaderPlugin)
 
 lazy val root =
   tlCrossRootProject
-    .aggregate(objects, circe, manifests, cookbook, docs, unidocs)
+    .aggregate(objects, circe, manifests, docs, unidocs)
     .settings(
       name := "scala-k8s"
     )
@@ -75,18 +75,6 @@ lazy val manifests = crossProject(JVMPlatform)
     )
   )
   .dependsOn(circe)
-
-lazy val cookbook = crossProject(
-  JVMPlatform,
-  JSPlatform
-) // , NativePlatform) //TODO enable after munit support scala3
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-cookbook",
-    description := "kubernetes manifest recipes",
-    libraryDependencies += "org.scalameta" %%% "munit" % munitVersion % Test
-  )
-  .dependsOn(objects)
 
 lazy val docs = project
   .in(file("site"))
