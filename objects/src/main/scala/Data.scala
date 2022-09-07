@@ -44,6 +44,24 @@ object Data {
   def file(path: String): FileValue = FileValue(new File(path))
   def file(uri: URI): FileValue = FileValue(new File(uri))
   def file(path: Path): FileValue = FileValue(path.toFile())
+
+  /** creates a data map for all files in a given directory
+    * @note
+    *   this is not a safe operation and has side effects
+    * @throws Exception
+    */
+  def fromDir(path: File): Map[String, FileValue] = {
+    val files = path.listFiles()
+    if (files == null) Map.empty
+    else files.toList.map(f => (f.getName(), Data(f))).toMap
+  }
+
+  /** creates a data map for all files in a given directory
+    * @note
+    *   this is not a safe operation and has side effects
+    * @throws Exception
+    */
+  def fromDir(path: Path): Map[String, FileValue] = fromDir(path.toFile())
 }
 
 /** Utility for filling data in `ConfigMap` or `Secret` */
@@ -53,13 +71,40 @@ object DataMap {
       m.map { case (k, v) => (k, f(v)) }.toMap
   }
 
-  /** String data map, useful for `ConfigMap` data and `Secret` stringData */
+  /** String data map, useful for `ConfigMap` data and `Secret` stringData
+    * @note
+    *   this is not a safe operation and might have side effects
+    * @throws Exception
+    */
   def apply(values: (String, Data)*): Map[String, String] =
     values.toMap.vMap(_.getContent)
 
   /** Binary base64 encoded data map, useful for `ConfigMap` binaryData and
     * `Secret` data
+    * @note
+    *   this is not a safe operation and might have side effects
+    * @throws Exception
     */
   def binary(values: (String, Data)*): Map[String, String] =
     values.toMap.vMap(_.getBase64Content)
+
+  /** String data map from all files in a directory, keys are file names and
+    * values are file content
+    * @note
+    *   this is not a safe operation and might have side effects
+    * @throws Exception
+    */
+  def fromDir(path: File): Map[String, String] = apply(
+    Data.fromDir(path).toSeq: _*
+  )
+
+  /** Binary data map from all files in a directory, keys are file names and
+    * values are file content
+    * @note
+    *   this is not a safe operation and might have side effects
+    * @throws Exception
+    */
+  def binaryFromDir(path: File): Map[String, String] = binary(
+    Data.fromDir(path).toSeq: _*
+  )
 }
