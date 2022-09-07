@@ -16,22 +16,18 @@
 
 package dev.hnaderi.k8s
 
+import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.io.File
-import java.net.URI
 
 final case class FileValue(value: Path) extends AnyVal with Data {
   def getContent: String = scala.io.Source.fromFile(value.toFile()).mkString
   def getBase64Content: String = Utils.base64(getContent)
 }
 trait DataPlatform {
-
   implicit def apply(value: File): FileValue = FileValue(value.toPath())
   implicit def apply(value: Path): FileValue = file(value)
-  implicit def apply(value: URI): FileValue = file(value)
   def file(path: String): FileValue = FileValue(Paths.get(path))
-  def file(uri: URI): FileValue = FileValue(new File(uri).toPath())
   def file(path: Path): FileValue = FileValue(path)
 
   /** creates a data map for all files in a given directory
@@ -54,8 +50,8 @@ trait DataPlatform {
 }
 
 trait DataMapPlatform {
-  def apply(values: Map[String, Data]): Map[String, String]
-  def binary(values: Map[String, Data]): Map[String, String]
+  def from(values: Map[String, Data]): Map[String, String]
+  def binaryFrom(values: Map[String, Data]): Map[String, String]
 
   /** String data map from all files in a directory, keys are file names and
     * values are file content
@@ -63,7 +59,7 @@ trait DataMapPlatform {
     *   this is not a safe operation and might have side effects and throw
     *   exceptions too
     */
-  def fromDir(path: File): Map[String, String] = apply(Data.fromDir(path))
+  def fromDir(path: File): Map[String, String] = from(Data.fromDir(path))
 
   /** Binary data map from all files in a directory, keys are file names and
     * values are file content
@@ -71,7 +67,7 @@ trait DataMapPlatform {
     *   this is not a safe operation and might have side effects and throw
     *   exceptions too
     */
-  def binaryFromDir(path: File): Map[String, String] = binary(
+  def binaryFromDir(path: File): Map[String, String] = binaryFrom(
     Data.fromDir(path)
   )
 }

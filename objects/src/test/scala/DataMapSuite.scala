@@ -24,4 +24,8 @@ class DataMapSuite extends FunSuite {
     assertEquals(Data(string).value, string)
     assertEquals(Data(string), Data.StringValue(string))
   }
+
+  test("inline binary") {
+    assertEquals(DataMap.binary("abc" -> "def"), Map("abc" -> "ZGVm"))
+  }
 }
