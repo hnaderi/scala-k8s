@@ -47,8 +47,8 @@ object Data {
 
   /** creates a data map for all files in a given directory
     * @note
-    *   this is not a safe operation and has side effects
-    * @throws Exception
+    *   this is not a safe operation and has side effects and might throw
+    *   exceptions too
     */
   def fromDir(path: File): Map[String, FileValue] = {
     val files = path.listFiles()
@@ -58,8 +58,8 @@ object Data {
 
   /** creates a data map for all files in a given directory
     * @note
-    *   this is not a safe operation and has side effects
-    * @throws Exception
+    *   this is not a safe operation and has side effects and might throw
+    *   exceptions too
     */
   def fromDir(path: Path): Map[String, FileValue] = fromDir(path.toFile())
 }
@@ -73,26 +73,43 @@ object DataMap {
 
   /** String data map, useful for `ConfigMap` data and `Secret` stringData
     * @note
-    *   this is not a safe operation and might have side effects
-    * @throws Exception
+    *   this is not a safe operation and might have side effects and throw
+    *   exceptions too
+    */
+  def apply(values: Map[String, Data]): Map[String, String] =
+    values.vMap(_.getContent)
+
+  /** String data map, useful for `ConfigMap` data and `Secret` stringData
+    * @note
+    *   this is not a safe operation and might have side effects and throw
+    *   exceptions too
     */
   def apply(values: (String, Data)*): Map[String, String] =
-    values.toMap.vMap(_.getContent)
+    apply(values.toMap)
 
   /** Binary base64 encoded data map, useful for `ConfigMap` binaryData and
     * `Secret` data
     * @note
-    *   this is not a safe operation and might have side effects
-    * @throws Exception
+    *   this is not a safe operation and might have side effects and throw
+    *   exceptions too
+    */
+  def binary(values: Map[String, Data]): Map[String, String] =
+    values.vMap(_.getBase64Content)
+
+  /** Binary base64 encoded data map, useful for `ConfigMap` binaryData and
+    * `Secret` data
+    * @note
+    *   this is not a safe operation and might have side effects and throw
+    *   exceptions too
     */
   def binary(values: (String, Data)*): Map[String, String] =
-    values.toMap.vMap(_.getBase64Content)
+    binary(values.toMap)
 
   /** String data map from all files in a directory, keys are file names and
     * values are file content
     * @note
-    *   this is not a safe operation and might have side effects
-    * @throws Exception
+    *   this is not a safe operation and might have side effects and throw
+    *   exceptions too
     */
   def fromDir(path: File): Map[String, String] = apply(
     Data.fromDir(path).toSeq: _*
@@ -101,8 +118,8 @@ object DataMap {
   /** Binary data map from all files in a directory, keys are file names and
     * values are file content
     * @note
-    *   this is not a safe operation and might have side effects
-    * @throws Exception
+    *   this is not a safe operation and might have side effects and throw
+    *   exceptions too
     */
   def binaryFromDir(path: File): Map[String, String] = binary(
     Data.fromDir(path).toSeq: _*
