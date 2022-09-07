@@ -27,12 +27,13 @@ enablePlugins(AutomateHeaderPlugin)
 
 lazy val root =
   tlCrossRootProject
-    .aggregate(objects, circe, manifests, docs, unidocs)
+    .aggregate(objects, circe, manifests, cookbook, docs, unidocs)
     .settings(
       name := "scala-k8s"
     )
 
 lazy val circeVersion = "0.14.1"
+lazy val munitVersion = "0.7.29"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
@@ -70,6 +71,15 @@ lazy val manifests = crossProject(JVMPlatform)
     )
   )
   .dependsOn(circe)
+
+lazy val cookbook = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "scala-k8s-cookbook",
+    description := "kubernetes manifest recipes",
+    libraryDependencies += "org.scalameta" %%% "munit" % munitVersion % Test
+  )
+  .dependsOn(objects)
 
 lazy val docs = project
   .in(file("site"))
