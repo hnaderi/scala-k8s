@@ -31,7 +31,7 @@ import io.k8s.api.core.v1.Volume
 import io.k8s.api.core.v1.VolumeMount
 import io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
 
-sealed abstract class EnvironmentDefinition extends Serializable with Product {
+abstract class EnvironmentDefinition extends Serializable with Product {
   def configMap: Option[ConfigMap] = None
   def secret: Option[Secret] = None
   def env: Option[EnvVar] = None
