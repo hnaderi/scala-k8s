@@ -37,12 +37,16 @@ lazy val munitVersion = "0.7.29"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
-lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+lazy val objects = crossProject(
+  JVMPlatform,
+  JSPlatform
+) // , NativePlatform) //TODO enable after munit support for scala3
   .crossType(CrossType.Pure)
   .settings(
     name := "scala-k8s-objects",
     description := "data models for kubernetes",
-    k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala"
+    k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala",
+    libraryDependencies += "org.scalameta" %%% "munit" % munitVersion % Test
   )
   .enablePlugins(KubernetesObjectGeneratorPlugin)
 
@@ -72,7 +76,10 @@ lazy val manifests = crossProject(JVMPlatform)
   )
   .dependsOn(circe)
 
-lazy val cookbook = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+lazy val cookbook = crossProject(
+  JVMPlatform,
+  JSPlatform
+) // , NativePlatform) //TODO enable after munit support scala3
   .crossType(CrossType.Pure)
   .settings(
     name := "scala-k8s-cookbook",
