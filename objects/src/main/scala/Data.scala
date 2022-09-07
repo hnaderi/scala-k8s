@@ -16,10 +16,6 @@
 
 package dev.hnaderi.k8s
 
-import java.io.File
-import java.net.URI
-import java.nio.file.Path
-
 /** A type that represents data content */
 trait Data extends Any {
   def getContent: String
@@ -27,45 +23,16 @@ trait Data extends Any {
 }
 
 /** A type that represents data content */
-object Data {
+object Data extends DataPlatform {
   final case class StringValue(value: String) extends AnyVal with Data {
     def getContent: String = value
     def getBase64Content: String = Utils.base64(value)
   }
-  final case class FileValue(value: File) extends AnyVal with Data {
-    def getContent: String = scala.io.Source.fromFile(value).mkString
-    def getBase64Content: String = Utils.base64(getContent)
-  }
-
   implicit def apply(value: String): StringValue = StringValue(value)
-  implicit def apply(value: File): FileValue = FileValue(value)
-  implicit def apply(value: Path): FileValue = file(value)
-  implicit def apply(value: URI): FileValue = file(value)
-  def file(path: String): FileValue = FileValue(new File(path))
-  def file(uri: URI): FileValue = FileValue(new File(uri))
-  def file(path: Path): FileValue = FileValue(path.toFile())
-
-  /** creates a data map for all files in a given directory
-    * @note
-    *   this is not a safe operation and has side effects and might throw
-    *   exceptions too
-    */
-  def fromDir(path: File): Map[String, FileValue] = {
-    val files = path.listFiles()
-    if (files == null) Map.empty
-    else files.toList.map(f => (f.getName(), Data(f))).toMap
-  }
-
-  /** creates a data map for all files in a given directory
-    * @note
-    *   this is not a safe operation and has side effects and might throw
-    *   exceptions too
-    */
-  def fromDir(path: Path): Map[String, FileValue] = fromDir(path.toFile())
 }
 
 /** Utility for filling data in `ConfigMap` or `Secret` */
-object DataMap {
+object DataMap extends DataMapPlatform {
   private implicit class MapOps(m: Map[String, Data]) {
     def vMap[T](f: Data => T): Map[String, T] =
       m.map { case (k, v) => (k, f(v)) }.toMap
@@ -104,24 +71,4 @@ object DataMap {
     */
   def binary(values: (String, Data)*): Map[String, String] =
     binary(values.toMap)
-
-  /** String data map from all files in a directory, keys are file names and
-    * values are file content
-    * @note
-    *   this is not a safe operation and might have side effects and throw
-    *   exceptions too
-    */
-  def fromDir(path: File): Map[String, String] = apply(
-    Data.fromDir(path).toSeq: _*
-  )
-
-  /** Binary data map from all files in a directory, keys are file names and
-    * values are file content
-    * @note
-    *   this is not a safe operation and might have side effects and throw
-    *   exceptions too
-    */
-  def binaryFromDir(path: File): Map[String, String] = binary(
-    Data.fromDir(path).toSeq: _*
-  )
 }
