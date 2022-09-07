@@ -18,17 +18,17 @@ package dev.hnaderi.k8s
 
 import java.io.File
 import java.nio.file.Path
-import java.nio.file.Paths
 
-final case class FileValue(value: Path) extends AnyVal with Data {
-  def getContent: String = scala.io.Source.fromFile(value.toFile()).mkString
+final case class FileValue(value: File) extends AnyVal with Data {
+  def getContent: String = scala.io.Source.fromFile(value).mkString
   def getBase64Content: String = Utils.base64(getContent)
 }
+
 trait DataPlatform {
-  implicit def apply(value: File): FileValue = FileValue(value.toPath())
+  implicit def apply(value: File): FileValue = FileValue(value)
   implicit def apply(value: Path): FileValue = file(value)
-  def file(path: String): FileValue = FileValue(Paths.get(path))
-  def file(path: Path): FileValue = FileValue(path)
+  def file(path: String): FileValue = FileValue(new File(path))
+  def file(path: Path): FileValue = FileValue(path.toFile())
 
   /** creates a data map for all files in a given directory
     * @note
