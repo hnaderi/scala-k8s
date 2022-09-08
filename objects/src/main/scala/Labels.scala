@@ -21,28 +21,31 @@ package dev.hnaderi.k8s
   */
 object Labels {
 
+  val name: String = "app.kubernetes.io/name"
+  val instance: String = "app.kubernetes.io/instance"
+  val version: String = "app.kubernetes.io/version"
+  val component: String = "app.kubernetes.io/component"
+  val partOf: String = "app.kubernetes.io/part-of"
+  val managedBy: String = "app.kubernetes.io/managed-by"
+
   /** The name of the application */
-  def name(value: String): (String, String) = s"app.kubernetes.io/name" -> value
+  def name(value: String): (String, String) = name -> value
 
   /** A unique name identifying the instance of an application */
-  def instance(value: String): (String, String) =
-    s"app.kubernetes.io/instance" -> value
+  def instance(value: String): (String, String) = instance -> value
 
   /** The current version of the application (e.g., a semantic version, revision
     * hash, etc.)
     */
-  def version(value: String): (String, String) =
-    s"app.kubernetes.io/version" -> value
+  def version(value: String): (String, String) = version -> value
 
   /** The component within the architecture */
-  def component(value: String): (String, String) =
-    s"app.kubernetes.io/component" -> value
+  def component(value: String): (String, String) = component -> value
 
   /** The name of a higher level application this one is part of */
-  def partOf(value: String): (String, String) =
-    s"app.kubernetes.io/part-of" -> value
+  def partOf(value: String): (String, String) = partOf -> value
 
   /** The tool being used to manage the operation of an application */
-  def managedBy(value: String): (String, String) =
-    s"app.kubernetes.io/managed-by" -> value
+  def managedBy(value: String): (String, String) = managedBy -> value
+
 }
