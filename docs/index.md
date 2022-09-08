@@ -39,6 +39,7 @@ import io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
 import io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
 
 import java.nio.file.Paths
+import java.io.File
 ```
 
 Now we can define any kubernetes object
@@ -64,6 +65,14 @@ val config = ConfigMap(
     "blob2" -> Paths.get(".scalafmt.conf"),
     "other inline data" -> "some other data"
   )
+)
+```
+
+or even from a whole directory, like `kubectl`
+
+```scala mdoc:silent
+val config2 = ConfigMap(
+  data = DataMap.fromDir(new File("objects/src/test/resources/data"))
 )
 ```
 
@@ -124,7 +133,7 @@ println(manifest)
 You can also use helpers to manipulate data models easily
 
 ```scala mdoc:silent
-val config2 = config
+val config3 = config
   .addData("new-key" -> "new value")
   .withImmutable(true)
   .mapMetadata(_.withName("new-config").withNamespace("production"))
@@ -138,5 +147,5 @@ All fields have the following helper methods:
 
 
 ```scala mdoc
-println(config2.asManifest)
+println(config3.asManifest)
 ```
