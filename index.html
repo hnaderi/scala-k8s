@@ -143,6 +143,10 @@
     </span><span class="string-literal">&quot;other inline data&quot;</span><span> -&gt; </span><span class="string-literal">&quot;some other data&quot;</span><span>
   )
 )</span></code></pre>
+        <p>or even from a whole directory, like <code>kubectl</code></p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">config2</span><span> = </span><span class="type-name">ConfigMap</span><span>(
+  </span><span class="identifier">data</span><span> = </span><span class="type-name">DataMap</span><span>.</span><span class="identifier">fromDir</span><span>(</span><span class="keyword">new</span><span> </span><span class="type-name">File</span><span>(</span><span class="string-literal">&quot;objects/src/test/resources/data&quot;</span><span>))
+)</span></code></pre>
         
         <h4 id="deployment-example" class="section">Deployment example<a class="anchor-link right" href="#deployment-example"><i class="icofont-laika">&#xef71;</i></a></h4>
         <pre><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">deployment</span><span> = </span><span class="type-name">Deployment</span><span>(
@@ -202,17 +206,17 @@
 //   some config: some value
 //   config file: |
 //     use flake
+// kind: ConfigMap
+// binaryData:
+//   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
+//   blob2: dmVyc2lvbiA9IDMuNC4zCnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
+//   other inline data: c29tZSBvdGhlciBkYXRh
 // metadata:
 //   name: example
 //   labels:
 //     app.kubernetes.io/name: example
 //     app.kubernetes.io/instance: one
 //   namespace: staging
-// binaryData:
-//   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
-//   blob2: dmVyc2lvbiA9IDMuNC4zCnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
-//   other inline data: c29tZSBvdGhlciBkYXRh
-// kind: ConfigMap
 // 
 // ---
 // spec:
@@ -233,7 +237,7 @@
         
         <h3 id="helpers" class="section">Helpers<a class="anchor-link right" href="#helpers"><i class="icofont-laika">&#xef71;</i></a></h3>
         <p>You can also use helpers to manipulate data models easily</p>
-        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">config2</span><span> = </span><span class="identifier">config</span><span>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">config3</span><span> = </span><span class="identifier">config</span><span>
   .</span><span class="identifier">addData</span><span>(</span><span class="string-literal">&quot;new-key&quot;</span><span> -&gt; </span><span class="string-literal">&quot;new value&quot;</span><span>)
   .</span><span class="identifier">withImmutable</span><span>(</span><span class="boolean-literal">true</span><span>)
   .</span><span class="identifier">mapMetadata</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">withName</span><span>(</span><span class="string-literal">&quot;new-config&quot;</span><span>).</span><span class="identifier">withNamespace</span><span>(</span><span class="string-literal">&quot;production&quot;</span><span>))</span></code></pre>
@@ -243,25 +247,25 @@
           <li><code>addFieldName</code> for lists and maps, adds new values</li>
           <li><code>mapFieldName</code> transforms using a function</li>
         </ul>
-        <pre><code class="nohighlight"><span class="identifier">println</span><span>(</span><span class="identifier">config2</span><span>.</span><span class="identifier">asManifest</span><span>)
-</span><span class="comment">// metadata:
+        <pre><code class="nohighlight"><span class="identifier">println</span><span>(</span><span class="identifier">config3</span><span>.</span><span class="identifier">asManifest</span><span>)
+</span><span class="comment">// binaryData:
+//   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
+//   blob2: dmVyc2lvbiA9IDMuNC4zCnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
+//   other inline data: c29tZSBvdGhlciBkYXRh
+// kind: ConfigMap
+// data:
+//   some config: some value
+//   config file: |
+//     use flake
+//   new-key: new value
+// apiVersion: v1
+// metadata:
 //   name: new-config
 //   labels:
 //     app.kubernetes.io/name: example
 //     app.kubernetes.io/instance: one
 //   namespace: production
 // immutable: true
-// binaryData:
-//   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
-//   blob2: dmVyc2lvbiA9IDMuNC4zCnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
-//   other inline data: c29tZSBvdGhlciBkYXRh
-// apiVersion: v1
-// data:
-//   some config: some value
-//   config file: |
-//     use flake
-//   new-key: new value
-// kind: ConfigMap
 //</span></code></pre>
 
         <hr style="margin-top: 30px"/>
