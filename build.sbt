@@ -32,7 +32,7 @@ lazy val root =
       name := "scala-k8s"
     )
 
-lazy val circeVersion = "0.14.1"
+lazy val circeVersion = "0.14.2"
 lazy val munitVersion = "0.7.29"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
