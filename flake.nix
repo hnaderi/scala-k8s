@@ -16,7 +16,7 @@
       {
         devShell = pkgs.devshell.mkShell {
           imports = [ typelevel-nix.typelevelShell ];
-          name = "sbt-k8s-shell";
+          name = "scala-k8s-shell";
           typelevelShell = {
             jdk.package = pkgs.jdk8;
             nodejs.enable = true;
