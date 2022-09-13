@@ -156,18 +156,14 @@ object $name {
       case _                => return ""
     }
 
-    def encodeValueFor(p: ModelProperty) =
-      if (p.required) s"o.${p.fieldName}.encodeTo"
-      else s"o.${p.fieldName}.map(_.encodeTo)"
-
     def encoderFieldFor(p: ModelProperty) =
-      s""""${p.name}"""" -> encodeValueFor(p)
+      s""""${p.name}"""" -> s"o.${p.fieldName}"
 
     val additionalFields =
       if (hasAdditionalEnc)
         Seq(
-          "\"kind\"" -> "builder.of(o.kind)",
-          "\"apiVersion\"" -> "builder.of(o.apiVersion)"
+          "\"kind\"" -> "o.kind",
+          "\"apiVersion\"" -> "o.apiVersion"
         )
       else Nil
 
