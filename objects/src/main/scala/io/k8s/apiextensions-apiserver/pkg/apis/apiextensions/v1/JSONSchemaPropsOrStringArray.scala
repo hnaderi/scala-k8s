@@ -16,6 +16,8 @@
 
 package io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1
 
+import dev.hnaderi.k8s.utils._
+
 /* JSONSchemaPropsOrStringArray represents a JSONSchemaProps or a string array. */
 sealed trait JSONSchemaPropsOrStringArray extends Any
 object JSONSchemaPropsOrStringArray {
@@ -30,4 +32,12 @@ object JSONSchemaPropsOrStringArray {
   def apply(value: String, others: String*): StringList = StringList(
     value +: others
   )
+
+  implicit def encoder[T: Builder]: Encoder[JSONSchemaPropsOrStringArray, T] =
+    new Encoder[JSONSchemaPropsOrStringArray, T] {
+      def apply(r: JSONSchemaPropsOrStringArray): T = r match {
+        case PropsValue(value) => value.encodeTo
+        case StringList(value) => value.encodeTo
+      }
+    }
 }

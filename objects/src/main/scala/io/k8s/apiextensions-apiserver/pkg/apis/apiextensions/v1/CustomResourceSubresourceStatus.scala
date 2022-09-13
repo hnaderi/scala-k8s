@@ -16,6 +16,8 @@
 
 package io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1
 
+import dev.hnaderi.k8s.utils._
+
 /** CustomResourceSubresourceStatus defines how to serve the status subresource
   * for CustomResources. Status is represented by the `.status` JSON path inside
   * of a CustomResource. When set, * exposes a /status subresource for the
@@ -25,5 +27,8 @@ package io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1
   * stanza
   */
 final case class CustomResourceSubresourceStatus()
-object CustomResourceSubresourceStatus {}
+object CustomResourceSubresourceStatus {
+  implicit def encoder[T: Builder]
+      : Encoder[CustomResourceSubresourceStatus, T] = Encoder.emptyObj
+}
 //TODO

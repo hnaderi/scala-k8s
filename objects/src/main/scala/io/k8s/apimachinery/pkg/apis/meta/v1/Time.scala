@@ -16,9 +16,19 @@
 
 package io.k8s.apimachinery.pkg.apis.meta.v1
 
+import dev.hnaderi.k8s.utils._
+
 /** Time is a wrapper around time.Time which supports correct marshaling to YAML
   * and JSON. Wrappers are provided for many of the factory methods that the
   * time package offers.
   */
 final case class Time(value: String) extends AnyVal
 //TODO
+
+object Time {
+  implicit def encoder[T](implicit
+      builder: Builder[T]
+  ): Encoder[Time, T] = new Encoder[Time, T] {
+    def apply(r: Time): T = builder.of(r.value)
+  }
+}

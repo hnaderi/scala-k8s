@@ -29,4 +29,6 @@ trait KObject extends Serializable with Product {
   final lazy val version: String = _resourceKind.version
   final lazy val apiVersion: String =
     if (group.isEmpty) version else s"$group/$version"
+
+  def foldTo[T: utils.Builder]: T
 }

@@ -63,13 +63,19 @@ ${Utils.generateDescription(obj.description)}"""
 
   private val resource: CodeGeneratorFor[Resource] = { t =>
     import t._
-    s"""${t.header("dev.hnaderi.k8s._")}
+    s"""${t.header("dev.hnaderi.k8s._", "dev.hnaderi.k8s.utils._")}
 final case class $name(
   ${printProps(properties.filterNot(_.isKindOrAPIVersion))}
 ) extends KObject {
   protected val _resourceKind = ResourceKind("${kind.group}", "${kind.kind}", "${kind.version}")
 
 ${builderMethods(name, properties)}
+
+  override def foldTo[T : Builder] : T = $name.encoder[T].apply(this)
+}
+
+object $name {
+${foldToTree(t)}
 }
 """
   }
@@ -83,7 +89,7 @@ ${builderMethods(name, properties)}
       )
       .mkString(",\n")
 
-    s"""${t.header("dev.hnaderi.k8s._")}
+    s"""${t.header("dev.hnaderi.k8s._", "dev.hnaderi.k8s.utils._")}
 
 final case class $name(
   kind: String,
@@ -95,27 +101,33 @@ object $name {
   val knownKinds : Seq[ResourceKind] = Seq(
 $supportedKinds
   )
+
+${foldToTree(t)}
 }
 """
   }
 
   private val subResource: CodeGeneratorFor[SubResource] = { t =>
     import t._
-    s"""${t.header()}
+    s"""${t.header("dev.hnaderi.k8s.utils._")}
 final case class $name(
   ${printProps(properties)}
 ) {
 ${builderMethods(name, properties)}
+}
+
+object $name {
+${foldToTree(t)}
 }
 """
   }
 
   private val primitive: CodeGeneratorFor[Primitive] = { t =>
     import t._
-    s"""${t.header()}
+    s"""${t.header("dev.hnaderi.k8s.utils._")}
 trait $name
 object $name {
-
+  implicit def encoder[T](implicit builder : Builder[T]) : Encoder[$name, T] = ???
 }
 """
   }
@@ -132,5 +144,46 @@ object $name {
       scg.unmanaged(pkg = p.pkg, name = p.name).write(print(p))
     case other =>
       scg.managed(pkg = other.pkg, name = other.name).write(print(other))
+  }
+
+  private def foldToTree(model: DataModel): String = {
+    val tpe = s"${model.pkg.replace('-', '_')}.${model.name}"
+
+    val (ps, hasAdditionalEnc, hasAdditionalDec) = model match {
+      case r: Resource      => (r.properties, true, false)
+      case sr: SubResource  => (sr.properties, false, false)
+      case mr: MetaResource => (mr.properties, false, true)
+      case _                => return ""
+    }
+
+    def encodeValueFor(p: ModelProperty) =
+      if (p.required) s"o.${p.fieldName}.encodeTo"
+      else s"o.${p.fieldName}.map(_.encodeTo)"
+
+    def encoderFieldFor(p: ModelProperty) =
+      s""""${p.name}"""" -> encodeValueFor(p)
+
+    val additionalFields =
+      if (hasAdditionalEnc)
+        Seq(
+          "\"kind\"" -> "builder.of(o.kind)",
+          "\"apiVersion\"" -> "builder.of(o.apiVersion)"
+        )
+      else Nil
+
+    val encoderFields =
+      (ps.map(encoderFieldFor) ++ additionalFields)
+        .map { case (field, value) => s"            .write($field, $value)" }
+        .mkString("\n")
+
+    s"""
+    implicit def encoder[T](implicit builder : Builder[T]) : Encoder[$tpe, T] = new Encoder[$tpe, T] {
+        def apply(o: $tpe) : T = {
+          val obj = ObjectWriter[T]()
+          obj
+$encoderFields
+            .build
+        }
+    }"""
   }
 }

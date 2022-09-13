@@ -16,6 +16,13 @@
 
 package io.k8s.api.apiserverinternal.v1alpha1
 
+import dev.hnaderi.k8s.utils._
+
 /** StorageVersionSpec is an empty spec. */
 final case class StorageVersionSpec()
 //TODO
+
+object StorageVersionSpec {
+  implicit def encoder[T: Builder]: Encoder[StorageVersionSpec, T] =
+    Encoder.emptyObj
+}

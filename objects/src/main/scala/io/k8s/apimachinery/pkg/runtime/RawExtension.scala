@@ -16,6 +16,8 @@
 
 package io.k8s.apimachinery.pkg.runtime
 
+import dev.hnaderi.k8s.utils._
+
 /** RawExtension is used to hold extensions in external versions.
   *
   * To use this, make a field which has RawExtension as its type in your
@@ -52,3 +54,11 @@ package io.k8s.apimachinery.pkg.runtime
   */
 final case class RawExtension()
 //TODO
+
+object RawExtension {
+  implicit def encoder[T](implicit
+      builder: Builder[T]
+  ): Encoder[RawExtension, T] = new Encoder[RawExtension, T] {
+    def apply(r: RawExtension): T = builder.ofFields()
+  }
+}

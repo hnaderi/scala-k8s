@@ -16,6 +16,8 @@
 
 package io.k8s.apimachinery.pkg.apis.meta.v1
 
+import dev.hnaderi.k8s.utils._
+
 /** FieldsV1 stores a set of fields in a data structure like a Trie, in JSON
   * format.
   *
@@ -31,5 +33,7 @@ package io.k8s.apimachinery.pkg.apis.meta.v1
   * The exact format is defined in sigs.k8s.io/structured-merge-diff
   */
 final case class FieldsV1()
-object FieldsV1 {}
+object FieldsV1 {
+  implicit def encoder[T: Builder]: Encoder[FieldsV1, T] = Encoder.emptyObj
+}
 //TODO

@@ -16,6 +16,8 @@
 
 package io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1
 
+import dev.hnaderi.k8s.utils._
+
 /* JSONSchemaPropsOrBool represents JSONSchemaProps or a boolean value. Defaults to true for the boolean property. */
 sealed trait JSONSchemaPropsOrBool extends Any
 object JSONSchemaPropsOrBool {
@@ -27,4 +29,12 @@ object JSONSchemaPropsOrBool {
       with JSONSchemaPropsOrBool
   def apply(value: JSONSchemaProps): PropsValue = PropsValue(value)
   def apply(value: Boolean): BoolValue = BoolValue(value)
+
+  implicit def encoder[T: Builder]: Encoder[JSONSchemaPropsOrBool, T] =
+    new Encoder[JSONSchemaPropsOrBool, T] {
+      def apply(r: JSONSchemaPropsOrBool): T = r match {
+        case PropsValue(value) => value.encodeTo
+        case BoolValue(value)  => value.encodeTo
+      }
+    }
 }

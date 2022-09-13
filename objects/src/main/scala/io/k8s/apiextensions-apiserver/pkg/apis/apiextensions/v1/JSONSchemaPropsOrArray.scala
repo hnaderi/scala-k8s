@@ -16,6 +16,8 @@
 
 package io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1
 
+import dev.hnaderi.k8s.utils._
+
 /* JSONSchemaPropsOrArray represents a value that can either be a JSONSchemaProps or an array of JSONSchemaProps. Mainly here for serialization purposes. */
 sealed trait JSONSchemaPropsOrArray extends Any
 object JSONSchemaPropsOrArray {
@@ -31,4 +33,12 @@ object JSONSchemaPropsOrArray {
       v2: JSONSchemaProps,
       others: JSONSchemaProps*
   ): MutipleValues = MutipleValues(Seq(v1, v2) ++ others)
+
+  implicit def encoder[T: Builder]: Encoder[JSONSchemaPropsOrArray, T] =
+    new Encoder[JSONSchemaPropsOrArray, T] {
+      def apply(r: JSONSchemaPropsOrArray): T = r match {
+        case MutipleValues(value) => value.encodeTo
+        case SingleValue(value)   => value.encodeTo
+      }
+    }
 }

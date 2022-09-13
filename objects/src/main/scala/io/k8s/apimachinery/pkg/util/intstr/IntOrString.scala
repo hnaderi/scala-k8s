@@ -16,6 +16,8 @@
 
 package io.k8s.apimachinery.pkg.util.intstr
 
+import dev.hnaderi.k8s.utils._
+
 /** IntOrString is a type that can hold an int32 or a string. When used in JSON
   * or YAML marshalling and unmarshalling, it produces or consumes the inner
   * type. This allows you to have, for example, a JSON field that can accept a
@@ -27,4 +29,13 @@ object IntOrString {
   final case class StringValue(value: String) extends AnyVal with IntOrString
   def apply(int: Int): IntValue = IntValue(int)
   def apply(str: String): StringValue = StringValue(str)
+
+  implicit def encoder[T](implicit
+      builder: Builder[T]
+  ): Encoder[IntOrString, T] = new Encoder[IntOrString, T] {
+    def apply(r: IntOrString): T = r match {
+      case IntValue(i)    => builder.of(i)
+      case StringValue(s) => builder.of(s)
+    }
+  }
 }

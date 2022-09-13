@@ -16,6 +16,8 @@
 
 package io.k8s.apimachinery.pkg.api.resource
 
+import dev.hnaderi.k8s.utils._
+
 /** Quantity is a fixed-point representation of a number. It provides convenient
   * marshaling/unmarshaling in JSON and YAML, in addition to String() and
   * AsInt64() accessors.
@@ -75,3 +77,11 @@ package io.k8s.apimachinery.pkg.api.resource
   */
 final case class Quantity(value: String) extends AnyVal
 //TODO
+
+object Quantity {
+  implicit def encoder[T](implicit
+      builder: Builder[T]
+  ): Encoder[Quantity, T] = new Encoder[Quantity, T] {
+    def apply(r: Quantity): T = builder.of(r.value)
+  }
+}

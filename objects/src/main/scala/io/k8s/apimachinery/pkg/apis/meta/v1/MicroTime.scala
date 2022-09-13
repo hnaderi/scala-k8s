@@ -16,6 +16,16 @@
 
 package io.k8s.apimachinery.pkg.apis.meta.v1
 
+import dev.hnaderi.k8s.utils._
+
 /** MicroTime is version of Time with microsecond level precision. */
 final case class MicroTime(value: String) extends AnyVal
 //TODO
+
+object MicroTime {
+  implicit def encoder[T](implicit
+      builder: Builder[T]
+  ): Encoder[MicroTime, T] = new Encoder[MicroTime, T] {
+    def apply(r: MicroTime): T = builder.of(r.value)
+  }
+}
