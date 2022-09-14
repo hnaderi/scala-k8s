@@ -27,7 +27,7 @@ enablePlugins(AutomateHeaderPlugin)
 
 lazy val root =
   tlCrossRootProject
-    .aggregate(objects, circe, manifests, docs, unidocs)
+    .aggregate(objects, circe, spray, manifests, docs, unidocs)
     .settings(
       name := "scala-k8s"
     )
@@ -57,6 +57,17 @@ lazy val circe = crossProject(JVMPlatform, JSPlatform)
     description := "circe codecs for kubernetes data models",
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-core" % circeVersion
+    )
+  )
+  .dependsOn(objects)
+
+lazy val spray = crossProject(JVMPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "scala-k8s-spray-json",
+    description := "spray-json codecs for kubernetes data models",
+    libraryDependencies ++= Seq(
+      "io.spray" %%  "spray-json" % "1.3.6"
     )
   )
   .dependsOn(objects)
