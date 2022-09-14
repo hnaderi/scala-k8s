@@ -30,7 +30,7 @@ abstract class Decoder[T, +R] { self =>
       def apply(t: T): Either[String, RR] = {
         self(t) match {
           case Right(value) => Right(value)
-          case other        => dec(t)
+          case _            => dec(t)
         }
       }
     }
