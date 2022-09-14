@@ -20,7 +20,9 @@ object KubernetesObjectGeneratorPlugin extends AutoPlugin {
     val scg =
       new SourceCodeGenerator(managed = managed, unmanaged = unmanaged)
     val sources = spec.map { case (n, d) => DataModel(n, d) }
+
     sources.foreach(ObjectGenerator.write(scg))
+    DecoderGenerator.resources(scg)(sources)
 
     scg.createdFiles
   }

@@ -16,6 +16,9 @@
 
 package dev.hnaderi.k8s
 
+import dev.hnaderi.k8s.utils.Reader
+import dev.hnaderi.k8s.utils.Decoder
+
 final case class ResourceKind(
     group: String,
     kind: String,
@@ -31,4 +34,9 @@ trait KObject extends Serializable with Product {
     if (group.isEmpty) version else s"$group/$version"
 
   def foldTo[T: utils.Builder]: T
+}
+
+object KObject {
+  implicit def decoder[T: Reader]: Decoder[T, KObject] =
+    ResourceCodecs.resourceDecoder
 }

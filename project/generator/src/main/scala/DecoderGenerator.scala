@@ -3,15 +3,6 @@ package dev.hnaderi.k8s.generator
 import DataModel.{Resource, SubResource, MetaResource, Primitive}
 
 object DecoderGenerator {
-  private implicit val kindOrdering: Ordering[Kind] =
-    Ordering.by(k => (k.group, k.kind, k.version))
-  private implicit val dataModelOrdering: Ordering[DataModel] = Ordering.by {
-    case _: DataModel.Primitive    => 0
-    case _: DataModel.SubResource  => 1
-    case _: DataModel.Resource     => 2
-    case _: DataModel.MetaResource => 3
-  }
-
   def apply(model: DataModel): String = {
     import model.name
 
@@ -56,5 +47,81 @@ $indent$constructFields
     }"""
   }
 
-  def resources(all: Seq[DataModel]) = {}
+  private object KObjectCodec {
+    private implicit val kindOrdering: Ordering[Kind] =
+      Ordering.by(k => (k.group, k.kind, k.version))
+    private implicit val dataModelOrdering: Ordering[DataModel] = Ordering.by {
+      case _: DataModel.Primitive    => 0
+      case _: DataModel.SubResource  => 1
+      case _: DataModel.Resource     => 2
+      case _: DataModel.MetaResource => 3
+    }
+
+    def apply(res: Seq[DataModel]) = {
+      val sorted = res.collect { case r: Resource => r }.sortBy(_.kind)
+
+      s"""package dev.hnaderi.k8s
+
+import utils._
+
+private[k8s] object ResourceCodecs {
+${resourceDecoder(sorted)}
+}"""
+    }
+
+    private def typeName(d: DataModel) = s"${d.pkg.replace('-', '_')}.${d.name}"
+    private def groupDecoderName(group: String) =
+      s"group${group.replace('.', '_')}Decoder"
+
+    private def groupDecoders(sorted: Seq[Resource]) = {
+      def matchers(rs: Seq[Resource]) = rs
+        .map { r =>
+          val name = typeName(r)
+          s"""    case ("${r.kind.kind}", "${r.kind.version}") => Decoder[T, $name].apply(t)"""
+        }
+        .mkString("\n")
+
+      sorted
+        .groupBy(_.kind.group)
+        .map { case (group, rs) =>
+          val groupCodec = groupDecoderName(group)
+          s"""
+  private def $groupCodec[T : Reader](t: T) : (String, String) => Either[String, KObject]  = {
+${matchers(rs)}
+    case (kind, version) => Left(s"Unknown kubernetes object: group: $group, kind: $$kind, version: $$version")
+  }"""
+        }
+        .mkString("\n")
+
+    }
+    private def resourceDecoder(sorted: Seq[Resource]) = {
+      val matchers = sorted
+        .map(_.kind.group)
+        .distinct
+        .sorted
+        .map { r =>
+          val name = groupDecoderName(r)
+          s"""        case "$r" => $name(t).apply(kind, version)"""
+        }
+        .mkString("\n")
+      s"""  ${groupDecoders(sorted)}
+  implicit def resourceDecoder[T : Reader] : Decoder[T, KObject] = new Decoder[T, KObject]{
+    def apply(t: T): Either[String, KObject] = for {
+      obj <- ObjectReader(t)
+      kind <- obj.read[String]("kind")
+      apiVersion <- obj.read[String]("apiVersion")
+      (group, version) = apiVersion.splitAt(apiVersion.indexOf("/"))
+      res <- group match {
+$matchers
+        case unknown => Left(s"Unknown kubernetes group id: $$unknown")
+      }
+    } yield res
+  }
+"""
+    }
+  }
+
+  def resources(scg: SourceCodeGenerator)(models: Iterable[DataModel]) = {
+    scg.managed("", "KObjectDecoders").write(KObjectCodec(models.toSeq))
+  }
 }

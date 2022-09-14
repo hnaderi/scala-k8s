@@ -73,4 +73,7 @@ object Decoder {
   def const[T, R](r: R): Decoder[T, R] = new Decoder[T, R] {
     def apply(t: T): Either[String, R] = Right(r)
   }
+  def failed[T, R](msg: String): Decoder[T, R] = new Decoder[T, R] {
+    def apply(t: T): Either[String, R] = Left(msg)
+  }
 }
