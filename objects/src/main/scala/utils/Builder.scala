@@ -16,8 +16,8 @@
 
 package dev.hnaderi.k8s.utils
 
-/** Adapter typeclass for building trees of type ${T} that encode a subset of
-  * json, required for k8s objects
+/** Adapter typeclass for building trees of type T that encode a subset of json,
+  * required for k8s objects
   */
 trait Builder[T] {
   def of(str: String): T
