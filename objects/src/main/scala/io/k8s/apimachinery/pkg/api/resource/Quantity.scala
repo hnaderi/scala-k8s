@@ -84,4 +84,6 @@ object Quantity {
   ): Encoder[Quantity, T] = new Encoder[Quantity, T] {
     def apply(r: Quantity): T = builder.of(r.value)
   }
+  implicit def decoder[T: Reader]: Decoder[T, Quantity] =
+    Decoder[T, String].map(Quantity(_))
 }

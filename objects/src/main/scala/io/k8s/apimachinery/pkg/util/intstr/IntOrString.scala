@@ -38,4 +38,7 @@ object IntOrString {
       case StringValue(s) => builder.of(s)
     }
   }
+  implicit def decoder[T: Reader]: Decoder[T, IntOrString] = Decoder[T, Int]
+    .map(IntValue(_))
+    .orElse(Decoder[T, String].map(StringValue(_)))
 }

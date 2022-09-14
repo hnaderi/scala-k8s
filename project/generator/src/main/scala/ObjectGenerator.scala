@@ -76,6 +76,7 @@ ${builderMethods(name, properties)}
 
 object $name {
 ${EncoderGenerator(t)}
+${DecoderGenerator(t)}
 }
 """
   }
@@ -103,6 +104,7 @@ $supportedKinds
   )
 
 ${EncoderGenerator(t)}
+${DecoderGenerator(t)}
 }
 """
   }
@@ -118,6 +120,7 @@ ${builderMethods(name, properties)}
 
 object $name {
 ${EncoderGenerator(t)}
+${DecoderGenerator(t)}
 }
 """
   }
@@ -128,6 +131,7 @@ ${EncoderGenerator(t)}
 trait $name
 object $name {
   implicit def encoder[T](implicit builder : Builder[T]) : Encoder[$name, T] = ???
+  implicit def decoder[T : Reader] : Decoder[T, $name] = ???
 }
 """
   }

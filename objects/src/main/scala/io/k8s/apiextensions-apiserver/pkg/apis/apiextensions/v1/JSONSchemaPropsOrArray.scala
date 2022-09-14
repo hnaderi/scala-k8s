@@ -41,4 +41,11 @@ object JSONSchemaPropsOrArray {
         case SingleValue(value)   => value.encodeTo
       }
     }
+
+  implicit def decoder[T: Reader]: Decoder[T, JSONSchemaPropsOrArray] =
+    Decoder[T, JSONSchemaProps]
+      .map(SingleValue(_))
+      .orElse(
+        Decoder[T, Seq[JSONSchemaProps]].map(MutipleValues(_))
+      )
 }

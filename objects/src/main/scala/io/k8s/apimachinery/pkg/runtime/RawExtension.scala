@@ -61,4 +61,7 @@ object RawExtension {
   ): Encoder[RawExtension, T] = new Encoder[RawExtension, T] {
     def apply(r: RawExtension): T = builder.ofFields()
   }
+
+  implicit def decoder[T]: Decoder[T, RawExtension] =
+    Decoder.const(RawExtension())
 }

@@ -40,4 +40,10 @@ object JSONSchemaPropsOrStringArray {
         case StringList(value) => value.encodeTo
       }
     }
+  implicit def decoder[T: Reader]: Decoder[T, JSONSchemaPropsOrStringArray] =
+    Decoder[T, JSONSchemaProps]
+      .map(PropsValue(_))
+      .orElse(
+        Decoder[T, Seq[String]].map(StringList(_))
+      )
 }

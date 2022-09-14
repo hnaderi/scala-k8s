@@ -30,5 +30,7 @@ final case class CustomResourceSubresourceStatus()
 object CustomResourceSubresourceStatus {
   implicit def encoder[T: Builder]
       : Encoder[CustomResourceSubresourceStatus, T] = Encoder.emptyObj
+  implicit def decoder[T]: Decoder[T, CustomResourceSubresourceStatus] =
+    Decoder.const(CustomResourceSubresourceStatus())
 }
 //TODO

@@ -37,4 +37,10 @@ object JSONSchemaPropsOrBool {
         case BoolValue(value)  => value.encodeTo
       }
     }
+  implicit def decoder[T: Reader]: Decoder[T, JSONSchemaPropsOrBool] =
+    Decoder[T, JSONSchemaProps]
+      .map(PropsValue(_))
+      .orElse(
+        Decoder[T, Boolean].map(BoolValue(_))
+      )
 }

@@ -28,4 +28,7 @@ object MicroTime {
   ): Encoder[MicroTime, T] = new Encoder[MicroTime, T] {
     def apply(r: MicroTime): T = builder.of(r.value)
   }
+
+  implicit def decoder[T: Reader]: Decoder[T, MicroTime] =
+    Decoder[T, String].map(MicroTime(_))
 }

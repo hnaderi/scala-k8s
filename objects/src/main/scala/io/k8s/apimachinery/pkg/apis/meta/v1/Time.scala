@@ -31,4 +31,7 @@ object Time {
   ): Encoder[Time, T] = new Encoder[Time, T] {
     def apply(r: Time): T = builder.of(r.value)
   }
+
+  implicit def decoder[T: Reader]: Decoder[T, Time] =
+    Decoder[T, String].map(Time(_))
 }

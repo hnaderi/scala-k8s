@@ -26,4 +26,7 @@ object JSON {
   ): Encoder[JSON, T] = new Encoder[JSON, T] {
     def apply(r: JSON): T = builder.of(r.value)
   }
+
+  implicit def decoder[T: Reader]: Decoder[T, JSON] =
+    Decoder[T, String].map(JSON(_))
 }
