@@ -16,18 +16,11 @@
 
 package dev.hnaderi.k8s
 
-import io.circe._
+import dev.hnaderi.k8s.utils.Builder
+import dev.hnaderi.k8s.utils.Reader
+import io.circe.Json
 
 package object circe {
-  private[circe] implicit val resourceKindDecoder: Decoder[ResourceKind] =
-    (c: HCursor) =>
-      for {
-        apiVersion <- c.get[String]("apiVersion")
-        kind <- c.get[String]("kind")
-        (group, version) = apiVersion.splitAt(apiVersion.indexOf("/"))
-      } yield ResourceKind(
-        group = group,
-        kind = kind,
-        version = version.drop(1)
-      )
+  implicit val circeBuilder: Builder[Json] = CirceBuilder
+  implicit val circeReader: Reader[Json] = CirceReader
 }

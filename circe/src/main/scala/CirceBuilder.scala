@@ -15,18 +15,26 @@
  */
 
 package dev.hnaderi.k8s
+package circe
 
-import dev.hnaderi.k8s.circe._
-import io.circe.Json
-import io.circe.yaml.syntax._
+import dev.hnaderi.k8s.utils.Builder
+import io.circe._
+import io.circe.syntax._
 
-package object manifest {
-  implicit class KObjectsOps(val objs: Iterable[KObject]) extends AnyVal {
-    def asManifest: String =
-      objs.map(_.asManifest).mkString("\n---\n")
-  }
-  implicit class KObjectOps(val obj: KObject) extends AnyVal {
-    def asManifest: String = obj.asJsonManifest.asYaml.spaces2
-    def asJsonManifest: Json = obj.foldTo[Json].deepDropNullValues
-  }
+object CirceBuilder extends Builder[Json] {
+
+  override def of(str: String): Json = str.asJson
+
+  override def of(i: Int): Json = i.asJson
+
+  override def of(l: Long): Json = l.asJson
+
+  override def of(l: Double): Json = l.asJson
+
+  override def of(b: Boolean): Json = b.asJson
+
+  override def arr(a: Iterable[Json]): Json = Json.fromValues(a)
+
+  override def obj(values: Iterable[(String, Json)]): Json =
+    Json.fromFields(values)
 }
