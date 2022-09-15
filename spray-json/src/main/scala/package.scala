@@ -15,28 +15,11 @@
  */
 
 package dev.hnaderi.k8s
-package spray
 
 import dev.hnaderi.k8s.utils._
-import _root_.spray.json._
+import spray.json._
 
-object SprayBuilder extends Builder[JsValue] {
-
-  override def of(str: String): JsValue = JsString(str)
-
-  override def of(i: Int): JsValue = JsNumber(i)
-
-  override def of(l: Long): JsValue = JsNumber(l)
-
-  override def of(l: Double): JsValue = JsNumber(l)
-
-  override def of(b: Boolean): JsValue = JsBoolean(b)
-
-  override def arr(a: Iterable[JsValue]): JsValue = JsArray(a.toVector)
-
-  override def obj(values: Iterable[(String, JsValue)]): JsValue = JsObject(
-    values.toMap
-  )
-
-  override def nil: JsValue = JsNull
+package object sprayJson {
+  implicit val sprayJsonBuilder: Builder[JsValue] = SprayBuilder
+  implicit val sprayJsonReader: Reader[JsValue] = SprayReader
 }

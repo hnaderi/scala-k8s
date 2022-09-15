@@ -27,7 +27,15 @@ enablePlugins(AutomateHeaderPlugin)
 
 lazy val root =
   tlCrossRootProject
-    .aggregate(objects, circe, spray, manifests, docs, unidocs)
+    .aggregate(
+      objects,
+      circe,
+      `spray-json`,
+      `play-json`,
+      manifests,
+      docs,
+      unidocs
+    )
     .settings(
       name := "scala-k8s"
     )
@@ -61,13 +69,25 @@ lazy val circe = crossProject(JVMPlatform, JSPlatform)
   )
   .dependsOn(objects)
 
-lazy val spray = crossProject(JVMPlatform)
+lazy val `spray-json` = crossProject(JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "scala-k8s-spray-json",
     description := "spray-json codecs for kubernetes data models",
     libraryDependencies ++= Seq(
-      "io.spray" %% "spray-json" % "1.3.6"
+      "io.spray" %%% "spray-json" % "1.3.6"
+    )
+  )
+  .dependsOn(objects)
+
+lazy val `play-json` = crossProject(JVMPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "scala-k8s-play-json",
+    description := "play-json codecs for kubernetes data models",
+    libraryDependencies ++= Seq(
+      ("com.typesafe.play" %%% "play-json" % "2.9.3")
+        .cross(CrossVersion.for3Use2_13)
     )
   )
   .dependsOn(objects)
@@ -105,6 +125,8 @@ lazy val unidocs = project
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
       objects.jvm,
       circe.jvm,
+      `spray-json`.jvm,
+      `play-json`.jvm,
       manifests.jvm
     )
   )

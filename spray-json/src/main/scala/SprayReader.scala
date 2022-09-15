@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package dev.hnaderi.k8s.spray
+package dev.hnaderi.k8s.sprayJson
 
-import _root_.spray.json._
+import spray.json._
 import dev.hnaderi.k8s.utils._
 
 import scala.util.Try
