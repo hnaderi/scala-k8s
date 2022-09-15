@@ -108,3 +108,25 @@ lazy val unidocs = project
       manifests.jvm
     )
   )
+
+def addAlias(name: String)(tasks: String*) =
+  addCommandAlias(name, tasks.mkString(" ;"))
+
+addAlias("commit")(
+  "reload",
+  "clean",
+  "scalafmtCheckAll",
+  "scalafmtSbtCheck",
+  "headerCheckAll",
+  "githubWorkflowCheck",
+  "+test"
+)
+
+addAlias("precommit")(
+  "reload",
+  "scalafmtAll",
+  "scalafmtSbt",
+  "headerCreateAll",
+  "githubWorkflowGenerate",
+  "+test"
+)
