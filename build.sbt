@@ -67,7 +67,7 @@ lazy val spray = crossProject(JVMPlatform)
     name := "scala-k8s-spray-json",
     description := "spray-json codecs for kubernetes data models",
     libraryDependencies ++= Seq(
-      "io.spray" %%  "spray-json" % "1.3.6"
+      "io.spray" %% "spray-json" % "1.3.6"
     )
   )
   .dependsOn(objects)
