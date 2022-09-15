@@ -37,4 +37,6 @@ object CirceBuilder extends Builder[Json] {
 
   override def obj(values: Iterable[(String, Json)]): Json =
     Json.fromFields(values)
+
+  override def nil: Json = Json.Null
 }

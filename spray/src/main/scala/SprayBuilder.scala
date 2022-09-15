@@ -38,4 +38,5 @@ object SprayBuilder extends Builder[JsValue] {
     values.toMap
   )
 
+  override def nil: JsValue = JsNull
 }

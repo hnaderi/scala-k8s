@@ -29,6 +29,7 @@ trait Builder[T] {
   final def ofValues(a: T*): T = arr(a)
   def obj(values: Iterable[(String, T)]): T
   final def ofFields(values: (String, T)*): T = obj(values)
+  def nil: T
 }
 object Builder {
   def apply[T](implicit t: Builder[T]) = t
