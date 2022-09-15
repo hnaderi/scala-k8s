@@ -32,6 +32,7 @@ lazy val root =
       circe,
       `spray-json`,
       `play-json`,
+      json4s,
       manifests,
       docs,
       unidocs
@@ -92,6 +93,17 @@ lazy val `play-json` = crossProject(JVMPlatform)
   )
   .dependsOn(objects)
 
+lazy val json4s = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "scala-k8s-json4s",
+    description := "json4s codecs for kubernetes data models",
+    libraryDependencies ++= Seq(
+      "org.json4s" %%% "json4s-ast" % "4.0.5"
+    )
+  )
+  .dependsOn(objects)
+
 lazy val manifests = crossProject(JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("lib"))
@@ -127,6 +139,7 @@ lazy val unidocs = project
       circe.jvm,
       `spray-json`.jvm,
       `play-json`.jvm,
+      json4s.jvm,
       manifests.jvm
     )
   )
