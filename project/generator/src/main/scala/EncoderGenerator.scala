@@ -6,10 +6,10 @@ object EncoderGenerator {
   def apply(model: DataModel): String = {
     val tpe = s"${model.pkg.replace('-', '_')}.${model.name}"
 
-    val (ps, hasAdditionalEnc, hasAdditionalDec) = model match {
-      case r: Resource      => (r.properties, true, false)
-      case sr: SubResource  => (sr.properties, false, false)
-      case mr: MetaResource => (mr.properties, false, true)
+    val (ps, hasAdditionalEnc) = model match {
+      case r: Resource      => (r.properties, true)
+      case sr: SubResource  => (sr.properties, false)
+      case mr: MetaResource => (mr.properties, true)
       case _                => return ""
     }
 

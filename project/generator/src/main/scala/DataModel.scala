@@ -20,6 +20,7 @@ sealed trait DataModel extends Serializable with Product {
   val name: String
   val pkg: String
   val description: Option[String]
+  val properties: Seq[ModelProperty]
 }
 
 object DataModel {
@@ -98,5 +99,7 @@ object DataModel {
       name: String,
       pkg: String,
       description: Option[String]
-  ) extends DataModel
+  ) extends DataModel {
+    override val properties: Seq[ModelProperty] = Nil
+  }
 }

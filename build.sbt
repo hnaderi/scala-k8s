@@ -31,6 +31,7 @@ lazy val root =
     .aggregate(
       objects,
       objectsTest,
+      codecTest,
       circe,
       `spray-json`,
       `play-json`,
@@ -84,6 +85,19 @@ lazy val objectsTest = crossProject(JVMPlatform, JSPlatform)
   .dependsOn(objects)
   .enablePlugins(NoPublishPlugin)
 
+lazy val codecTest = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "scala-k8s-codec-test",
+    description := "internal codec tests for scala-k8s objects",
+    libraryDependencies ++= Seq(
+      "org.scalameta" %%% "munit" % munitVersion,
+      "org.scalameta" %%% "munit-scalacheck" % munitVersion
+    )
+  )
+  .dependsOn(scalacheck)
+  .enablePlugins(NoPublishPlugin)
+
 lazy val circe = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
   .settings(
@@ -94,6 +108,7 @@ lazy val circe = crossProject(JVMPlatform, JSPlatform)
     )
   )
   .dependsOn(objects)
+  .dependsOn(codecTest % Test)
 
 lazy val `spray-json` = crossProject(JVMPlatform)
   .crossType(CrossType.Pure)

@@ -110,7 +110,8 @@ ${matchers(rs)}
       obj <- ObjectReader(t)
       kind <- obj.read[String]("kind")
       apiVersion <- obj.read[String]("apiVersion")
-      (group, version) = apiVersion.splitAt(apiVersion.indexOf("/"))
+      (group, secondPart) = apiVersion.splitAt(apiVersion.indexOf("/"))
+      version = if(secondPart.startsWith("/")) secondPart.tail else secondPart
       res <- group match {
 $matchers
         case unknown => Left(s"Unknown kubernetes group id: $$unknown")

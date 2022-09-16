@@ -7,19 +7,21 @@ object ScalacheckGenerator {
     "arbitrary_" + data.pkg.replace('-', '_').replace('.', '_') + data.name
   private def typeFor(data: DataModel) =
     data.pkg.replace('-', '_') + "." + data.name
-  private def definitionFor(d: DataModel) = s"""  implicit lazy val ${arbName(
-      d
-    )}: Arbitrary[${typeFor(d)}]"""
+  private def definitionFor(d: DataModel) =
+    s"""  implicit lazy val ${arbName(d)}: Arbitrary[${typeFor(d)}]"""
 
   private def smallCtor(d: DataModel, fieldNum: Int): String = {
     val ctor = List.fill(fieldNum)("_").mkString(", ")
     s""" Arbitrary(Gen.resultOf(${typeFor(d)}($ctor)))"""
   }
+  private def arbValue(parent: DataModel, field: ModelProperty) = {
+    val pType = typeFor(parent)
+    s"arbitrary[${field.fullTypename}]"
+  }
+
   private def largeCtor(d: DataModel, ps: Seq[ModelProperty]): String = {
     val fields = ps
-      .map(p =>
-        s"      ${p.fieldName} <- Arbitrary.arbitrary[${p.fullTypename}]"
-      )
+      .map(p => s"      ${p.fieldName} <- ${arbValue(d, p)}")
       .mkString("\n")
     val ctorArgs =
       ps.map(p => s"      ${p.fieldName} = ${p.fieldName}").mkString(",\n")
@@ -32,20 +34,26 @@ $ctorArgs
     s""" Arbitrary($gen)"""
   }
 
-  private def print(data: Seq[Primitive]) = {
+  private def print(data: Seq[DataModel]) = {
     val arbs = data
-      .map(p =>
-        s"""  implicit lazy val ${arbName(p)}: Arbitrary[${typeFor(
-            p
-          )}] = ${smallCtor(p, 1)}"""
-      )
+      .map { p =>
+        val tpe = typeFor(p)
+        val name = arbName(p)
+        if (isRecursive(p))
+          s"""  implicit lazy val $name: Arbitrary[$tpe] = ${largeCtor(
+              p,
+              p.properties
+            )}"""
+        else
+          s"""  implicit lazy val $name: Arbitrary[$tpe] = ${smallCtor(p, 1)}"""
+      }
       .mkString("\n")
     s"""package dev.hnaderi.k8s.scalacheck
 
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 
-private[scalacheck] trait PrimitiveGenerators { self : NonPrimitiveGenerators =>
+private[scalacheck] trait PrimitiveGenerators {
 $arbs
 }
 """
@@ -65,6 +73,7 @@ $arbs
     s"""package dev.hnaderi.k8s.scalacheck
 
 import org.scalacheck.Arbitrary
+import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
 private[scalacheck] trait NonPrimitiveGenerators { self : PrimitiveGenerators =>
@@ -82,7 +91,7 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 
-private[scalacheck] trait KObjectGenerators { self : NonPrimitiveGenerators =>
+private[scalacheck] trait KObjectGenerators { self : NonPrimitiveGenerators with PrimitiveGenerators =>
   implicit val arbitraryKObjects : Arbitrary[KObject] = Arbitrary(
     Gen.oneOf(
       ${data.map(typeFor).map(t => s"arbitrary[$t]").mkString(",\n      ")}
@@ -92,12 +101,17 @@ private[scalacheck] trait KObjectGenerators { self : NonPrimitiveGenerators =>
 """
   }
 
+  private def isRecursive(d: DataModel) = d.name == "JSONSchemaProps"
+
   def write(scg: SourceCodeGenerator)(data: Seq[DataModel]) = {
-    val primitives = data.collect { case o: Primitive => o }
+    val primitives = data.collect {
+      case o: Primitive                => o
+      case other if isRecursive(other) => other
+    }
     val other = data.collect {
-      case o: Resource     => (o, o.properties)
-      case o: SubResource  => (o, o.properties)
-      case o: MetaResource => (o, o.properties)
+      case o: Resource if !isRecursive(o)     => (o, o.properties)
+      case o: SubResource if !isRecursive(o)  => (o, o.properties)
+      case o: MetaResource if !isRecursive(o) => (o, o.properties)
     }
     val kobjs = data.collect { case r: Resource => r }
     scg.managed("", "NonPrimitiveGenerators").write(printOther(other))
