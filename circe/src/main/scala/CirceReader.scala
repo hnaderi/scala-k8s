@@ -19,7 +19,7 @@ package dev.hnaderi.k8s.circe
 import dev.hnaderi.k8s.utils.Reader
 import io.circe._
 
-object CirceReader extends Reader[Json] {
+private[circe] object CirceReader extends Reader[Json] {
 
   private def convert[T: Decoder](json: Json): Either[String, T] =
     json.as[T].left.map(_.getMessage())

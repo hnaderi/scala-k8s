@@ -21,7 +21,7 @@ import dev.hnaderi.k8s.utils.Reader
 
 import scala.collection.Seq
 
-object PlayJsonReader extends Reader[JsValue] {
+private[playJson] object PlayJsonReader extends Reader[JsValue] {
 
   private def errorMsg(
       err: Seq[(JsPath, Seq[JsonValidationError])]

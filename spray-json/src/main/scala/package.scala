@@ -22,4 +22,7 @@ import spray.json._
 package object sprayJson {
   implicit val sprayJsonBuilder: Builder[JsValue] = SprayBuilder
   implicit val sprayJsonReader: Reader[JsValue] = SprayReader
+  implicit def k8sJsonFormat[T](implicit
+      enc: Encoder[T, JsValue]
+  ): JsonWriter[T] = JsonWriter.func2Writer(enc(_))
 }

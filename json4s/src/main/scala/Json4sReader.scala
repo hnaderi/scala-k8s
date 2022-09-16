@@ -19,7 +19,7 @@ package dev.hnaderi.k8s.json4s
 import dev.hnaderi.k8s.utils.Reader
 import org.json4s._
 
-object Json4sReader extends Reader[JValue] {
+private[json4s] object Json4sReader extends Reader[JValue] {
 
   override def string(t: JValue): Either[String, String] = t match {
     case JString(s) => Right(s)

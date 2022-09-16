@@ -21,7 +21,7 @@ import dev.hnaderi.k8s.utils._
 
 import scala.util.Try
 
-object SprayReader extends Reader[JsValue] {
+private[sprayJson] object SprayReader extends Reader[JsValue] {
 
   override def string(t: JsValue): Either[String, String] = t match {
     case JsString(value) => Right(value)

@@ -21,7 +21,7 @@ import dev.hnaderi.k8s.utils.Builder
 import io.circe._
 import io.circe.syntax._
 
-object CirceBuilder extends Builder[Json] {
+private[circe] object CirceBuilder extends Builder[Json] {
 
   override def of(str: String): Json = str.asJson
 

@@ -19,7 +19,7 @@ package dev.hnaderi.k8s.json4s
 import dev.hnaderi.k8s.utils.Builder
 import org.json4s._
 
-object Json4sBuilder extends Builder[JValue] {
+private[json4s] object Json4sBuilder extends Builder[JValue] {
 
   override def of(str: String): JValue = JString(str)
 

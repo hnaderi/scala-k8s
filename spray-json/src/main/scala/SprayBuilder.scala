@@ -19,7 +19,7 @@ package dev.hnaderi.k8s.sprayJson
 import dev.hnaderi.k8s.utils._
 import spray.json._
 
-object SprayBuilder extends Builder[JsValue] {
+private[sprayJson] object SprayBuilder extends Builder[JsValue] {
 
   override def of(str: String): JsValue = JsString(str)
 

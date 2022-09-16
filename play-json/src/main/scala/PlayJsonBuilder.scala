@@ -19,7 +19,7 @@ package dev.hnaderi.k8s.playJson
 import play.api.libs.json._
 import dev.hnaderi.k8s.utils.Builder
 
-object PlayJsonBuilder extends Builder[JsValue] {
+private[playJson] object PlayJsonBuilder extends Builder[JsValue] {
 
   override def of(str: String): JsValue = JsString(str)
 
