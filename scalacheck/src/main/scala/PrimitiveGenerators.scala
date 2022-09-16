@@ -97,65 +97,68 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       : Arbitrary[io.k8s.apimachinery.pkg.apis.meta.v1.FieldsV1] =
     Arbitrary(Gen.const(io.k8s.apimachinery.pkg.apis.meta.v1.FieldsV1()))
 
-  implicit lazy val arbitrary_io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaPropsOrArray
-      : Arbitrary[JSONSchemaPropsOrArray] = Arbitrary(genJSONSchemaPropsOrArray)
-
-  implicit lazy val arbitrary_io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaPropsOrBool
-      : Arbitrary[JSONSchemaPropsOrBool] = Arbitrary(genJSONSchemaPropsOrBool)
-
-  implicit lazy val arbitrary_io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaPropsOrStringArray
-      : Arbitrary[JSONSchemaPropsOrStringArray] = Arbitrary(
-    genJSONSchemaPropsOrStringArray
-  )
-
-  private lazy val genJSONSchemaPropsOrArray: Gen[JSONSchemaPropsOrArray] =
+  private def genJSONSchemaPropsOrArray(
+      jsp: JSONSchemaProps
+  ): Gen[JSONSchemaPropsOrArray] =
     Gen.oneOf(
-      leafJsonSchemaProps.map(JSONSchemaPropsOrArray(_)),
-      Gen.listOf(leafJsonSchemaProps).map(JSONSchemaPropsOrArray(_))
+      Gen.const(JSONSchemaPropsOrArray(jsp)),
+      Gen.listOf(Gen.const(jsp)).map(JSONSchemaPropsOrArray(_))
     )
 
-  private lazy val genJSONSchemaPropsOrBool: Gen[JSONSchemaPropsOrBool] =
+  private def genJSONSchemaPropsOrBool(
+      jsp: JSONSchemaProps
+  ): Gen[JSONSchemaPropsOrBool] =
     Gen.oneOf(
-      leafJsonSchemaProps.map(JSONSchemaPropsOrBool(_)),
+      Gen.const(JSONSchemaPropsOrBool(jsp)),
       arbitrary[Boolean].map(JSONSchemaPropsOrBool(_))
     )
 
-  private lazy val genJSONSchemaPropsOrStringArray
-      : Gen[JSONSchemaPropsOrStringArray] =
+  private def genJSONSchemaPropsOrStringArray(
+      jsp: JSONSchemaProps
+  ): Gen[JSONSchemaPropsOrStringArray] =
     Gen.oneOf(
-      leafJsonSchemaProps.map(JSONSchemaPropsOrStringArray(_)),
+      Gen.const(JSONSchemaPropsOrStringArray(jsp)),
       arbitrary[Seq[String]].map(JSONSchemaPropsOrStringArray(_))
     )
 
   implicit lazy val arbitrary_io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaProps
-      : Arbitrary[JSONSchemaProps] = Arbitrary(jsonSchemaProps(2))
+      : Arbitrary[JSONSchemaProps] = Arbitrary(jsonSchemaProps)
 
-  private def jsonSchemas(maxDepth: Int): Gen[List[JSONSchemaProps]] =
+  private def jsonSchemas(jsp: JSONSchemaProps): Gen[List[JSONSchemaProps]] =
     for {
       n <- Gen.choose(0, 3)
-      jsp <- leafJsonSchemaProps
     } yield List.fill(n)(jsp)
 
-  private def jsonSchemaMap(maxDepth: Int): Gen[Map[String, JSONSchemaProps]] =
+  private def jsonSchemaMap(
+      jsp: JSONSchemaProps
+  ): Gen[Map[String, JSONSchemaProps]] =
     Gen
       .choose(0, 3)
       .flatMap(n =>
         Gen.mapOfN(
           n,
-          for {
-            k <- Gen.alphaStr
-            v <- leafJsonSchemaProps
-          } yield (k, v)
+          Gen.alphaStr.map((_, jsp))
         )
       )
 
-  private def opt[T](depth: Int, g: => Gen[T]): Gen[Option[T]] =
-    if (depth == 0) Gen.const(None)
-    else Gen.option(g)
+  private def jsonSchemaProps: Gen[JSONSchemaProps] =
+    Gen.recursive[JSONSchemaProps](recurse =>
+      Gen.choose(1, 10).flatMap { n =>
+        if (n > 7) recurse.map(Some(_)).flatMap(join)
+        else join(None)
+      }
+    )
 
-  private lazy val leafJsonSchemaProps = Gen.lzy(jsonSchemaProps())
+  private def opt[T](
+      jsp: Option[JSONSchemaProps],
+      g: JSONSchemaProps => Gen[T]
+  ): Gen[Option[T]] =
+    jsp match {
+      case None        => Gen.const(None)
+      case Some(value) => g(value).map(Some(_))
+    }
 
-  private def jsonSchemaProps(maxDepth: Int = 0): Gen[JSONSchemaProps] =
+  private def join(jsp: Option[JSONSchemaProps]): Gen[JSONSchemaProps] =
     for {
       exclusiveMaximum <- arbitrary[Option[Boolean]]
       format <- arbitrary[Option[String]]
@@ -164,11 +167,11 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       `x-kubernetes-map-type` <- arbitrary[Option[String]]
       pattern <- arbitrary[Option[String]]
       description <- arbitrary[Option[String]]
-      anyOf <- opt(maxDepth, jsonSchemas(maxDepth - 1))
+      anyOf <- opt(jsp, jsonSchemas)
       `x-kubernetes-list-type` <- arbitrary[Option[String]]
-      patternProperties <- opt(maxDepth, jsonSchemaMap(maxDepth - 1))
-      items <- opt(maxDepth, genJSONSchemaPropsOrArray)
-      additionalItems <- opt(maxDepth, genJSONSchemaPropsOrBool)
+      patternProperties <- opt(jsp, jsonSchemaMap)
+      items <- opt(jsp, genJSONSchemaPropsOrArray)
+      additionalItems <- opt(jsp, genJSONSchemaPropsOrBool)
       maxProperties <- arbitrary[Option[Int]]
       maxItems <- arbitrary[Option[Int]]
       `x-kubernetes-int-or-string` <- arbitrary[Option[Boolean]]
@@ -176,18 +179,18 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       maximum <- arbitrary[Option[Double]]
       multipleOf <- arbitrary[Option[Double]]
       id <- arbitrary[Option[String]]
-      properties <- opt(maxDepth, jsonSchemaMap(maxDepth - 1))
+      properties <- opt(jsp, jsonSchemaMap)
       exclusiveMinimum <- arbitrary[Option[Boolean]]
       `x-kubernetes-validations` <- arbitrary[Option[Seq[
         io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.ValidationRule
       ]]]
       `enum` <- arbitrary[Option[Seq[JSON]]]
       `x-kubernetes-preserve-unknown-fields` <- arbitrary[Option[Boolean]]
-      additionalProperties <- opt(maxDepth, genJSONSchemaPropsOrBool)
+      additionalProperties <- opt(jsp, genJSONSchemaPropsOrBool)
       default <- arbitrary[Option[JSON]]
       minItems <- arbitrary[Option[Int]]
-      not <- opt(maxDepth, jsonSchemaProps(maxDepth - 1))
-      definitions <- opt(maxDepth, jsonSchemaMap(maxDepth - 1))
+      not <- Gen.const(jsp)
+      definitions <- opt(jsp, jsonSchemaMap)
       minLength <- arbitrary[Option[Int]]
       `x-kubernetes-list-map-keys` <- arbitrary[Option[Seq[String]]]
       title <- arbitrary[Option[String]]
@@ -196,7 +199,7 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       required <- arbitrary[Option[Seq[String]]]
       example <- arbitrary[Option[JSON]]
       schema <- arbitrary[Option[String]]
-      oneOf <- opt(maxDepth, jsonSchemas(maxDepth - 1))
+      oneOf <- opt(jsp, jsonSchemas)
       uniqueItems <- arbitrary[Option[Boolean]]
       minProperties <- arbitrary[Option[Int]]
       dependencies <- Gen.const(None)
@@ -204,7 +207,7 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
         io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.ExternalDocumentation
       ]]
       maxLength <- arbitrary[Option[Int]]
-      allOf <- opt(maxDepth, jsonSchemas(maxDepth - 1))
+      allOf <- opt(jsp, jsonSchemas)
     } yield JSONSchemaProps(
       exclusiveMaximum = exclusiveMaximum,
       format = format,
