@@ -85,7 +85,7 @@ lazy val objectsTest = crossProject(JVMPlatform, JSPlatform)
   .dependsOn(objects)
   .enablePlugins(NoPublishPlugin)
 
-lazy val codecTest = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+lazy val codecTest = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "scala-k8s-codec-test",
@@ -120,6 +120,7 @@ lazy val `spray-json` = crossProject(JVMPlatform)
     )
   )
   .dependsOn(objects)
+  .dependsOn(codecTest % Test)
 
 lazy val `play-json` = crossProject(JVMPlatform)
   .crossType(CrossType.Pure)
@@ -132,6 +133,7 @@ lazy val `play-json` = crossProject(JVMPlatform)
     )
   )
   .dependsOn(objects)
+  .dependsOn(codecTest % Test)
 
 lazy val json4s = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
