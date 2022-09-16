@@ -16,7 +16,19 @@
 
 package dev.hnaderi.k8s.circe
 
+import dev.hnaderi.k8s.KObject
+import dev.hnaderi.k8s.scalacheck.Generators.arbitraryKObjects
 import dev.hnaderi.k8s.test.CodecSuite
 import io.circe.Json
+import io.circe.syntax._
+import org.scalacheck.Prop.forAll
 
-class CirceSuite extends CodecSuite[Json]
+class CirceSuite extends CodecSuite[Json] {
+  property("Circe json must be reversible") {
+    forAll { (obj: KObject) =>
+      val json = obj.asJson
+      val dec = json.as[KObject]
+      assertEquals(dec, Right(obj))
+    }
+  }
+}

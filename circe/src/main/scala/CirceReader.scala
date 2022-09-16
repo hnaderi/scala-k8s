@@ -17,7 +17,9 @@
 package dev.hnaderi.k8s.circe
 
 import dev.hnaderi.k8s.utils.Reader
-import io.circe._
+import io.circe.Decoder
+import io.circe.Json
+import io.circe.JsonObject
 
 private[circe] object CirceReader extends Reader[Json] {
   /* NOTE that this import is required to use correct implicit instances */

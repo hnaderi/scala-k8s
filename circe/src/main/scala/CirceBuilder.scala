@@ -18,10 +18,12 @@ package dev.hnaderi.k8s
 package circe
 
 import dev.hnaderi.k8s.utils.Builder
-import io.circe._
+import io.circe.Json
 import io.circe.syntax._
 
 private[circe] object CirceBuilder extends Builder[Json] {
+  /* NOTE that this import is required to use correct implicit instances */
+  import io.circe.Encoder._
 
   override def of(str: String): Json = str.asJson
 

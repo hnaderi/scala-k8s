@@ -16,7 +16,18 @@
 
 package dev.hnaderi.k8s.sprayJson
 
-import spray.json._
+import dev.hnaderi.k8s.KObject
+import dev.hnaderi.k8s.scalacheck.Generators.arbitraryKObjects
 import dev.hnaderi.k8s.test.CodecSuite
+import org.scalacheck.Prop.forAll
+import spray.json._
 
-class SprayJsonSuite extends CodecSuite[JsValue]
+class SprayJsonSuite extends CodecSuite[JsValue] {
+  property("Spray json must be reversible") {
+    forAll { (obj: KObject) =>
+      val json = obj.toJson
+      val dec = json.convertTo[KObject]
+      assertEquals(dec, obj)
+    }
+  }
+}

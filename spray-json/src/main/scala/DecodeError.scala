@@ -14,20 +14,6 @@
  * limitations under the License.
  */
 
-package dev.hnaderi.k8s.playJson
+package dev.hnaderi.k8s.sprayJson
 
-import dev.hnaderi.k8s.KObject
-import dev.hnaderi.k8s.scalacheck.Generators.arbitraryKObjects
-import dev.hnaderi.k8s.test.CodecSuite
-import org.scalacheck.Prop.forAll
-import play.api.libs.json._
-
-class PlayJsonSuite extends CodecSuite[JsValue] {
-  property("Play json must be reversible") {
-    forAll { (obj: KObject) =>
-      val json = Json.toJson(obj)
-      val dec = json.validate[KObject]
-      assertEquals(dec, JsSuccess(obj))
-    }
-  }
-}
+final case class DecodeError(msg: String) extends Exception(msg)
