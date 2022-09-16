@@ -58,7 +58,7 @@ lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   )
   .enablePlugins(KubernetesObjectGeneratorPlugin)
 
-lazy val scalacheck = crossProject(JVMPlatform, JSPlatform)
+lazy val scalacheck = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "scala-k8s-scalacheck",
@@ -118,7 +118,7 @@ lazy val `play-json` = crossProject(JVMPlatform)
   )
   .dependsOn(objects)
 
-lazy val json4s = crossProject(JVMPlatform, JSPlatform)
+lazy val json4s = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "scala-k8s-json4s",
