@@ -33,6 +33,7 @@ object JSONSchemaPropsOrArray {
       v2: JSONSchemaProps,
       others: JSONSchemaProps*
   ): MutipleValues = MutipleValues(Seq(v1, v2) ++ others)
+  def apply(values: Seq[JSONSchemaProps]): MutipleValues = MutipleValues(values)
 
   implicit def encoder[T: Builder]: Encoder[JSONSchemaPropsOrArray, T] =
     new Encoder[JSONSchemaPropsOrArray, T] {

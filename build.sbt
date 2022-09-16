@@ -1,3 +1,4 @@
+import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
 ThisBuild / tlBaseVersion := "0.3"
 
 ThisBuild / organization := "dev.hnaderi"
@@ -34,6 +35,7 @@ lazy val root =
       `play-json`,
       json4s,
       manifests,
+      scalacheck,
       docs,
       unidocs
     )
@@ -58,6 +60,19 @@ lazy val objects = crossProject(
     libraryDependencies += "org.scalameta" %%% "munit" % munitVersion % Test
   )
   .enablePlugins(KubernetesObjectGeneratorPlugin)
+
+lazy val scalacheck = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "scala-k8s-scalacheck",
+    description := "scalacheck generators for kubernetes data models",
+    k8sUnmanagedTarget := rootDir.value / "scalacheck" / "src" / "main" / "scala",
+    libraryDependencies ++= Seq(
+      "org.scalacheck" %%% "scalacheck" % "1.16.0"
+    )
+  )
+  .dependsOn(objects)
+  .enablePlugins(KubernetesScalacheckGeneratorPlugin)
 
 lazy val circe = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -140,7 +155,8 @@ lazy val unidocs = project
       `spray-json`.jvm,
       `play-json`.jvm,
       json4s.jvm,
-      manifests.jvm
+      manifests.jvm,
+      scalacheck.jvm
     )
   )
 
