@@ -21,15 +21,19 @@ for easy to use recipes and integration with sbt, visit [this project](https://g
 
 ## Getting started
 
-This library is currently available for Scala binary versions 2.12, 2.13 and 3.1 on JVM/JS/Native. 
+This library is currently available for Scala binary versions 2.12, 2.13 and 3.2 on JVM/JS/Native. 
 
 To use the latest version of library, include the following in your `build.sbt`:
 
 ```scala
 libraryDependencies ++= Seq(
-  "dev.hnaderi" %% "scala-k8s-objects" % "@VERSION@", // JVM, JS, NATIVE
-  "dev.hnaderi" %% "scala-k8s-circe" % "@VERSION@", // JVM, JS
-  "dev.hnaderi" %% "scala-k8s-manifests" % "@VERSION@" // JVM
+  "dev.hnaderi" %% "scala-k8s-objects" % "@VERSION@", // JVM, JS, Native ; raw k8s objects
+  "dev.hnaderi" %% "scala-k8s-circe" % "@VERSION@", // JVM, JS ; circe integration
+  "dev.hnaderi" %% "scala-k8s-json4s" % "@VERSION@", // JVM, JS, Native; json4s integration
+  "dev.hnaderi" %% "scala-k8s-spray-json" % "@VERSION@", // JVM ; spray-json integration
+  "dev.hnaderi" %% "scala-k8s-play-json" % "@VERSION@", // JVM ; play-json integration
+  "dev.hnaderi" %% "scala-k8s-manifests" % "@VERSION@", // JVM ; yaml manifest generation
+  "dev.hnaderi" %% "scala-k8s-scalacheck" % "@VERSION@" // JVM, JS, Native; scalacheck instances
 )
 ```
 
@@ -39,5 +43,4 @@ visit [project site](https://projects.hnaderi.dev/scala-k8s) to see more tutoria
 see [this project](https://github.com/hnaderi/sbt-k8s)
 
 ## Future plans
-- provide codecs for other common libraries
 - implement API client
