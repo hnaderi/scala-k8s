@@ -30,6 +30,7 @@ lazy val root =
   tlCrossRootProject
     .aggregate(
       objects,
+      objectsTest,
       circe,
       `spray-json`,
       `play-json`,
@@ -48,16 +49,12 @@ lazy val munitVersion = "0.7.29"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
-lazy val objects = crossProject(
-  JVMPlatform,
-  JSPlatform
-) // , NativePlatform) //TODO enable after munit support for scala3
+lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .settings(
     name := "scala-k8s-objects",
     description := "data models for kubernetes",
-    k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala",
-    libraryDependencies += "org.scalameta" %%% "munit" % munitVersion % Test
+    k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala"
   )
   .enablePlugins(KubernetesObjectGeneratorPlugin)
 
@@ -73,6 +70,19 @@ lazy val scalacheck = crossProject(JVMPlatform, JSPlatform)
   )
   .dependsOn(objects)
   .enablePlugins(KubernetesScalacheckGeneratorPlugin)
+
+lazy val objectsTest = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "scala-k8s-test",
+    description := "internal tests for scala-k8s objects",
+    libraryDependencies ++= Seq(
+      "org.scalacheck" %%% "scalacheck" % "1.16.0",
+      "org.scalameta" %%% "munit" % munitVersion % Test
+    )
+  )
+  .dependsOn(objects)
+  .enablePlugins(NoPublishPlugin)
 
 lazy val circe = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)

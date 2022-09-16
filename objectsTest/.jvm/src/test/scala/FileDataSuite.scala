@@ -21,13 +21,15 @@ import munit.FunSuite
 import java.io.File
 
 class FileDataSuite extends FunSuite {
+  private val dataPath = "objectsTest/src/test/resources/data"
+
   test("file value") {
     val file = new File("some.file")
     assertEquals(Data.file("some.file"), Data(file))
   }
 
   test("directory") {
-    val dir = DataMap.fromDir(new File("objects/src/test/resources/data"))
+    val dir = DataMap.fromDir(new File(dataPath))
     assertEquals(
       dir,
       Map(
@@ -38,7 +40,7 @@ class FileDataSuite extends FunSuite {
   }
 
   test("directory binary") {
-    val dir = DataMap.binaryFromDir(new File("objects/src/test/resources/data"))
+    val dir = DataMap.binaryFromDir(new File(dataPath))
     assertEquals(
       dir,
       Map(
