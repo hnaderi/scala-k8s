@@ -121,6 +121,15 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       arbitrary[Seq[String]].map(JSONSchemaPropsOrStringArray(_))
     )
 
+  private def dependenciesMap(
+      jsp: JSONSchemaProps
+  ): Gen[Map[String, JSONSchemaPropsOrStringArray]] = Gen.mapOf {
+    for {
+      k <- Gen.alphaNumStr
+      v <- genJSONSchemaPropsOrStringArray(jsp)
+    } yield (k, v)
+  }
+
   implicit lazy val arbitrary_io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaProps
       : Arbitrary[JSONSchemaProps] = Arbitrary(jsonSchemaProps)
 
@@ -202,7 +211,7 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       oneOf <- opt(jsp, jsonSchemas)
       uniqueItems <- arbitrary[Option[Boolean]]
       minProperties <- arbitrary[Option[Int]]
-      dependencies <- Gen.const(None)
+      dependencies <- opt(jsp, dependenciesMap)
       externalDocs <- arbitrary[Option[
         io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.ExternalDocumentation
       ]]
