@@ -7,26 +7,6 @@ object ScalacheckGenerator {
     "arbitrary_" + data.pkg.replace('-', '_').replace('.', '_') + data.name
   private def typeFor(data: DataModel) =
     data.pkg.replace('-', '_') + "." + data.name
-
-  private def print(data: Seq[Primitive]) = {
-    val arbs = data
-      .map(p =>
-        s"""  implicit lazy val ${arbName(p)}: Arbitrary[${typeFor(
-            p
-          )}] = ${smallCtor(p, 1)}"""
-      )
-      .mkString("\n")
-    s"""package dev.hnaderi.k8s.scalacheck
-
-import org.scalacheck.Arbitrary
-import org.scalacheck.Gen
-
-private[scalacheck] trait Primitives {
-$arbs
-}
-"""
-  }
-
   private def definitionFor(d: DataModel) = s"""  implicit lazy val ${arbName(
       d
     )}: Arbitrary[${typeFor(d)}]"""
@@ -52,8 +32,26 @@ $ctorArgs
     s""" Arbitrary($gen)"""
   }
 
-  private def printOther(data: Seq[(DataModel, Seq[ModelProperty])]) = {
+  private def print(data: Seq[Primitive]) = {
+    val arbs = data
+      .map(p =>
+        s"""  implicit lazy val ${arbName(p)}: Arbitrary[${typeFor(
+            p
+          )}] = ${smallCtor(p, 1)}"""
+      )
+      .mkString("\n")
+    s"""package dev.hnaderi.k8s.scalacheck
 
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
+
+private[scalacheck] trait PrimitiveGenerators { self : NonPrimitiveGenerators =>
+$arbs
+}
+"""
+  }
+
+  private def printOther(data: Seq[(DataModel, Seq[ModelProperty])]) = {
     val arbs = data
       .map {
         case (d: MetaResource, ps) =>
@@ -69,8 +67,27 @@ $ctorArgs
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 
-object Generators extends Primitives {
+private[scalacheck] trait NonPrimitiveGenerators { self : PrimitiveGenerators =>
 $arbs
+}
+"""
+  }
+
+  private def printKObjects(data: Seq[Resource]) = {
+
+    s"""package dev.hnaderi.k8s
+package scalacheck
+
+import org.scalacheck.Arbitrary
+import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Gen
+
+private[scalacheck] trait KObjectGenerators { self : NonPrimitiveGenerators =>
+  implicit val arbitraryKObjects : Arbitrary[KObject] = Arbitrary(
+    Gen.oneOf(
+      ${data.map(typeFor).map(t => s"arbitrary[$t]").mkString(",\n      ")}
+    )
+  )
 }
 """
   }
@@ -82,7 +99,9 @@ $arbs
       case o: SubResource  => (o, o.properties)
       case o: MetaResource => (o, o.properties)
     }
-    scg.managed("", "Generators").write(printOther(other))
-    scg.unmanaged("", "Primitives").write(print(primitives))
+    val kobjs = data.collect { case r: Resource => r }
+    scg.managed("", "NonPrimitiveGenerators").write(printOther(other))
+    scg.unmanaged("", "PrimitiveGenerators").write(print(primitives))
+    scg.managed("", "KObjectGenerators").write(printKObjects(kobjs))
   }
 }

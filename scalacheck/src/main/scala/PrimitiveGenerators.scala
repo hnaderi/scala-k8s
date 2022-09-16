@@ -16,6 +16,8 @@
 
 package dev.hnaderi.k8s.scalacheck
 
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSONSchemaProps
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSONSchemaPropsOrArray
 import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.JSONSchemaPropsOrBool
@@ -25,9 +27,8 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 
 import Arbitrary.arbitrary
-import Generators.arbitrary_io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaProps
 
-private[scalacheck] trait Primitives {
+private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
   implicit lazy val arbitrary_io_k8s_apimachinery_pkg_api_resourceQuantity
       : Arbitrary[io.k8s.apimachinery.pkg.api.resource.Quantity] = Arbitrary(
     Gen.resultOf(io.k8s.apimachinery.pkg.api.resource.Quantity(_))
