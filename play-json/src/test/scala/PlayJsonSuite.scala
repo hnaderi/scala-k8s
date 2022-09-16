@@ -16,7 +16,7 @@
 
 package dev.hnaderi.k8s.playJson
 
-import play.api.libs.json._
+import play.api.libs.json.JsValue
 import dev.hnaderi.k8s.test.CodecSuite
 
 class PlayJsonSuite extends CodecSuite[JsValue]

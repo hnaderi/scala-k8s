@@ -20,6 +20,8 @@ import dev.hnaderi.k8s.utils.Reader
 import io.circe._
 
 private[circe] object CirceReader extends Reader[Json] {
+  /* NOTE that this import is required to use correct implicit instances */
+  import io.circe.Decoder._
 
   private def convert[T: Decoder](json: Json): Either[String, T] =
     json.as[T].left.map(_.getMessage())

@@ -16,12 +16,14 @@
 
 package dev.hnaderi.k8s.playJson
 
-import play.api.libs.json._
 import dev.hnaderi.k8s.utils.Reader
+import play.api.libs.json._
 
 import scala.collection.Seq
 
 private[playJson] object PlayJsonReader extends Reader[JsValue] {
+  /* NOTE that this import is required to use correct implicit instances */
+  import play.api.libs.json.Reads._
 
   private def errorMsg(
       err: Seq[(JsPath, Seq[JsonValidationError])]
