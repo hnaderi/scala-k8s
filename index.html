@@ -205,22 +205,22 @@
 //     port: 80
 // 
 // ---
-// apiVersion: v1
 // metadata:
 //   namespace: staging
 //   labels:
 //     app.kubernetes.io/name: example
 //     app.kubernetes.io/instance: one
 //   name: example
+// apiVersion: v1
 // kind: ConfigMap
-// binaryData:
-//   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
-//   blob2: dmVyc2lvbiA9IDMuNS45CnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
-//   other inline data: c29tZSBvdGhlciBkYXRh
 // data:
 //   some config: some value
 //   config file: |
 //     use flake
+// binaryData:
+//   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
+//   blob2: dmVyc2lvbiA9IDMuNS45CnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
+//   other inline data: c29tZSBvdGhlciBkYXRh
 // 
 // ---
 // apiVersion: apps/v1
@@ -252,7 +252,12 @@
           <li><code>mapFieldName</code> transforms using a function</li>
         </ul>
         <pre><code class="nohighlight"><span class="identifier">println</span><span>(</span><span class="identifier">config3</span><span>.</span><span class="identifier">asManifest</span><span>)
-</span><span class="comment">// apiVersion: v1
+</span><span class="comment">// metadata:
+//   namespace: production
+//   labels:
+//     app.kubernetes.io/name: example
+//     app.kubernetes.io/instance: one
+//   name: new-config
 // binaryData:
 //   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
 //   blob2: dmVyc2lvbiA9IDMuNS45CnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
@@ -263,12 +268,7 @@
 //   config file: |
 //     use flake
 //   new-key: new value
-// metadata:
-//   namespace: production
-//   labels:
-//     app.kubernetes.io/name: example
-//     app.kubernetes.io/instance: one
-//   name: new-config
+// apiVersion: v1
 // immutable: true
 //</span></code></pre>
 
