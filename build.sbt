@@ -66,7 +66,7 @@ lazy val scalacheck = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     description := "scalacheck generators for kubernetes data models",
     k8sUnmanagedTarget := rootDir.value / "scalacheck" / "src" / "main" / "scala",
     libraryDependencies ++= Seq(
-      "org.scalacheck" %%% "scalacheck" % "1.16.0"
+      "org.scalacheck" %%% "scalacheck" % "1.17.0"
     )
   )
   .dependsOn(objects)
@@ -78,7 +78,7 @@ lazy val objectsTest = crossProject(JVMPlatform, JSPlatform)
     name := "scala-k8s-test",
     description := "internal tests for scala-k8s objects",
     libraryDependencies ++= Seq(
-      "org.scalacheck" %%% "scalacheck" % "1.16.0",
+      "org.scalacheck" %%% "scalacheck" % "1.17.0",
       "org.scalameta" %%% "munit" % munitVersion % Test
     )
   )
