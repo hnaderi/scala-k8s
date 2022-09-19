@@ -28,9 +28,9 @@ import dev.hnaderi.k8s.utils._
   */
 final case class CustomResourceSubresourceStatus()
 object CustomResourceSubresourceStatus {
-  implicit def encoder[T: Builder]
-      : Encoder[CustomResourceSubresourceStatus, T] = Encoder.emptyObj
-  implicit def decoder[T]: Decoder[T, CustomResourceSubresourceStatus] =
+  implicit val encoder: Encoder[CustomResourceSubresourceStatus] =
+    Encoder.emptyObj
+  implicit val decoder: Decoder[CustomResourceSubresourceStatus] =
     Decoder.const(CustomResourceSubresourceStatus())
 }
 //TODO

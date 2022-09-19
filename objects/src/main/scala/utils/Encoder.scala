@@ -16,59 +16,56 @@
 
 package dev.hnaderi.k8s.utils
 
-trait Encoder[R, T] extends Serializable {
-  def apply(r: R): T
+trait Encoder[R] extends Serializable {
+  def apply[T: Builder](r: R): T
 }
 
 object Encoder {
-  def apply[R, T](implicit enc: Encoder[R, T]): Encoder[R, T] = enc
-  implicit def intBuilder[T](implicit b: Builder[T]): Encoder[Int, T] =
-    new Encoder[Int, T] {
-      def apply(r: Int): T =
+  def apply[R](implicit enc: Encoder[R]): Encoder[R] = enc
+  implicit lazy val intBuilder: Encoder[Int] =
+    new Encoder[Int] {
+      def apply[T](r: Int)(implicit b: Builder[T]): T = b.of(r)
+    }
+
+  implicit lazy val longBuilder: Encoder[Long] =
+    new Encoder[Long] {
+      def apply[T](r: Long)(implicit b: Builder[T]): T =
         b.of(r)
     }
-  implicit def longBuilder[T](implicit b: Builder[T]): Encoder[Long, T] =
-    new Encoder[Long, T] {
-      def apply(r: Long): T =
-        b.of(r)
-    }
-  implicit def doubleBuilder[T](implicit b: Builder[T]): Encoder[Double, T] =
-    new Encoder[Double, T] {
-      def apply(r: Double): T =
+  implicit lazy val doubleBuilder: Encoder[Double] =
+    new Encoder[Double] {
+      def apply[T](r: Double)(implicit b: Builder[T]): T =
         b.of(r)
     }
 
-  implicit def stringBuilder[T](implicit b: Builder[T]): Encoder[String, T] =
-    new Encoder[String, T] {
-      def apply(r: String): T =
+  implicit lazy val stringBuilder: Encoder[String] =
+    new Encoder[String] {
+      def apply[T](r: String)(implicit b: Builder[T]): T =
         b.of(r)
     }
 
-  implicit def booleanBuilder[T](implicit b: Builder[T]): Encoder[Boolean, T] =
-    new Encoder[Boolean, T] {
-      def apply(r: Boolean): T =
+  implicit lazy val booleanBuilder: Encoder[Boolean] =
+    new Encoder[Boolean] {
+      def apply[T](r: Boolean)(implicit b: Builder[T]): T =
         b.of(r)
     }
 
-  implicit def seqBuilder[A, T](implicit
-      b: Builder[T],
-      enc: Encoder[A, T]
-  ): Encoder[Seq[A], T] =
-    new Encoder[Seq[A], T] {
-      def apply(r: Seq[A]): T = b.arr(r.map(enc(_)))
+  implicit def seqBuilder[A](implicit enc: Encoder[A]): Encoder[Seq[A]] =
+    new Encoder[Seq[A]] {
+      def apply[T](r: Seq[A])(implicit b: Builder[T]): T = b.arr(r.map(enc(_)))
     }
 
-  implicit def mapBuilder[A, T](implicit
-      b: Builder[T],
-      enc: Encoder[A, T]
-  ): Encoder[Map[String, A], T] =
-    new Encoder[Map[String, A], T] {
-      def apply(r: Map[String, A]): T = b.obj(r.map { case (k, v) =>
-        (k, enc(v))
+  implicit def mapBuilder[A](implicit
+      enc: Encoder[A]
+  ): Encoder[Map[String, A]] =
+    new Encoder[Map[String, A]] {
+      def apply[T](r: Map[String, A])(implicit b: Builder[T]): T = b.obj(r.map {
+        case (k, v) =>
+          (k, enc(v))
       })
     }
 
-  def emptyObj[R, T: Builder]: Encoder[R, T] = new Encoder[R, T] {
-    def apply(r: R): T = Builder[T].ofFields()
+  def emptyObj[R]: Encoder[R] = new Encoder[R] {
+    def apply[T: Builder](r: R): T = Builder[T].ofFields()
   }
 }

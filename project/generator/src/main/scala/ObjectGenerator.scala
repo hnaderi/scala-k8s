@@ -71,7 +71,7 @@ final case class $name(
 
 ${builderMethods(name, properties)}
 
-  override def foldTo[T : Builder] : T = $name.encoder[T].apply(this)
+  override def foldTo[T : Builder] : T = $name.encoder.apply(this)
 }
 
 object $name {

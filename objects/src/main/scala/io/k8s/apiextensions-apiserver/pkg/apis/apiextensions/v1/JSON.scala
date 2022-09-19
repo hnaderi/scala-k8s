@@ -21,12 +21,10 @@ import dev.hnaderi.k8s.utils._
 /* JSON represents any valid JSON value. These types are supported: bool, int64, float64, string, []interface{}, map[string]interface{} and nil. */
 final case class JSON(value: String) extends AnyVal
 object JSON {
-  implicit def encoder[T](implicit
-      builder: Builder[T]
-  ): Encoder[JSON, T] = new Encoder[JSON, T] {
-    def apply(r: JSON): T = builder.of(r.value)
+  implicit val encoder: Encoder[JSON] = new Encoder[JSON] {
+    def apply[T](r: JSON)(implicit builder: Builder[T]): T = builder.of(r.value)
   }
 
-  implicit def decoder[T: Reader]: Decoder[T, JSON] =
-    Decoder[T, String].map(JSON(_))
+  implicit val decoder: Decoder[JSON] =
+    Decoder[String].map(JSON(_))
 }

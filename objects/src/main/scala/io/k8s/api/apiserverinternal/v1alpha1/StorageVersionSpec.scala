@@ -23,8 +23,8 @@ final case class StorageVersionSpec()
 //TODO
 
 object StorageVersionSpec {
-  implicit def encoder[T: Builder]: Encoder[StorageVersionSpec, T] =
+  implicit val encoder: Encoder[StorageVersionSpec] =
     Encoder.emptyObj
-  implicit def decoder[T]: Decoder[T, StorageVersionSpec] =
+  implicit val decoder: Decoder[StorageVersionSpec] =
     Decoder.const(StorageVersionSpec())
 }

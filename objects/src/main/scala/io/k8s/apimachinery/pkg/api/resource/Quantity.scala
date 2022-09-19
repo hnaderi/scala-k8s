@@ -79,11 +79,10 @@ final case class Quantity(value: String) extends AnyVal
 //TODO
 
 object Quantity {
-  implicit def encoder[T](implicit
-      builder: Builder[T]
-  ): Encoder[Quantity, T] = new Encoder[Quantity, T] {
-    def apply(r: Quantity): T = builder.of(r.value)
+  implicit val encoder: Encoder[Quantity] = new Encoder[Quantity] {
+    def apply[T](r: Quantity)(implicit builder: Builder[T]): T =
+      builder.of(r.value)
   }
-  implicit def decoder[T: Reader]: Decoder[T, Quantity] =
-    Decoder[T, String].map(Quantity(_))
+  implicit val decoder: Decoder[Quantity] =
+    Decoder[String].map(Quantity(_))
 }

@@ -27,7 +27,7 @@ abstract class CodecSuite[T: Builder: Reader] extends ScalaCheckSuite {
   property("Codec must be reversible") {
     forAll { (o: KObject) =>
       val encoded = o.foldTo[T]
-      val decoded = KObject.decoder[T].apply(encoded)
+      val decoded = KObject.decoder.apply(encoded)
       assertEquals(decoded, Right(o))
     }
   }

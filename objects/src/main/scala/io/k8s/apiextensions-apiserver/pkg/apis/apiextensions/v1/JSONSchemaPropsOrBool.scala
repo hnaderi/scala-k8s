@@ -30,17 +30,17 @@ object JSONSchemaPropsOrBool {
   def apply(value: JSONSchemaProps): PropsValue = PropsValue(value)
   def apply(value: Boolean): BoolValue = BoolValue(value)
 
-  implicit def encoder[T: Builder]: Encoder[JSONSchemaPropsOrBool, T] =
-    new Encoder[JSONSchemaPropsOrBool, T] {
-      def apply(r: JSONSchemaPropsOrBool): T = r match {
+  implicit val encoder: Encoder[JSONSchemaPropsOrBool] =
+    new Encoder[JSONSchemaPropsOrBool] {
+      def apply[T: Builder](r: JSONSchemaPropsOrBool): T = r match {
         case PropsValue(value) => value.encodeTo
         case BoolValue(value)  => value.encodeTo
       }
     }
-  implicit def decoder[T: Reader]: Decoder[T, JSONSchemaPropsOrBool] =
-    Decoder[T, JSONSchemaProps]
+  implicit val decoder: Decoder[JSONSchemaPropsOrBool] =
+    Decoder[JSONSchemaProps]
       .map(PropsValue(_))
       .orElse(
-        Decoder[T, Boolean].map(BoolValue(_))
+        Decoder[Boolean].map(BoolValue(_))
       )
 }

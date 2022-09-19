@@ -25,11 +25,11 @@ final case class ObjectReader[T](fields: Iterable[(String, T)])(implicit
   def getOpt(key: String): Either[Nothing, Option[T]] =
     Right(m.get(key).map(Some(_)).getOrElse(None))
 
-  def read[A](key: String)(implicit dec: Decoder[T, A]): Either[String, A] =
+  def read[A](key: String)(implicit dec: Decoder[A]): Either[String, A] =
     get(key).flatMap(dec(_))
   def readOpt[A](
       key: String
-  )(implicit dec: Decoder[T, A]): Either[String, Option[A]] =
+  )(implicit dec: Decoder[A]): Either[String, Option[A]] =
     getOpt(key).flatMap {
       case Some(value) => dec(value).map(Some(_))
       case None        => Right(None)

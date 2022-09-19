@@ -26,12 +26,10 @@ final case class Time(value: String) extends AnyVal
 //TODO
 
 object Time {
-  implicit def encoder[T](implicit
-      builder: Builder[T]
-  ): Encoder[Time, T] = new Encoder[Time, T] {
-    def apply(r: Time): T = builder.of(r.value)
+  implicit val encoder: Encoder[Time] = new Encoder[Time] {
+    def apply[T](r: Time)(implicit builder: Builder[T]): T = builder.of(r.value)
   }
 
-  implicit def decoder[T: Reader]: Decoder[T, Time] =
-    Decoder[T, String].map(Time(_))
+  implicit val decoder: Decoder[Time] =
+    Decoder[String].map(Time(_))
 }

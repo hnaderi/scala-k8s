@@ -23,12 +23,12 @@ final case class MicroTime(value: String) extends AnyVal
 //TODO
 
 object MicroTime {
-  implicit def encoder[T](implicit
-      builder: Builder[T]
-  ): Encoder[MicroTime, T] = new Encoder[MicroTime, T] {
-    def apply(r: MicroTime): T = builder.of(r.value)
+  implicit val encoder: Encoder[MicroTime] = new Encoder[MicroTime] {
+    def apply[T](r: MicroTime)(implicit
+        builder: Builder[T]
+    ): T = builder.of(r.value)
   }
 
-  implicit def decoder[T: Reader]: Decoder[T, MicroTime] =
-    Decoder[T, String].map(MicroTime(_))
+  implicit val decoder: Decoder[MicroTime] =
+    Decoder[String].map(MicroTime(_))
 }

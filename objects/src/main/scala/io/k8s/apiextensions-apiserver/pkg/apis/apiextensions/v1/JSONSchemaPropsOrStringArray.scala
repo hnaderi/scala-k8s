@@ -33,17 +33,17 @@ object JSONSchemaPropsOrStringArray {
     value +: others
   )
 
-  implicit def encoder[T: Builder]: Encoder[JSONSchemaPropsOrStringArray, T] =
-    new Encoder[JSONSchemaPropsOrStringArray, T] {
-      def apply(r: JSONSchemaPropsOrStringArray): T = r match {
+  implicit val encoder: Encoder[JSONSchemaPropsOrStringArray] =
+    new Encoder[JSONSchemaPropsOrStringArray] {
+      def apply[T: Builder](r: JSONSchemaPropsOrStringArray): T = r match {
         case PropsValue(value) => value.encodeTo
         case StringList(value) => value.encodeTo
       }
     }
-  implicit def decoder[T: Reader]: Decoder[T, JSONSchemaPropsOrStringArray] =
-    Decoder[T, JSONSchemaProps]
+  implicit val decoder: Decoder[JSONSchemaPropsOrStringArray] =
+    Decoder[JSONSchemaProps]
       .map(PropsValue(_))
       .orElse(
-        Decoder[T, Seq[String]].map(StringList(_))
+        Decoder[Seq[String]].map(StringList(_))
       )
 }

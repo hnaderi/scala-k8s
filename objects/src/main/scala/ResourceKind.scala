@@ -19,7 +19,6 @@ package dev.hnaderi.k8s
 import dev.hnaderi.k8s.utils.Builder
 import dev.hnaderi.k8s.utils.Decoder
 import dev.hnaderi.k8s.utils.Encoder
-import dev.hnaderi.k8s.utils.Reader
 
 final case class ResourceKind(
     group: String,
@@ -39,10 +38,10 @@ trait KObject extends Serializable with Product {
 }
 
 object KObject {
-  implicit def decoder[T: Reader]: Decoder[T, KObject] =
+  implicit val decoder: Decoder[KObject] =
     ResourceCodecs.resourceDecoder
-  implicit def encoder[T: Builder]: Encoder[KObject, T] =
-    new Encoder[KObject, T] {
-      def apply(r: KObject): T = r.foldTo[T]
+  implicit val encoder: Encoder[KObject] =
+    new Encoder[KObject] {
+      def apply[T: Builder](r: KObject): T = r.foldTo[T]
     }
 }

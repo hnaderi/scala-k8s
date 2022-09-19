@@ -35,18 +35,18 @@ object JSONSchemaPropsOrArray {
   ): MutipleValues = MutipleValues(Seq(v1, v2) ++ others)
   def apply(values: Seq[JSONSchemaProps]): MutipleValues = MutipleValues(values)
 
-  implicit def encoder[T: Builder]: Encoder[JSONSchemaPropsOrArray, T] =
-    new Encoder[JSONSchemaPropsOrArray, T] {
-      def apply(r: JSONSchemaPropsOrArray): T = r match {
+  implicit val encoder: Encoder[JSONSchemaPropsOrArray] =
+    new Encoder[JSONSchemaPropsOrArray] {
+      def apply[T: Builder](r: JSONSchemaPropsOrArray): T = r match {
         case MutipleValues(value) => value.encodeTo
         case SingleValue(value)   => value.encodeTo
       }
     }
 
-  implicit def decoder[T: Reader]: Decoder[T, JSONSchemaPropsOrArray] =
-    Decoder[T, JSONSchemaProps]
+  implicit val decoder: Decoder[JSONSchemaPropsOrArray] =
+    Decoder[JSONSchemaProps]
       .map(SingleValue(_))
       .orElse(
-        Decoder[T, Seq[JSONSchemaProps]].map(MutipleValues(_))
+        Decoder[Seq[JSONSchemaProps]].map(MutipleValues(_))
       )
 }

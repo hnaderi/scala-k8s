@@ -56,12 +56,12 @@ final case class RawExtension()
 //TODO
 
 object RawExtension {
-  implicit def encoder[T](implicit
-      builder: Builder[T]
-  ): Encoder[RawExtension, T] = new Encoder[RawExtension, T] {
-    def apply(r: RawExtension): T = builder.ofFields()
+  implicit val encoder: Encoder[RawExtension] = new Encoder[RawExtension] {
+    def apply[T](r: RawExtension)(implicit
+        builder: Builder[T]
+    ): T = builder.ofFields()
   }
 
-  implicit def decoder[T]: Decoder[T, RawExtension] =
+  implicit val decoder: Decoder[RawExtension] =
     Decoder.const(RawExtension())
 }

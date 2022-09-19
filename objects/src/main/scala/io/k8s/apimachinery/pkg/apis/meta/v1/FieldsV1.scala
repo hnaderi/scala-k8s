@@ -34,7 +34,7 @@ import dev.hnaderi.k8s.utils._
   */
 final case class FieldsV1()
 object FieldsV1 {
-  implicit def encoder[T: Builder]: Encoder[FieldsV1, T] = Encoder.emptyObj
-  implicit def decoder[T]: Decoder[T, FieldsV1] = Decoder.const(FieldsV1())
+  implicit val encoder: Encoder[FieldsV1] = Encoder.emptyObj
+  implicit val decoder: Decoder[FieldsV1] = Decoder.const(FieldsV1())
 }
 //TODO

@@ -22,9 +22,9 @@ import play.api.libs.json._
 package object playJson {
   implicit val playJsonBuilder: Builder[JsValue] = PlayJsonBuilder
   implicit val playJsonReader: Reader[JsValue] = PlayJsonReader
-  implicit def k8sJsonWrites[T](implicit enc: Encoder[T, JsValue]): Writes[T] =
+  implicit def k8sJsonWrites[T](implicit enc: Encoder[T]): Writes[T] =
     Writes(enc(_))
-  implicit def k8sJsonReads[T](implicit dec: Decoder[JsValue, T]): Reads[T] =
+  implicit def k8sJsonReads[T](implicit dec: Decoder[T]): Reads[T] =
     Reads(dec(_) match {
       case Right(value) => JsSuccess(value)
       case Left(err)    => JsError(err)

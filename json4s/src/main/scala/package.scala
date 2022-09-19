@@ -24,12 +24,12 @@ import org.json4s.Writer
 package object json4s {
   implicit val json4sBuilder: Builder[JValue] = Json4sBuilder
   implicit val json4sReader: Reader[JValue] = Json4sReader
-  implicit def k8sJsonWriter[T](implicit enc: Encoder[T, JValue]): Writer[T] =
+  implicit def k8sJsonWriter[T](implicit enc: Encoder[T]): Writer[T] =
     new Writer[T] {
       def write(obj: T): JValue = enc(obj)
     }
   implicit def k8sJsonReader[T](implicit
-      dec: Decoder[JValue, T]
+      dec: Decoder[T]
   ): org.json4s.Reader[T] = new org.json4s.Reader[T] {
     def readEither(value: JValue): Either[MappingException, T] =
       dec(value).left.map(new MappingException(_))

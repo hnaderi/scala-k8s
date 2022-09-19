@@ -30,15 +30,15 @@ object IntOrString {
   def apply(int: Int): IntValue = IntValue(int)
   def apply(str: String): StringValue = StringValue(str)
 
-  implicit def encoder[T](implicit
-      builder: Builder[T]
-  ): Encoder[IntOrString, T] = new Encoder[IntOrString, T] {
-    def apply(r: IntOrString): T = r match {
+  implicit val encoder: Encoder[IntOrString] = new Encoder[IntOrString] {
+    def apply[T](r: IntOrString)(implicit
+        builder: Builder[T]
+    ): T = r match {
       case IntValue(i)    => builder.of(i)
       case StringValue(s) => builder.of(s)
     }
   }
-  implicit def decoder[T: Reader]: Decoder[T, IntOrString] = Decoder[T, Int]
+  implicit val decoder: Decoder[IntOrString] = Decoder[Int]
     .map(IntValue(_))
-    .orElse(Decoder[T, String].map(StringValue(_)))
+    .orElse(Decoder[String].map(StringValue(_)))
 }
