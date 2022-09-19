@@ -31,6 +31,8 @@ lazy val root =
     .aggregate(
       objects,
       objectsTest,
+      client,
+      http4s,
       codecTest,
       circe,
       `spray-json`,
@@ -58,6 +60,26 @@ lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala"
   )
   .enablePlugins(KubernetesObjectGeneratorPlugin)
+
+lazy val client = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "scala-k8s-client",
+    description := "client core for kubernetes"
+  )
+  .dependsOn(objects)
+
+lazy val http4s = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "scala-k8s-http4s",
+    description := "http4s based client for kubernetes",
+    libraryDependencies ++= Seq(
+      "org.http4s" %%% "http4s-ember-client" % "0.23.16",
+      "org.typelevel" %%% "jawn-fs2" % "2.3.0"
+    )
+  )
+  .dependsOn(client)
 
 lazy val scalacheck = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -178,6 +200,8 @@ lazy val unidocs = project
     description := "unified docs for scala-k8s",
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
       objects.jvm,
+      client.jvm,
+      http4s.jvm,
       circe.jvm,
       `spray-json`.jvm,
       `play-json`.jvm,
