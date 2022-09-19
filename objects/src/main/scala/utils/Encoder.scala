@@ -16,8 +16,11 @@
 
 package dev.hnaderi.k8s.utils
 
-trait Encoder[R] extends Serializable {
+trait Encoder[R] extends Serializable { self =>
   def apply[T: Builder](r: R): T
+  final def contramap[A](f: A => R): Encoder[A] = new Encoder[A] {
+    def apply[T: Builder](a: A): T = self(f(a))
+  }
 }
 
 object Encoder {
