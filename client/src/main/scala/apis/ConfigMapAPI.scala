@@ -19,29 +19,13 @@ package dev.hnaderi.k8s.client
 import io.k8s.api.core.v1.ConfigMap
 import io.k8s.api.core.v1.ConfigMapList
 
-import ConfigMapAPI._
+final case class ConfigMapAPI(namespace: String)
+    extends NamespacedAPIBuilders(ConfigMapAPI)
 
-final case class ConfigMapAPIExact(ns: String, name: String) {
-  def get: Get = Get(ns, name)
-}
-final case class ConfigMapAPINamespaced(ns: String) {
-  def create(cm: ConfigMap): Create = Create(ns, cm)
-}
-object ClusterConfigMapAPI {
-  final case class List()
-      extends ListingRequest[ConfigMap, ConfigMapList]("/api/v1/configmaps")
+object ClusterConfigMapAPI extends ClusterwideAPIBuilders(ConfigMapAPI)
 
-  val list: List = List()
-}
-
-object ConfigMapAPI {
-  final case class Create(namespace: String, configmap: ConfigMap)
-      extends CreateRequest(
-        s"/api/v1/namespaces/${namespace}/configmaps",
-        configmap
-      )
-  final case class Get(namespace: String, name: String)
-      extends GetRequest[ConfigMap](
-        s"/api/v1/namespaces/$namespace/configmaps/$name"
-      )
-}
+object ConfigMapAPI
+    extends NamespacedResourceAPIs[ConfigMap, ConfigMapList](
+      "/api/v1",
+      "configmaps"
+    )

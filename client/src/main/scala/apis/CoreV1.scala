@@ -32,12 +32,3 @@ trait CoreV1 {
 }
 
 object CoreV1 extends CoreV1
-
-
-trait BatchV1 {
-
-}
-
-trait NetworkingV1 {
-
-}
