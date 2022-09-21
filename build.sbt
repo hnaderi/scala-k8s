@@ -100,7 +100,6 @@ lazy val objectsTest = crossProject(JVMPlatform, JSPlatform)
     name := "scala-k8s-test",
     description := "internal tests for scala-k8s objects",
     libraryDependencies ++= Seq(
-      "org.scalacheck" %%% "scalacheck" % "1.17.0",
       "org.scalameta" %%% "munit" % munitVersion % Test
     )
   )

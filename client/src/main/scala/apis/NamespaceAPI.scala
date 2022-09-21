@@ -16,21 +16,13 @@
 
 package dev.hnaderi.k8s.client
 
-import io.k8s.api.core.v1.NodeList
-import dev.hnaderi.k8s.utils._
+import io.k8s.api.core.v1.Namespace
+import io.k8s.api.core.v1.NamespaceList
 
-final case class NodeAPI(name: String) {}
+final case class NamespaceAPI(namespace: String) extends CoreV1Namespaced
 
-object NodeAPI {
+object NamespaceAPI {
   final case class List()
-      extends HttpRequest[NodeList]
-      with WatchRequest[NodeList] {
-    override def run[F[_]](
-        http: HttpClient[F]
-    ): F[NodeList] = ???
-    override def start[F[_]](
-        http: StreamingClient[F]
-    ): F[NodeList] = ???
-  }
-  val list = List()
+      extends ListingRequest[Namespace, NamespaceList]("/api/v1/namespaces")
+  def list: List = List()
 }
