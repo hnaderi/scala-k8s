@@ -16,9 +16,16 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs extends CoreV1 with AppsV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
-}
+import io.k8s.api.core.v1.Secret
+import io.k8s.api.core.v1.SecretList
 
-object APIs extends APIs
+object SecretAPI
+    extends NamespacedResourceAPI[Secret, SecretList](
+      "/api/v1",
+      "secrets"
+    )
+
+final case class SecretAPI(namespace: String)
+    extends SecretAPI.NamespacedAPIBuilders
+
+object ClusterSecretAPI extends SecretAPI.ClusterwideAPIBuilders

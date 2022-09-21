@@ -23,17 +23,28 @@ trait NamespacedAPI {
   protected def namespace: String
 }
 
-abstract class NamespacedResourceAPIs[
+abstract class ResourceAPIBase[
     RES: Decoder: Encoder,
     COL: Decoder: Encoder
 ](base: String, resourceName: String) {
-  protected def baseUrlIn(namespace: String) =
-    s"$base/namespaces/${namespace}/$resourceName"
   protected val clusterwideUrl = s"$base/$resourceName"
-  protected def urlFor(namespace: String, name: String) =
-    s"${baseUrlIn(namespace)}/$name"
 
   case class ListAll() extends ListingRequest[RES, COL](clusterwideUrl)
+  trait ClusterwideAPIBuilders {
+    val list: ListAll = ListAll()
+  }
+}
+
+abstract class NamespacedResourceAPI[
+    RES: Decoder: Encoder,
+    COL: Decoder: Encoder
+](base: String, resourceName: String)
+    extends ResourceAPIBase[RES, COL](base, resourceName) {
+  protected def urlFor(namespace: String, name: String) =
+    s"${baseUrlIn(namespace)}/$name"
+  protected def baseUrlIn(namespace: String) =
+    s"$base/namespaces/${namespace}/$resourceName"
+
   case class ListInNamespace(namespace: String)
       extends ListingRequest[RES, COL](baseUrlIn(namespace))
   case class Create(namespace: String, configmap: RES)
@@ -42,21 +53,24 @@ abstract class NamespacedResourceAPIs[
       extends GetRequest[RES](urlFor(namespace, name))
   case class Delete(namespace: String, name: String)
       extends DeleteRequest[RES](urlFor(namespace, name))
+
+  trait NamespacedAPIBuilders extends NamespacedAPI {
+    def get(name: String): Get = Get(namespace, name)
+    val list: ListInNamespace = ListInNamespace(namespace)
+    def delete(name: String): Delete = Delete(namespace, name)
+  }
 }
 
-abstract class ClusterwideAPIBuilders[APIS <: NamespacedResourceAPIs[_, _]](
-    val apis: APIS
-) {
-  import apis._
+abstract class ClusterResourceAPI[
+    RES: Decoder: Encoder,
+    COL: Decoder: Encoder
+](base: String, resourceName: String)
+    extends ResourceAPIBase[RES, COL](base, resourceName) {
+  protected def urlFor(name: String) =
+    s"$clusterwideUrl/$name"
+
+  case class Get(name: String) extends GetRequest[RES](urlFor(name))
+
+  def get(name: String): Get = Get(name)
   val list: ListAll = ListAll()
-}
-
-abstract class NamespacedAPIBuilders[APIS <: NamespacedResourceAPIs[_, _]](
-    val apis: APIS
-) extends NamespacedAPI {
-  import apis._
-
-  def get(name: String): Get = Get(namespace, name)
-  val list: ListInNamespace = ListInNamespace(namespace)
-  def delete(name: String): Delete = Delete(namespace, name)
 }
