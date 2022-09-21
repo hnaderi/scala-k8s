@@ -18,39 +18,13 @@ package dev.hnaderi.k8s.client
 
 trait CoreV1Namespaced { self: NamespacedAPI =>
   val configmaps: ConfigMapAPI = ConfigMapAPI(namespace)
+  val secrets: SecretAPI = SecretAPI(namespace)
+  val services: ServiceAPI = ServiceAPI(namespace)
+  val pods: PodAPI = PodAPI(namespace)
 
-  // def secrets(name: String): ConfigMapAPIExact =
-  //   ConfigMapAPIExact(namespace, name)
-  // val secrets: ConfigMapAPINamespaced = ConfigMapAPINamespaced(namespace)
-
-  // def services(name: String): ConfigMapAPIExact =
-  //   ConfigMapAPIExact(namespace, name)
-  // val services: ConfigMapAPINamespaced = ConfigMapAPINamespaced(namespace)
-
-  // def pods(name: String): ConfigMapAPIExact =
-  //   ConfigMapAPIExact(namespace, name)
-  // val pods: ConfigMapAPINamespaced = ConfigMapAPINamespaced(namespace)
-
-  // def endpoints(name: String): ConfigMapAPIExact =
-  //   ConfigMapAPIExact(namespace, name)
-  // val endpoints: ConfigMapAPINamespaced = ConfigMapAPINamespaced(namespace)
-
-  // def limitRanges(name: String): ConfigMapAPIExact =
-  //   ConfigMapAPIExact(namespace, name)
-  // val limitRanges: ConfigMapAPINamespaced = ConfigMapAPINamespaced(namespace)
-
-  // def events(name: String): ConfigMapAPIExact =
-  //   ConfigMapAPIExact(namespace, name)
-  // val events: ConfigMapAPINamespaced = ConfigMapAPINamespaced(namespace)
-
-  // def serviceAccounts(name: String): ConfigMapAPIExact =
-  //   ConfigMapAPIExact(namespace, name)
-  // val serviceAccounts: ConfigMapAPINamespaced = ConfigMapAPINamespaced(
-  //   namespace
-  // )
-
-  // def resourceQuotas(name: String): ConfigMapAPIExact =
-  //   ConfigMapAPIExact(namespace, name)
-  // val resourceQuotas: ConfigMapAPINamespaced = ConfigMapAPINamespaced(namespace)
+  val limitRanges: LimitRangeAPI = LimitRangeAPI(namespace)
+  val events: EventAPI = EventAPI(namespace)
+  val serviceAccounts: ServiceAccountAPI = ServiceAccountAPI(namespace)
+  val resourceQuotas: ResourceQuotaAPI = ResourceQuotaAPI(namespace)
 
 }

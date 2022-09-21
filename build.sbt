@@ -41,7 +41,8 @@ lazy val root =
       manifests,
       scalacheck,
       docs,
-      unidocs
+      unidocs,
+      example
     )
     .settings(
       name := "scala-k8s"
@@ -209,6 +210,16 @@ lazy val unidocs = project
       scalacheck.jvm
     )
   )
+
+lazy val example = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.json4s" %%% "json4s-native-core" % "4.0.5"
+    )
+  )
+  .dependsOn(http4s, json4s)
+  .enablePlugins(NoPublishPlugin)
 
 def addAlias(name: String)(tasks: String*) =
   addCommandAlias(name, tasks.mkString(" ;"))

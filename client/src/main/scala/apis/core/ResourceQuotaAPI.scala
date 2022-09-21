@@ -16,9 +16,16 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs extends CoreV1 with AppsV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
-}
+import io.k8s.api.core.v1.ResourceQuota
+import io.k8s.api.core.v1.ResourceQuotaList
 
-object APIs extends APIs
+object ResourceQuotaAPI
+    extends NamespacedResourceAPI[ResourceQuota, ResourceQuotaList](
+      "/api/v1",
+      "resourcequotas"
+    )
+
+final case class ResourceQuotaAPI(namespace: String)
+    extends ResourceQuotaAPI.NamespacedAPIBuilders
+
+object ClusterResourceQuotaAPI extends ResourceQuotaAPI.ClusterwideAPIBuilders

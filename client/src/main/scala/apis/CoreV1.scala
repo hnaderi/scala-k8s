@@ -19,16 +19,13 @@ package dev.hnaderi.k8s.client
 trait CoreV1 {
   val configmaps = ClusterConfigMapAPI
   val nodes = NodeAPI
-  def node(name: String): NodeAPI = NodeAPI(name)
-
-  val secrets = ClusterConfigMapAPI
-  val services = ClusterConfigMapAPI
-  val pods = ClusterConfigMapAPI
-  val endpoints = ClusterConfigMapAPI
-  val limitRanges = ClusterConfigMapAPI
-  val events = ClusterConfigMapAPI
-  val serviceAccounts = ClusterConfigMapAPI
-  val resourceQuotas = ClusterConfigMapAPI
+  val secrets = ClusterSecretAPI
+  val services = ClusterServiceAPI
+  val pods = ClusterPodAPI
+  val limitRanges = ClusterLimitRangeAPI
+  val events = ClusterEventAPI
+  val serviceAccounts = ClusterServiceAccountAPI
+  val resourceQuotas = ClusterResourceQuotaAPI
 }
 
 object CoreV1 extends CoreV1

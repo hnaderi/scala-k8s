@@ -16,9 +16,16 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs extends CoreV1 with AppsV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
-}
+import io.k8s.api.core.v1.Event
+import io.k8s.api.core.v1.EventList
 
-object APIs extends APIs
+object EventAPI
+    extends NamespacedResourceAPI[Event, EventList](
+      "/api/v1",
+      "events"
+    )
+
+final case class EventAPI(namespace: String)
+    extends EventAPI.NamespacedAPIBuilders
+
+object ClusterEventAPI extends EventAPI.ClusterwideAPIBuilders

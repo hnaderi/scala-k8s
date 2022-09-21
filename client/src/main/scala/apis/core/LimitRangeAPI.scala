@@ -16,16 +16,16 @@
 
 package dev.hnaderi.k8s.client
 
-import io.k8s.api.core.v1.ConfigMap
-import io.k8s.api.core.v1.ConfigMapList
+import io.k8s.api.core.v1.LimitRange
+import io.k8s.api.core.v1.LimitRangeList
 
-final case class ConfigMapAPI(namespace: String)
-    extends NamespacedAPIBuilders(ConfigMapAPI)
-
-object ClusterConfigMapAPI extends ClusterwideAPIBuilders(ConfigMapAPI)
-
-object ConfigMapAPI
-    extends NamespacedResourceAPIs[ConfigMap, ConfigMapList](
+object LimitRangeAPI
+    extends NamespacedResourceAPI[LimitRange, LimitRangeList](
       "/api/v1",
-      "configmaps"
+      "limitranges"
     )
+
+final case class LimitRangeAPI(namespace: String)
+    extends LimitRangeAPI.NamespacedAPIBuilders
+
+object ClusterLimitRangeAPI extends LimitRangeAPI.ClusterwideAPIBuilders

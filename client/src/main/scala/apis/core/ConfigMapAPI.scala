@@ -16,17 +16,16 @@
 
 package dev.hnaderi.k8s.client
 
-import io.k8s.api.core.v1.Node
-import io.k8s.api.core.v1.NodeList
+import io.k8s.api.core.v1.ConfigMap
+import io.k8s.api.core.v1.ConfigMapList
 
-final case class NodeAPI(name: String) {
-  val get: NodeAPI.Get = NodeAPI.Get(name)
-}
+object ConfigMapAPI
+    extends NamespacedResourceAPI[ConfigMap, ConfigMapList](
+      "/api/v1",
+      "configmaps"
+    )
 
-object NodeAPI {
-  final case class List()
-      extends ListingRequest[Node, NodeList]("/api/v1/nodes")
-  final case class Get(name: String)
-      extends GetRequest[Node](s"/api/v1/nodes/$name")
-  val list = List()
-}
+final case class ConfigMapAPI(namespace: String)
+    extends ConfigMapAPI.NamespacedAPIBuilders
+
+object ClusterConfigMapAPI extends ConfigMapAPI.ClusterwideAPIBuilders
