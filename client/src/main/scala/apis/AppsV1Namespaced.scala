@@ -16,10 +16,11 @@
 
 package dev.hnaderi.k8s.client
 
-final case class NamespaceAPI(namespace: String) {
-  def configmap(name: String): ExactConfigMapAPI =
-    ExactConfigMapAPI(namespace, name)
-  val configmaps: NamespacedConfigMapAPI = NamespacedConfigMapAPI(namespace)
-}
+trait AppsV1Namespaced {
+  protected def namespace: String
 
-object NamespaceAPI {}
+  def deployments(name: String) = ""
+  def daemonsets(name: String) = ""
+  def replicasets(name: String) = ""
+  def statefulsets(name: String) = ""
+}

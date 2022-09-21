@@ -16,9 +16,17 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs extends CoreV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
+import io.k8s.api.core.v1.Node
+import io.k8s.api.core.v1.NodeList
+
+final case class NodeAPI(name: String) {
+  val get: NodeAPI.Get = NodeAPI.Get(name)
 }
 
-object APIs extends APIs
+object NodeAPI {
+  final case class List()
+      extends ListingRequest[Node, NodeList]("/api/v1/nodes")
+  final case class Get(name: String)
+      extends GetRequest[Node](s"/api/v1/nodes/$name")
+  val list = List()
+}

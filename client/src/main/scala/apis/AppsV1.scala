@@ -16,9 +16,6 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs extends CoreV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
-}
+trait AppsV1 {}
 
-object APIs extends APIs
+object AppsV1 extends AppsV1 {}

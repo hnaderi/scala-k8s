@@ -16,9 +16,28 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs extends CoreV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
+trait CoreV1 {
+  val configmaps = ClusterConfigMapAPI
+  val nodes = NodeAPI
+  def node(name: String): NodeAPI = NodeAPI(name)
+
+  val secrets = ClusterConfigMapAPI
+  val services = ClusterConfigMapAPI
+  val pods = ClusterConfigMapAPI
+  val endpoints = ClusterConfigMapAPI
+  val limitRanges = ClusterConfigMapAPI
+  val events = ClusterConfigMapAPI
+  val serviceAccounts = ClusterConfigMapAPI
+  val resourceQuotas = ClusterConfigMapAPI
 }
 
-object APIs extends APIs
+object CoreV1 extends CoreV1
+
+
+trait BatchV1 {
+
+}
+
+trait NetworkingV1 {
+
+}
