@@ -16,9 +16,7 @@
 
 package dev.hnaderi.k8s.client
 
-trait AppsV1Namespaced {
-  protected def namespace: String
-
+trait AppsV1Namespaced { self: NamespacedAPI =>
   def deployments(name: String) = ""
   def daemonsets(name: String) = ""
   def replicasets(name: String) = ""

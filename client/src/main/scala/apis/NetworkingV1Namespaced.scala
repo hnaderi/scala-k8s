@@ -16,16 +16,4 @@
 
 package dev.hnaderi.k8s.client
 
-import io.k8s.api.core.v1.Namespace
-import io.k8s.api.core.v1.NamespaceList
-
-final case class NamespaceAPI(namespace: String)
-    extends CoreV1Namespaced
-    with AppsV1Namespaced
-    with NamespacedAPI
-
-object NamespaceAPI {
-  final case class List()
-      extends ListingRequest[Namespace, NamespaceList]("/api/v1/namespaces")
-  def list: List = List()
-}
+trait NetworkingV1Namespaced { self: NamespacedAPI => }
