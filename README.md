@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.png" height="100px" alt="kubernetes icon" />
   <br/>
   <strong>Scala K8S</strong>
-  <i>Kubernetes data models and typesafe manifest generation for scala, scalajs, and scala native</i>
+  <i>Kubernetes client, data models and typesafe manifest generation for scala, scalajs, and scala native</i>
 </p>
 
 <a href="https://typelevel.org/cats/"><img src="https://typelevel.org/cats/img/cats-badge.svg" height="40px" align="right" alt="Cats friendly" /></a>
