@@ -15,12 +15,18 @@
  */
 
 package dev.hnaderi.k8s.client
+package apis.appsv1
 
-import apis.appsv1._
+import io.k8s.api.apps.v1.DaemonSet
+import io.k8s.api.apps.v1.DaemonSetList
 
-trait AppsV1Namespaced { self: NamespacedAPI =>
-  val deployments = DeploymentAPI(namespace)
-  val daemonsets = DaemonSetAPI(namespace)
-  val replicasets = ReplicaSetAPI(namespace)
-  val statefulsets = StatefulSetAPI(namespace)
-}
+object DaemonSetAPI
+    extends NamespacedResourceAPI[DaemonSet, DaemonSetList](
+      "/apis/apps/v1",
+      "daemonsets"
+    )
+
+final case class DaemonSetAPI(namespace: String)
+    extends DaemonSetAPI.NamespacedAPIBuilders
+
+object ClusterDaemonSetAPI extends DaemonSetAPI.ClusterwideAPIBuilders
