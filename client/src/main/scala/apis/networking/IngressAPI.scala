@@ -15,14 +15,17 @@
  */
 
 package dev.hnaderi.k8s.client
+package apis.networkingv1
 
-import apis.networkingv1._
+import io.k8s.api.networking.v1.Ingress
+import io.k8s.api.networking.v1.IngressList
 
-trait NetworkingV1 {
-  val ingresses = ClusterIngressAPI
-  val networkPolicies = ClusterNetworkPolicyAPI
-}
+object IngressAPI
+    extends NetworkingV1.NamespacedResourceAPI[Ingress, IngressList](
+      "ingresses"
+    )
 
-object NetworkingV1
-    extends APIGroupAPI("/apis/networking.k8s.io/v1/")
-    with NetworkingV1
+final case class IngressAPI(namespace: String)
+    extends IngressAPI.NamespacedAPIBuilders
+
+object ClusterIngressAPI extends IngressAPI.ClusterwideAPIBuilders
