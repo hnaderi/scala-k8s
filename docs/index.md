@@ -169,7 +169,7 @@ println(config3.asManifest)
 ## Client
 
 ### Sending requests
-```scala mdoc:compile-only
+```scala
 import dev.hnaderi.k8s.client.Http4sKubernetesClient
 import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.circe._
