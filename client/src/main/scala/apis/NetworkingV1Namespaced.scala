@@ -16,4 +16,9 @@
 
 package dev.hnaderi.k8s.client
 
-trait NetworkingV1Namespaced { self: NamespacedAPI => }
+import apis.networkingv1._
+
+trait NetworkingV1Namespaced { self: NamespacedAPI =>
+  val ingresses = IngressAPI(namespace)
+  val networkPolicies = NetworkPolicyAPI(namespace)
+}

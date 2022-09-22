@@ -23,6 +23,7 @@ final case class NamespaceAPI(namespace: String)
     extends CoreV1Namespaced
     with AppsV1Namespaced
     with BatchV1Namespaced
+    with NetworkingV1Namespaced
     with NamespacedAPI
 
 object NamespaceAPI {
