@@ -2,24 +2,36 @@
 
 ### Usage
 
-This library is currently available for Scala binary versions 2.12, 2.13 and 3.2 on JVM/JS/Native. 
+This library is currently available for Scala binary versions 2.12, 2.13 and 3.2 on JVM/JS/Native.  
+This library is architecured in a microkernel fashion and all the main kubernetes stuff are implemented/generated in pure scala, and integration modules are provided separately.  
+main modules are:
 
-To use the latest version of library, include the following in your `build.sbt`:
+- `objects` raw kubernetes objects, which has no dependency
+- `client` raw kubernetes client and requests, requests can also be extended in user land easily!
+
+``` scala
+libraryDependencies ++= Seq(
+  "dev.hnaderi" %% "scala-k8s-objects" % "@VERSION@", // JVM, JS, Native ; raw k8s objects
+  "dev.hnaderi" %% "scala-k8s-client" % "@VERSION@", // JVM, JS, Native ; k8s client kernel and requests
+  )
+```
+
+The following integrations are currently available:
 
 ```scala
 libraryDependencies ++= Seq(
-  "dev.hnaderi" %% "scala-k8s-objects" % "@VERSION@", // JVM, JS, Native ; raw k8s objects
+  "dev.hnaderi" %% "scala-k8s-http4s" % "@VERSION@", // JVM, JS, Native ; http4s and fs2 integration
   "dev.hnaderi" %% "scala-k8s-circe" % "@VERSION@", // JVM, JS ; circe integration
   "dev.hnaderi" %% "scala-k8s-json4s" % "@VERSION@", // JVM, JS, Native; json4s integration
   "dev.hnaderi" %% "scala-k8s-spray-json" % "@VERSION@", // JVM ; spray-json integration
   "dev.hnaderi" %% "scala-k8s-play-json" % "@VERSION@", // JVM ; play-json integration
+  "dev.hnaderi" %% "scala-k8s-jawn" % "@VERSION@", // JVM, JS, Native ; jawn integration
   "dev.hnaderi" %% "scala-k8s-manifests" % "@VERSION@", // JVM ; yaml manifest generation
   "dev.hnaderi" %% "scala-k8s-scalacheck" % "@VERSION@" // JVM, JS, Native; scalacheck instances
 )
 ```
 
-### Getting started
-
+## Manifest and object generation
 first off, we'll import the following
 ```scala mdoc
 import dev.hnaderi.k8s._  // base packages
@@ -48,7 +60,7 @@ import java.io.File
 
 Now we can define any kubernetes object
 
-#### ConfigMap example
+### ConfigMap example
 
 ```scala mdoc:silent
 val config = ConfigMap(
@@ -80,7 +92,7 @@ val config2 = ConfigMap(
 )
 ```
 
-#### Deployment example
+### Deployment example
 
 ```scala mdoc:silent
 val deployment = Deployment(
@@ -104,7 +116,7 @@ val deployment = Deployment(
 )
 ```
 
-#### Service example
+### Service example
 
 ```scala mdoc:silent
 val service = Service(
@@ -119,7 +131,7 @@ val service = Service(
 )
 ```
 
-#### Manifest example
+### Manifest example
 
 Now you can merge all of your kubernetes resource definitions in to one manifest
 ```scala mdoc:silent
@@ -152,4 +164,62 @@ All fields have the following helper methods:
 
 ```scala mdoc
 println(config3.asManifest)
+```
+
+## Client
+
+### Sending requests
+```scala mdoc:compile-only
+import dev.hnaderi.k8s.client.Http4sKubernetesClient
+import dev.hnaderi.k8s.client.APIs
+import dev.hnaderi.k8s.circe._
+
+import io.circe.Json
+import cats.effect.IO
+import org.http4s._
+import org.http4s.client.Client
+
+implicit val enc: EntityEncoder[IO, Json] = ???
+implicit val dec: EntityDecoder[IO, Json] = ???
+val httpClient : Client[IO] = ???
+
+val client : Http4sKubernetesClient[IO, Json] = Http4sKubernetesClient[IO, Json]("http://localhost:8001", httpClient)
+
+val printConfigMaps = 
+    APIs
+      .namespace("kube-system")
+      .configmaps
+      .get("kube-proxy")
+      .send(client)
+      .flatMap(IO.println)
+      
+val getNodes = APIs.nodes.list.send(client)
+
+val watchNodes = APIs.nodes.list.listen(client)
+
+```
+
+### Working with requests
+Requests are plain data, so you can manipulate or pass them like any normal data
+
+```scala mdoc
+import dev.hnaderi.k8s.client.APIs
+
+val sysConfig = APIs
+  .namespace("kube-system")
+  .configmaps
+
+val defaultConfig = sysConfig.copy(namespace = "default")
+```
+
+### Implementing new requests
+you can also implement your own requests easily, however if you need a request that is widely used and is standard, please open an issue or better, a pull request, so everyone can use it.
+
+```scala mdoc
+import dev.hnaderi.k8s.client._
+
+type CustomResource = String
+case class MyCustomRequest(name: String) extends GetRequest[CustomResource](
+  s"/apis/my.custom-resource.io/$name"
+)
 ```

@@ -216,7 +216,7 @@ lazy val manifests = module("manifests") {
 lazy val docs = project
   .in(file("site"))
   .enablePlugins(TypelevelSitePlugin)
-  .dependsOn(manifests.jvm)
+  .dependsOn(manifests.jvm, http4s.jvm, circe.jvm)
   .settings(
     tlSiteRelatedProjects := Seq(
       "Kubernetes" -> url("https://github.com/kubernetes/kubernetes"),
