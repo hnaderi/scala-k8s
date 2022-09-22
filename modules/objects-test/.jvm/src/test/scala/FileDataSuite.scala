@@ -21,7 +21,7 @@ import munit.FunSuite
 import java.io.File
 
 class FileDataSuite extends FunSuite {
-  private val dataPath = "objectsTest/src/test/resources/data"
+  private val dataPath = "modules/objects-test/src/test/resources/data"
 
   test("file value") {
     val file = new File("some.file")

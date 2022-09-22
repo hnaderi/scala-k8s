@@ -1,4 +1,6 @@
 import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
+import sbtcrossproject.CrossProject
+
 ThisBuild / tlBaseVersion := "0.4"
 
 ThisBuild / organization := "dev.hnaderi"
@@ -54,144 +56,162 @@ lazy val munitVersion = "0.7.29"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
-lazy val objects = crossProject(JVMPlatform, JSPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-objects",
-    description := "data models for kubernetes",
-    k8sUnmanagedTarget := rootDir.value / "objects" / "src" / "main" / "scala"
-  )
-  .enablePlugins(KubernetesObjectGeneratorPlugin)
-
-lazy val client = crossProject(JVMPlatform, JSPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-client",
-    description := "client core for kubernetes"
-  )
-  .dependsOn(objects)
-
-lazy val http4s = crossProject(JVMPlatform, JSPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-http4s",
-    description := "http4s based client for kubernetes",
-    libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-ember-client" % "0.23.16",
-      "org.typelevel" %%% "jawn-fs2" % "2.3.0"
+def module(mname: String): CrossProject => CrossProject =
+  _.in(file(s"modules/$mname"))
+    .settings(
+      name := s"scala-k8s-$mname"
     )
-  )
-  .dependsOn(client, jawn)
 
-lazy val scalacheck = crossProject(JVMPlatform, JSPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-scalacheck",
-    description := "scalacheck generators for kubernetes data models",
-    k8sUnmanagedTarget := rootDir.value / "scalacheck" / "src" / "main" / "scala",
-    libraryDependencies ++= Seq(
-      "org.scalacheck" %%% "scalacheck" % "1.17.0"
+lazy val objects = module("objects") {
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "data models for kubernetes",
+      k8sUnmanagedTarget := rootDir.value / "modules" / "objects" / "src" / "main" / "scala"
     )
-  )
-  .dependsOn(objects)
-  .enablePlugins(KubernetesScalacheckGeneratorPlugin)
+    .enablePlugins(KubernetesObjectGeneratorPlugin)
+}
 
-lazy val objectsTest = crossProject(JVMPlatform, JSPlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-test",
-    description := "internal tests for scala-k8s objects",
-    libraryDependencies ++= Seq(
-      "org.scalameta" %%% "munit" % munitVersion % Test
+lazy val client = module("client") {
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "client core for kubernetes"
     )
-  )
-  .dependsOn(objects)
-  .enablePlugins(NoPublishPlugin)
+    .dependsOn(objects)
+}
 
-lazy val codecTest = crossProject(JVMPlatform, JSPlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-codec-test",
-    description := "internal codec tests for scala-k8s objects",
-    libraryDependencies ++= Seq(
-      "org.scalameta" %%% "munit" % munitVersion,
-      "org.scalameta" %%% "munit-scalacheck" % munitVersion
+lazy val http4s = module("http4s") {
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "http4s based client for kubernetes",
+      libraryDependencies ++= Seq(
+        "org.http4s" %%% "http4s-ember-client" % "0.23.16",
+        "org.typelevel" %%% "jawn-fs2" % "2.3.0"
+      )
     )
-  )
-  .dependsOn(scalacheck)
-  .enablePlugins(NoPublishPlugin)
+    .dependsOn(client, jawn)
+}
 
-lazy val circe = crossProject(JVMPlatform, JSPlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-circe",
-    description := "circe codecs for kubernetes data models",
-    libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion
+lazy val scalacheck = module("scalacheck") {
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "scalacheck generators for kubernetes data models",
+      k8sUnmanagedTarget := rootDir.value / "modules" / "scalacheck" / "src" / "main" / "scala",
+      libraryDependencies ++= Seq(
+        "org.scalacheck" %%% "scalacheck" % "1.17.0"
+      )
     )
-  )
-  .dependsOn(objects)
-  .dependsOn(codecTest % Test)
+    .dependsOn(objects)
+    .enablePlugins(KubernetesScalacheckGeneratorPlugin)
+}
 
-lazy val `spray-json` = crossProject(JVMPlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-spray-json",
-    description := "spray-json codecs for kubernetes data models",
-    libraryDependencies ++= Seq(
-      "io.spray" %%% "spray-json" % "1.3.6"
+lazy val objectsTest = module("objects-test") {
+  crossProject(JVMPlatform, JSPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "internal tests for scala-k8s objects",
+      libraryDependencies ++= Seq(
+        "org.scalameta" %%% "munit" % munitVersion % Test
+      )
     )
-  )
-  .dependsOn(objects)
-  .dependsOn(codecTest % Test)
+    .dependsOn(objects)
+    .enablePlugins(NoPublishPlugin)
+}
 
-lazy val `play-json` = crossProject(JVMPlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-play-json",
-    description := "play-json codecs for kubernetes data models",
-    libraryDependencies ++= Seq(
-      ("com.typesafe.play" %%% "play-json" % "2.9.3")
-        .cross(CrossVersion.for3Use2_13)
+lazy val codecTest = module("codec-test") {
+  crossProject(JVMPlatform, JSPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      name := "scala-k8s-codec-test",
+      description := "internal codec tests for scala-k8s objects",
+      libraryDependencies ++= Seq(
+        "org.scalameta" %%% "munit" % munitVersion,
+        "org.scalameta" %%% "munit-scalacheck" % munitVersion
+      )
     )
-  )
-  .dependsOn(objects)
-  .dependsOn(codecTest % Test)
+    .dependsOn(scalacheck)
+    .enablePlugins(NoPublishPlugin)
+}
 
-lazy val json4s = crossProject(JVMPlatform, JSPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-json4s",
-    description := "json4s codecs for kubernetes data models",
-    libraryDependencies ++= Seq(
-      "org.json4s" %%% "json4s-ast" % "4.0.5"
+lazy val circe = module("circe") {
+  crossProject(JVMPlatform, JSPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "circe codecs for kubernetes data models",
+      libraryDependencies ++= Seq(
+        "io.circe" %%% "circe-core" % circeVersion
+      )
     )
-  )
-  .dependsOn(objects)
+    .dependsOn(objects)
+    .dependsOn(codecTest % Test)
+}
 
-lazy val jawn = crossProject(JVMPlatform, JSPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    name := "scala-k8s-jawn",
-    description := "jawn facade for kubernetes data models parsing",
-    libraryDependencies ++= Seq(
-      "org.typelevel" %%% "jawn-parser" % "1.4.0"
+lazy val `spray-json` = module("spray-json") {
+  crossProject(JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "spray-json codecs for kubernetes data models",
+      libraryDependencies ++= Seq(
+        "io.spray" %%% "spray-json" % "1.3.6"
+      )
     )
-  )
-  .dependsOn(objects)
+    .dependsOn(objects)
+    .dependsOn(codecTest % Test)
+}
 
-lazy val manifests = crossProject(JVMPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("lib"))
-  .settings(
-    name := "scala-k8s-manifests",
-    description := "kubernetes manifests utilities",
-    libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-yaml" % circeVersion,
-      "io.circe" %%% "circe-parser" % circeVersion
+lazy val `play-json` = module("play-json") {
+  crossProject(JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "play-json codecs for kubernetes data models",
+      libraryDependencies ++= Seq(
+        ("com.typesafe.play" %%% "play-json" % "2.9.3")
+          .cross(CrossVersion.for3Use2_13)
+      )
     )
-  )
-  .dependsOn(circe)
+    .dependsOn(objects)
+    .dependsOn(codecTest % Test)
+}
+
+lazy val json4s = module("json4s") {
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "json4s codecs for kubernetes data models",
+      libraryDependencies ++= Seq(
+        "org.json4s" %%% "json4s-ast" % "4.0.5"
+      )
+    )
+    .dependsOn(objects)
+}
+
+lazy val jawn = module("jawn") {
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "jawn facade for kubernetes data models parsing",
+      libraryDependencies ++= Seq(
+        "org.typelevel" %%% "jawn-parser" % "1.4.0"
+      )
+    )
+    .dependsOn(objects)
+}
+
+lazy val manifests = module("manifests") {
+  crossProject(JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "kubernetes manifests utilities",
+      libraryDependencies ++= Seq(
+        "io.circe" %%% "circe-yaml" % circeVersion,
+        "io.circe" %%% "circe-parser" % circeVersion
+      )
+    )
+    .dependsOn(circe)
+}
 
 lazy val docs = project
   .in(file("site"))
