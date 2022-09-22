@@ -22,6 +22,7 @@ import io.k8s.api.core.v1.NamespaceList
 final case class NamespaceAPI(namespace: String)
     extends CoreV1Namespaced
     with AppsV1Namespaced
+    with BatchV1Namespaced
     with NamespacedAPI
 
 object NamespaceAPI {

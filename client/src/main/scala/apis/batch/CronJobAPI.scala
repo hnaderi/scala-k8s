@@ -15,12 +15,15 @@
  */
 
 package dev.hnaderi.k8s.client
+package apis.batchv1
 
-import apis.batchv1._
+import io.k8s.api.batch.v1.CronJob
+import io.k8s.api.batch.v1.CronJobList
 
-trait BatchV1 {
-  val jobs = ClusterJobAPI
-  val cronjobs = ClusterCronJobAPI
-}
+object CronJobAPI
+    extends BatchV1.NamespacedResourceAPI[CronJob, CronJobList]("cronjobs")
 
-object BatchV1 extends APIGroupAPI("/apis/batch/v1") with BatchV1
+final case class CronJobAPI(namespace: String)
+    extends CronJobAPI.NamespacedAPIBuilders
+
+object ClusterCronJobAPI extends CronJobAPI.ClusterwideAPIBuilders
