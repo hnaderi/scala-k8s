@@ -38,6 +38,7 @@ lazy val root =
       `spray-json`,
       `play-json`,
       json4s,
+      jawn,
       manifests,
       scalacheck,
       docs,
@@ -80,7 +81,7 @@ lazy val http4s = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "org.typelevel" %%% "jawn-fs2" % "2.3.0"
     )
   )
-  .dependsOn(client)
+  .dependsOn(client, jawn)
 
 lazy val scalacheck = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
@@ -164,6 +165,17 @@ lazy val json4s = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     description := "json4s codecs for kubernetes data models",
     libraryDependencies ++= Seq(
       "org.json4s" %%% "json4s-ast" % "4.0.5"
+    )
+  )
+  .dependsOn(objects)
+
+lazy val jawn = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    name := "scala-k8s-jawn",
+    description := "jawn facade for kubernetes data models parsing",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "jawn-parser" % "1.4.0"
     )
   )
   .dependsOn(objects)

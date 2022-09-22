@@ -31,10 +31,9 @@ import org.http4s.Uri
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.headers.`Content-Type`
-import org.typelevel.jawn.Facade
 import org.typelevel.jawn.fs2._
-
-import Http4sKubernetesClient._
+import dev.hnaderi.k8s.jawn
+import org.typelevel.jawn.Facade
 
 final case class Http4sKubernetesClient[F[_]: Concurrent: std.Console, T](
     baseUrl: String,
@@ -49,6 +48,8 @@ final case class Http4sKubernetesClient[F[_]: Concurrent: std.Console, T](
   private val dsl = new Http4sClientDsl[F] {}
   import dsl._
 
+  private implicit lazy val jawnFacade: Facade.SimpleFacade[T] =
+    jawn.jawnFacade[T]
   private implicit def encoder[A: Encoder]: EntityEncoder[F, A] =
     enc
       .contramap[A](_.encodeTo)
@@ -118,24 +119,4 @@ final case class Http4sKubernetesClient[F[_]: Concurrent: std.Console, T](
           .fold(err => raiseError[F](new Exception(s"$err\n$s")), emit(_))
       }
   }
-}
-
-object Http4sKubernetesClient {
-  implicit def jawnFacade[T](implicit
-      builder: Builder[T]
-  ): Facade.SimpleFacade[T] =
-    new Facade.SimpleFacade[T] {
-      override def jnull: T = builder.nil
-      override def jfalse: T = builder.of(false)
-      override def jtrue: T = builder.of(true)
-      override def jnum(s: CharSequence, decIndex: Int, expIndex: Int): T = {
-        val n = BigDecimal(s.toString)
-        if (n.isValidInt) builder.of(n.toIntExact)
-        else if (n.isValidLong) builder.of(n.toLongExact)
-        else builder.of(n.toDouble)
-      }
-      override def jstring(s: CharSequence): T = builder.of(s.toString)
-      override def jarray(vs: List[T]): T = builder.arr(vs)
-      override def jobject(vs: Map[String, T]): T = builder.obj(vs)
-    }
 }

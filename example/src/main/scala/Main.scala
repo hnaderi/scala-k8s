@@ -22,9 +22,9 @@ import cats.effect.IO
 import cats.effect.IOApp
 import cats.implicits._
 import dev.hnaderi.k8s.client.APIs
+import dev.hnaderi.k8s.jawn.jawnFacade
 import dev.hnaderi.k8s.client.CoreV1
 import dev.hnaderi.k8s.client.Http4sKubernetesClient
-import dev.hnaderi.k8s.client.Http4sKubernetesClient.jawnFacade
 import dev.hnaderi.k8s.json4s._
 import fs2.Stream._
 import org.http4s._
