@@ -21,8 +21,7 @@ import io.k8s.api.apps.v1.ReplicaSet
 import io.k8s.api.apps.v1.ReplicaSetList
 
 object ReplicaSetAPI
-    extends NamespacedResourceAPI[ReplicaSet, ReplicaSetList](
-      "/apis/apps/v1",
+    extends AppsV1.NamespacedResourceAPI[ReplicaSet, ReplicaSetList](
       "replicasets"
     )
 

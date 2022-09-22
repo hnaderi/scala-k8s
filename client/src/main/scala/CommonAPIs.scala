@@ -17,6 +17,8 @@
 package dev.hnaderi.k8s.client
 
 import dev.hnaderi.k8s.utils._
+import io.k8s.apimachinery.pkg.apis.meta.v1.APIResourceList
+import io.k8s.apimachinery.pkg.apis.meta.v1.APIGroupList
 
 abstract class ListingRequest[O: Decoder, COL: Decoder](
     url: String
@@ -58,4 +60,18 @@ abstract class DeleteRequest[OUT: Decoder](url: String) // TODO parameters
   override def send[F[_]](
       http: HttpClient[F]
   ): F[OUT] = http.delete(url)
+}
+
+abstract class APIResourceListingRequest(url: String)
+    extends HttpRequest[APIResourceList] {
+  override def send[F[_]](
+      http: HttpClient[F]
+  ): F[APIResourceList] = http.get(url)
+}
+
+abstract class APIGroupListingRequest(url: String)
+    extends HttpRequest[APIGroupList] {
+  override def send[F[_]](
+      http: HttpClient[F]
+  ): F[APIGroupList] = http.get(url)
 }

@@ -21,8 +21,7 @@ import io.k8s.api.core.v1.ConfigMap
 import io.k8s.api.core.v1.ConfigMapList
 
 object ConfigMapAPI
-    extends NamespacedResourceAPI[ConfigMap, ConfigMapList](
-      "/api/v1",
+    extends CoreV1.NamespacedResourceAPI[ConfigMap, ConfigMapList](
       "configmaps"
     )
 

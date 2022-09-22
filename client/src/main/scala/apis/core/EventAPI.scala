@@ -21,8 +21,7 @@ import io.k8s.api.core.v1.Event
 import io.k8s.api.core.v1.EventList
 
 object EventAPI
-    extends NamespacedResourceAPI[Event, EventList](
-      "/api/v1",
+    extends CoreV1.NamespacedResourceAPI[Event, EventList](
       "events"
     )
 

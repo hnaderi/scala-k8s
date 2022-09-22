@@ -21,8 +21,7 @@ import io.k8s.api.core.v1.Pod
 import io.k8s.api.core.v1.PodList
 
 object PodAPI
-    extends NamespacedResourceAPI[Pod, PodList](
-      "/api/v1",
+    extends CoreV1.NamespacedResourceAPI[Pod, PodList](
       "pods"
     )
 

@@ -21,8 +21,7 @@ import io.k8s.api.core.v1.Secret
 import io.k8s.api.core.v1.SecretList
 
 object SecretAPI
-    extends NamespacedResourceAPI[Secret, SecretList](
-      "/api/v1",
+    extends CoreV1.NamespacedResourceAPI[Secret, SecretList](
       "secrets"
     )
 

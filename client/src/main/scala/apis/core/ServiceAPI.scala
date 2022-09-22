@@ -21,8 +21,7 @@ import io.k8s.api.core.v1.Service
 import io.k8s.api.core.v1.ServiceList
 
 object ServiceAPI
-    extends NamespacedResourceAPI[Service, ServiceList](
-      "/api/v1",
+    extends CoreV1.NamespacedResourceAPI[Service, ServiceList](
       "services"
     )
 

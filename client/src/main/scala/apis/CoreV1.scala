@@ -30,4 +30,4 @@ trait CoreV1 {
   val resourceQuotas = ClusterResourceQuotaAPI
 }
 
-object CoreV1 extends CoreV1
+object CoreV1 extends APIGroupAPI("/api/v1") with CoreV1

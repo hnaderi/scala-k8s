@@ -21,8 +21,7 @@ import io.k8s.api.core.v1.ResourceQuota
 import io.k8s.api.core.v1.ResourceQuotaList
 
 object ResourceQuotaAPI
-    extends NamespacedResourceAPI[ResourceQuota, ResourceQuotaList](
-      "/api/v1",
+    extends CoreV1.NamespacedResourceAPI[ResourceQuota, ResourceQuotaList](
       "resourcequotas"
     )
 
