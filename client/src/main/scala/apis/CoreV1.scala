@@ -16,6 +16,8 @@
 
 package dev.hnaderi.k8s.client
 
+import apis.corev1._
+
 trait CoreV1 {
   val configmaps = ClusterConfigMapAPI
   val nodes = NodeAPI

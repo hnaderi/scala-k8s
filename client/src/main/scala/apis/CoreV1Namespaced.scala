@@ -16,6 +16,8 @@
 
 package dev.hnaderi.k8s.client
 
+import apis.corev1._
+
 trait CoreV1Namespaced { self: NamespacedAPI =>
   val configmaps: ConfigMapAPI = ConfigMapAPI(namespace)
   val secrets: SecretAPI = SecretAPI(namespace)
