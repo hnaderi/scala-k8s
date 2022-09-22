@@ -21,8 +21,7 @@ import io.k8s.api.apps.v1.StatefulSet
 import io.k8s.api.apps.v1.StatefulSetList
 
 object StatefulSetAPI
-    extends NamespacedResourceAPI[StatefulSet, StatefulSetList](
-      "/apis/apps/v1",
+    extends AppsV1.NamespacedResourceAPI[StatefulSet, StatefulSetList](
       "statefulsets"
     )
 

@@ -82,8 +82,9 @@ object Main extends IOApp {
       .flatMap(IO.println)
 
   def debug2(cl: Http4sKubernetesClient[IO, JValue]) =
-    APIs.nodes.list
+    CoreV1.resources
       .send(cl)
+      .map(_.resources.map(_.name))
       .flatMap(IO.println)
 
   override def run(args: List[String]): IO[ExitCode] = client

@@ -20,4 +20,4 @@ package apis.corev1
 import io.k8s.api.core.v1.Node
 import io.k8s.api.core.v1.NodeList
 
-object NodeAPI extends ClusterResourceAPI[Node, NodeList]("/api/v1", "nodes")
+object NodeAPI extends CoreV1.ClusterResourceAPI[Node, NodeList]("nodes")

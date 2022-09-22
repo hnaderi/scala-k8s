@@ -22,7 +22,7 @@ trait AppsV1 {
   val deployments = ClusterDeploymentAPI
   val daemonsets = ClusterDaemonSetAPI
   val replicasets = ClusterReplicaSetAPI
-  val statefulsets = ""
+  val statefulsets = ClusterStatefulSetAPI
 }
 
-object AppsV1 extends AppsV1
+object AppsV1 extends APIGroupAPI("/apis/apps/v1") with AppsV1

@@ -21,8 +21,7 @@ import io.k8s.api.apps.v1.DaemonSet
 import io.k8s.api.apps.v1.DaemonSetList
 
 object DaemonSetAPI
-    extends NamespacedResourceAPI[DaemonSet, DaemonSetList](
-      "/apis/apps/v1",
+    extends AppsV1.NamespacedResourceAPI[DaemonSet, DaemonSetList](
       "daemonsets"
     )
 

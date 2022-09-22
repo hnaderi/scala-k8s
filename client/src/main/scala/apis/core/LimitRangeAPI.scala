@@ -21,8 +21,7 @@ import io.k8s.api.core.v1.LimitRange
 import io.k8s.api.core.v1.LimitRangeList
 
 object LimitRangeAPI
-    extends NamespacedResourceAPI[LimitRange, LimitRangeList](
-      "/api/v1",
+    extends CoreV1.NamespacedResourceAPI[LimitRange, LimitRangeList](
       "limitranges"
     )
 
