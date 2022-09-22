@@ -17,17 +17,11 @@
 package dev.hnaderi.k8s.client
 
 import cats.effect.Concurrent
-import cats.effect.std
 import cats.implicits._
 import dev.hnaderi.k8s.utils._
 import fs2.Stream
-import org.http4s.DecodeFailure
-import org.http4s.EntityDecoder
-import org.http4s.EntityEncoder
-import org.http4s.InvalidMessageBodyFailure
-import org.http4s.MediaType
+import org.http4s._
 import org.http4s.Method._
-import org.http4s.Uri
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.headers.`Content-Type`
@@ -35,7 +29,7 @@ import org.typelevel.jawn.fs2._
 import dev.hnaderi.k8s.jawn
 import org.typelevel.jawn.Facade
 
-final case class Http4sKubernetesClient[F[_]: Concurrent: std.Console, T](
+final case class Http4sKubernetesClient[F[_]: Concurrent, T](
     baseUrl: String,
     client: Client[F]
 )(implicit
@@ -70,9 +64,7 @@ final case class Http4sKubernetesClient[F[_]: Concurrent: std.Console, T](
   def get[O: Decoder](url: String, params: (String, String)*): F[O] = for {
     add <- urlFrom(url, params: _*)
     req = GET(add)
-    res <- client.expectOr[O](req)(res =>
-      std.Console[F].error(res.toString).as(new Exception())
-    )
+    res <- client.expect[O](req)
   } yield res
 
   def post[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
