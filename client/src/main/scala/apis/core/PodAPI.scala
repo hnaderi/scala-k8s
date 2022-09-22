@@ -15,6 +15,7 @@
  */
 
 package dev.hnaderi.k8s.client
+package apis.corev1
 
 import io.k8s.api.core.v1.Pod
 import io.k8s.api.core.v1.PodList
