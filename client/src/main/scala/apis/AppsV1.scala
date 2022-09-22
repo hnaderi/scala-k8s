@@ -16,6 +16,13 @@
 
 package dev.hnaderi.k8s.client
 
-trait AppsV1 {}
+import apis.appsv1._
 
-object AppsV1 extends AppsV1 {}
+trait AppsV1 {
+  val deployments = ClusterDeploymentAPI
+  val daemonsets = ClusterDaemonSetAPI
+  val replicasets = ClusterReplicaSetAPI
+  val statefulsets = ""
+}
+
+object AppsV1 extends AppsV1

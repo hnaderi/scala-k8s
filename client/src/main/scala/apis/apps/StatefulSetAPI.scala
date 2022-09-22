@@ -15,12 +15,18 @@
  */
 
 package dev.hnaderi.k8s.client
+package apis.appsv1
 
-import apis.appsv1._
+import io.k8s.api.apps.v1.StatefulSet
+import io.k8s.api.apps.v1.StatefulSetList
 
-trait AppsV1Namespaced { self: NamespacedAPI =>
-  val deployments = DeploymentAPI(namespace)
-  val daemonsets = DaemonSetAPI(namespace)
-  val replicasets = ReplicaSetAPI(namespace)
-  val statefulsets = StatefulSetAPI(namespace)
-}
+object StatefulSetAPI
+    extends NamespacedResourceAPI[StatefulSet, StatefulSetList](
+      "/apis/apps/v1",
+      "statefulsets"
+    )
+
+final case class StatefulSetAPI(namespace: String)
+    extends StatefulSetAPI.NamespacedAPIBuilders
+
+object ClusterStatefulSetAPI extends StatefulSetAPI.ClusterwideAPIBuilders
