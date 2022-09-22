@@ -27,8 +27,8 @@ abstract class APIGroupAPI(base: String) {
   case object resources extends APIResourceListingRequest(base)
 
   abstract class ResourceAPIBase[
-      RES: Decoder: Encoder,
-      COL: Decoder: Encoder
+      RES: Decoder,
+      COL: Decoder
   ](resourceName: String) {
     protected val clusterwideUrl = s"$base/$resourceName"
 
@@ -40,7 +40,7 @@ abstract class APIGroupAPI(base: String) {
 
   abstract class NamespacedResourceAPI[
       RES: Decoder: Encoder,
-      COL: Decoder: Encoder
+      COL: Decoder
   ](resourceName: String)
       extends ResourceAPIBase[RES, COL](resourceName) {
     protected def urlFor(namespace: String, name: String) =
@@ -65,8 +65,8 @@ abstract class APIGroupAPI(base: String) {
   }
 
   abstract class ClusterResourceAPI[
-      RES: Decoder: Encoder,
-      COL: Decoder: Encoder
+      RES: Decoder,
+      COL: Decoder
   ](resourceName: String)
       extends ResourceAPIBase[RES, COL](resourceName) {
     protected def urlFor(name: String) =
