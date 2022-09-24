@@ -36,6 +36,7 @@ lazy val root =
       client,
       http4s,
       zio,
+      sttp,
       codecTest,
       circe,
       `spray-json`,
@@ -91,6 +92,18 @@ lazy val http4s = module("http4s") {
       libraryDependencies ++= Seq(
         "org.http4s" %%% "http4s-ember-client" % "0.23.16",
         "org.typelevel" %%% "jawn-fs2" % "2.3.0"
+      )
+    )
+    .dependsOn(client, jawn)
+}
+
+lazy val sttp = module("sttp") {
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "sttp based client for kubernetes",
+      libraryDependencies ++= Seq(
+        "com.softwaremill.sttp.client3" %%% "core" % "3.8.0"
       )
     )
     .dependsOn(client, jawn)
@@ -253,6 +266,7 @@ lazy val docs = project
       "ZIO" -> url("https://github.com/zio/zio"),
       "ZIO-http" -> url("https://github.com/zio/zio-http"),
       "ZIO-json" -> url("https://github.com/zio/zio-json"),
+      "sttp" -> url("https://sttp.softwaremill.com"),
       "Circe" -> url("https://github.com/circe/circe"),
       "Spray json" -> url("https://github.com/spray/spray-json"),
       "Play json" -> url("https://github.com/playframework/play-json"),
@@ -276,6 +290,7 @@ lazy val unidocs = project
       client.jvm,
       http4s.jvm,
       zio.jvm,
+      sttp.jvm,
       circe.jvm,
       `spray-json`.jvm,
       `play-json`.jvm,
@@ -291,10 +306,11 @@ lazy val example = crossProject(JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-circe" % "0.23.16"
+      "org.http4s" %%% "http4s-circe" % "0.23.16",
+      "com.softwaremill.sttp.client3" %%% "circe" % "3.8.0"
     )
   )
-  .dependsOn(http4s, circe, zio)
+  .dependsOn(http4s, circe, zio, sttp)
   .enablePlugins(NoPublishPlugin)
 
 def addAlias(name: String)(tasks: String*) =
