@@ -41,6 +41,7 @@ lazy val root =
       `spray-json`,
       `play-json`,
       json4s,
+      `zio-json`,
       jawn,
       manifests,
       scalacheck,
@@ -102,10 +103,10 @@ lazy val zio = module("zio") {
       description := "zio-http based client for kubernetes",
       libraryDependencies ++= Seq(
         "io.d11" %%% "zhttp" % "2.0.0-RC10",
-        "org.typelevel" %%% "jawn-fs2" % "2.3.0"
+        "dev.zio" %%% "zio-json" % "0.3.0"
       )
     )
-    .dependsOn(client, jawn)
+    .dependsOn(client, `zio-json`)
 }
 
 lazy val scalacheck = module("scalacheck") {
@@ -202,6 +203,19 @@ lazy val json4s = module("json4s") {
     .dependsOn(objects)
 }
 
+lazy val `zio-json` = module("zio-json") {
+  crossProject(JVMPlatform, JSPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "zio-json codecs for kubernetes data models",
+      libraryDependencies ++= Seq(
+        "dev.zio" %%% "zio-json" % "0.3.0"
+      )
+    )
+    .dependsOn(objects)
+    .dependsOn(codecTest % Test)
+}
+
 lazy val jawn = module("jawn") {
   crossProject(JVMPlatform, JSPlatform, NativePlatform)
     .crossType(CrossType.Pure)
@@ -253,6 +267,8 @@ lazy val unidocs = project
       `spray-json`.jvm,
       `play-json`.jvm,
       json4s.jvm,
+      `zio-json`.jvm,
+      jawn.jvm,
       manifests.jvm,
       scalacheck.jvm
     )

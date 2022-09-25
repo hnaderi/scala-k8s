@@ -18,9 +18,6 @@ package test
 
 import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.ZIOKubernetesClient
-import dev.hnaderi.k8s.json4s._
-import org.json4s.JValue
-import org.json4s.native.JsonMethods._
 import zhttp.service.ChannelFactory
 import zhttp.service.EventLoopGroup
 import zio.Scope
@@ -30,9 +27,8 @@ import zio.ZIOAppDefault
 import zio._
 
 object ZIOExample extends ZIOAppDefault {
-  val client = ZIOKubernetesClient[JValue](
-    "http://localhost:8001",
-    j => compact(render(j))
+  val client = ZIOKubernetesClient(
+    "http://localhost:8001"
   )
   val nodes = APIs.nodes.list.send(client)
   private val env = ChannelFactory.auto ++ EventLoopGroup.auto()

@@ -16,26 +16,23 @@
 
 package dev.hnaderi.k8s.client
 
-import dev.hnaderi.k8s.jawn.jawnFacade
-import dev.hnaderi.k8s.utils._
-import org.typelevel.jawn.Facade
-import org.typelevel.jawn.Parser
+import dev.hnaderi.k8s.utils.Decoder
+import dev.hnaderi.k8s.utils.Encoder
+import dev.hnaderi.k8s.zioJson._
 import zhttp.http
+import zhttp.http.HttpData
+import zhttp.http.Method
 import zhttp.service.ChannelFactory
 import zhttp.service.Client
 import zhttp.service.EventLoopGroup
 import zio._
-import zio.stream.ZStream
+import zio.json._
 
 import ZIOKubernetesClient._
 
-final case class ZIOKubernetesClient[T: Reader: Builder](
-    serverUrl: String,
-    stringify: T => String
-) extends HttpClient[Z]
-    with StreamingClient[ZS] {
-
-  private implicit val jawn: Facade.SimpleFacade[T] = jawnFacade[T]
+final case class ZIOKubernetesClient(
+    serverUrl: String
+) extends HttpClient[Z] {
 
   private def urlFor(
       url: String,
@@ -52,10 +49,28 @@ final case class ZIOKubernetesClient[T: Reader: Builder](
 
   private def expect[O: Decoder](req: http.Request): Z[O] = for {
     res <- Client.request(req, Client.Config.empty)
-    t <- res.bodyAsByteArray
-      .map(Parser.parseFromByteArray[T](_))
-      .flatMap(ZIO.fromTry(_))
-    o <- ZIO.fromEither(t.decodeTo[O].left.map(DecodeError(_)))
+    body <- res.bodyAsString
+    o <- ZIO.fromEither(
+      JsonDecoder[O]
+        .decodeJson(body)
+        .left
+        .map(DecodeError(_))
+    )
+  } yield o
+
+  private def send[I: Encoder, O: Decoder](
+      url: String,
+      params: Seq[(String, String)],
+      method: http.Method,
+      body: I
+  ): Z[O] = for {
+    u <- urlFor(url, params)
+    req = http.Request(
+      method = method,
+      url = u,
+      data = HttpData.fromString(body.toJson)
+    )
+    o <- expect(req)
   } yield o
 
   override def get[O: Decoder](url: String, params: (String, String)*): Z[O] =
@@ -69,41 +84,33 @@ final case class ZIOKubernetesClient[T: Reader: Builder](
       url: String,
       params: (String, String)*
   )(body: I): Z[O] =
-    for {
-      u <- urlFor(url, params)
-      req = http.Request(
-        method = http.Method.POST,
-        url = u,
-        data = http.HttpData.fromString(stringify(body.encodeTo[T]))
-      )
-      o <- expect(req)
-    } yield o
+    send(url, params, Method.POST, body)
 
   override def put[I: Encoder, O: Decoder](
       url: String,
       params: (String, String)*
-  )(body: I): Z[O] = ???
+  )(body: I): Z[O] =
+    send(url, params, Method.PUT, body)
 
   override def patch[I: Encoder, O: Decoder](
       url: String,
       params: (String, String)*
-  )(body: I): Z[O] = ???
+  )(body: I): Z[O] =
+    send(url, params, Method.PATCH, body)
 
   override def delete[O: Decoder](
       url: String,
       params: (String, String)*
-  ): Z[O] = ???
-
-  override def connect[O: Decoder](
-      url: String,
-      params: (String, String)*
-  ): ZS[O] = ???
-
+  ): Z[O] =
+    for {
+      u <- urlFor(url, params)
+      req = http.Request(url = u, method = Method.DELETE)
+      o <- expect(req)
+    } yield o
 }
 
 object ZIOKubernetesClient {
   type Z[T] = ZIO[EventLoopGroup with ChannelFactory, Throwable, T]
-  type ZS[T] = ZStream[EventLoopGroup with ChannelFactory, Throwable, T]
 
   final case class DecodeError(msg: String) extends Exception(msg)
 }
