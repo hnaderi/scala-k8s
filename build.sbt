@@ -35,6 +35,7 @@ lazy val root =
       objectsTest,
       client,
       http4s,
+      zio,
       codecTest,
       circe,
       `spray-json`,
@@ -88,6 +89,19 @@ lazy val http4s = module("http4s") {
       description := "http4s based client for kubernetes",
       libraryDependencies ++= Seq(
         "org.http4s" %%% "http4s-ember-client" % "0.23.16",
+        "org.typelevel" %%% "jawn-fs2" % "2.3.0"
+      )
+    )
+    .dependsOn(client, jawn)
+}
+
+lazy val zio = module("zio") {
+  crossProject(JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "zio-http based client for kubernetes",
+      libraryDependencies ++= Seq(
+        "io.d11" %%% "zhttp" % "2.0.0-RC10",
         "org.typelevel" %%% "jawn-fs2" % "2.3.0"
       )
     )
@@ -234,6 +248,7 @@ lazy val unidocs = project
       objects.jvm,
       client.jvm,
       http4s.jvm,
+      zio.jvm,
       circe.jvm,
       `spray-json`.jvm,
       `play-json`.jvm,
@@ -243,14 +258,14 @@ lazy val unidocs = project
     )
   )
 
-lazy val example = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+lazy val example = crossProject(JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     libraryDependencies ++= Seq(
       "org.json4s" %%% "json4s-native-core" % "4.0.5"
     )
   )
-  .dependsOn(http4s, json4s)
+  .dependsOn(http4s, json4s, zio)
   .enablePlugins(NoPublishPlugin)
 
 def addAlias(name: String)(tasks: String*) =
