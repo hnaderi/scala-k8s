@@ -24,7 +24,7 @@ ThisBuild / tlSitePublishBranch := Some("main")
 ThisBuild / scalaVersion := scala212
 ThisBuild / crossScalaVersions := supportScalaVersions
 ThisBuild / githubWorkflowJavaVersions := Seq(PrimaryJava, LTSJava)
-ThisBuild / kubernetesVersion := "1.25.0"
+ThisBuild / kubernetesVersion := "1.25.2"
 
 enablePlugins(AutomateHeaderPlugin)
 
