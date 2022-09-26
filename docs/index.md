@@ -189,9 +189,9 @@ val buildClient =
     .build
     .map(Http4sKubernetesClient[IO, Json]("http://localhost:8001", _))
  
-val getNodes = buildClient.use(APIs.nodes.list.send)
+val getNodes = buildClient.use(APIs.nodes.list().send)
 
-val watchNodes = fs2.Stream.resource(buildClient).flatMap(APIs.nodes.list.listen)
+val watchNodes = fs2.Stream.resource(buildClient).flatMap(APIs.nodes.list().listen)
 
 val getConfigMaps = 
   buildClient.use(client=>
@@ -210,7 +210,7 @@ import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.ZIOKubernetesClient
 
 val client = ZIOKubernetesClient.make("http://localhost:8001")
-val nodes = ZIOKubernetesClient.send(APIs.nodes.list)
+val nodes = ZIOKubernetesClient.send(APIs.nodes.list())
 ```
 
 ### Working with requests

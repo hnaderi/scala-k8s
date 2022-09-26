@@ -17,23 +17,52 @@
 package dev.hnaderi.k8s.client
 
 import dev.hnaderi.k8s.utils._
-import io.k8s.apimachinery.pkg.apis.meta.v1.APIResourceList
 import io.k8s.apimachinery.pkg.apis.meta.v1.APIGroupList
+import io.k8s.apimachinery.pkg.apis.meta.v1.APIResourceList
+
+import scala.concurrent.duration.FiniteDuration
 
 abstract class ListingRequest[O: Decoder, COL: Decoder](
-    url: String
-) // TODO parameters
-    extends HttpRequest[COL]
+    url: String,
+    allowWatchBookmarks: Option[Boolean] = None,
+    continue: Option[String] = None,
+    fieldSelector: List[String] = Nil,
+    labelSelector: List[String] = Nil,
+    limit: Option[Int] = None,
+    resourceVersion: Option[String] = None,
+    resourceVersionMatch: Option[String] = None,
+    timeout: Option[FiniteDuration] = None
+) extends HttpRequest[COL]
     with WatchRequest[WatchEvent[O]] {
+  private def selector(name: String, l: List[String]) =
+    if (l.isEmpty) None
+    else Some(name -> l.mkString(", "))
+
+  private def params: Seq[(String, String)] = Seq(
+    continue.map(c => "continue" -> c),
+    selector("fieldSelector", fieldSelector),
+    selector("labelSelector", labelSelector),
+    limit.map(l => "limit" -> l.toString),
+    resourceVersion.map(v => "resourceVersion" -> v),
+    resourceVersionMatch.map(v => "resourceVersionMatch" -> v),
+    timeout.map(t => "timeoutSeconds" -> t.toSeconds.toString)
+  ).flatten
+
+  private def watchParams =
+    Seq("watch" -> "true") ++
+      allowWatchBookmarks.map(b => "allowWatchBookmarks" -> b.toString) ++
+      params
+
   override def send[F[_]](
       http: HttpClient[F]
-  ): F[COL] = http.get(url)
+  ): F[COL] = http.get(url, params: _*)
   override def listen[F[_]](http: StreamingClient[F]) =
-    http.connect(url, "watch" -> "true")
+    http.connect(url, watchParams: _*)
 }
 
-abstract class GetRequest[O: Decoder](url: String)
-    extends ListingRequest[O, O](url)
+abstract class GetRequest[O: Decoder](url: String) extends HttpRequest[O] {
+  override def send[F[_]](http: HttpClient[F]): F[O] = http.get(url)
+}
 
 abstract class CreateRequest[RES: Encoder: Decoder](
     url: String,

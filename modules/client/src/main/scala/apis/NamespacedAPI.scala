@@ -19,6 +19,8 @@ package dev.hnaderi.k8s.client
 import dev.hnaderi.k8s.utils.Decoder
 import dev.hnaderi.k8s.utils.Encoder
 
+import scala.concurrent.duration.FiniteDuration
+
 trait NamespacedAPI {
   protected def namespace: String
 }
@@ -32,9 +34,37 @@ abstract class APIGroupAPI(base: String) {
   ](resourceName: String) {
     protected val clusterwideUrl = s"$base/$resourceName"
 
-    case class ListAll() extends ListingRequest[RES, COL](clusterwideUrl)
+    case class ListAll(
+        allowWatchBookmarks: Option[Boolean] = None,
+        continue: Option[String] = None,
+        fieldSelector: List[String] = Nil,
+        labelSelector: List[String] = Nil,
+        limit: Option[Int] = None,
+        resourceVersion: Option[String] = None,
+        resourceVersionMatch: Option[String] = None,
+        timeout: Option[FiniteDuration] = None
+    ) extends ListingRequest[RES, COL](clusterwideUrl)
+
     trait ClusterwideAPIBuilders {
-      val list: ListAll = ListAll()
+      def list(
+          allowWatchBookmarks: Option[Boolean] = None,
+          continue: Option[String] = None,
+          fieldSelector: List[String] = Nil,
+          labelSelector: List[String] = Nil,
+          limit: Option[Int] = None,
+          resourceVersion: Option[String] = None,
+          resourceVersionMatch: Option[String] = None,
+          timeout: Option[FiniteDuration] = None
+      ): ListAll = ListAll(
+        allowWatchBookmarks = allowWatchBookmarks,
+        continue = continue,
+        fieldSelector = fieldSelector,
+        labelSelector = labelSelector,
+        limit = limit,
+        resourceVersion = resourceVersion,
+        resourceVersionMatch = resourceVersionMatch,
+        timeout = timeout
+      )
     }
   }
 
@@ -75,7 +105,25 @@ abstract class APIGroupAPI(base: String) {
     case class Get(name: String) extends GetRequest[RES](urlFor(name))
 
     def get(name: String): Get = Get(name)
-    val list: ListAll = ListAll()
+    def list(
+        allowWatchBookmarks: Option[Boolean] = None,
+        continue: Option[String] = None,
+        fieldSelector: List[String] = Nil,
+        labelSelector: List[String] = Nil,
+        limit: Option[Int] = None,
+        resourceVersion: Option[String] = None,
+        resourceVersionMatch: Option[String] = None,
+        timeout: Option[FiniteDuration] = None
+    ): ListAll = ListAll(
+      allowWatchBookmarks = allowWatchBookmarks,
+      continue = continue,
+      fieldSelector = fieldSelector,
+      labelSelector = labelSelector,
+      limit = limit,
+      resourceVersion = resourceVersion,
+      resourceVersionMatch = resourceVersionMatch,
+      timeout = timeout
+    )
   }
 
 }

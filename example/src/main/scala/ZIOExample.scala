@@ -37,7 +37,7 @@ object ZIOExample extends ZIOAppDefault {
 
   private val app =
     for {
-      n <- ZIOKubernetesClient.send(APIs.nodes.list)
+      n <- ZIOKubernetesClient.send(APIs.nodes.list())
       _ <- ZIO
         .foreach(n.items.map(_.metadata.flatMap(_.name)))(Console.printLine(_))
     } yield ()

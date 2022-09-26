@@ -35,7 +35,8 @@ object Http4sExample extends IOApp {
       .map(Http4sKubernetesClient[IO, Json]("http://localhost:8001", _))
 
   def watchNodes(cl: StreamingClient[fs2.Stream[IO, *]]) =
-    CoreV1.nodes.list
+    CoreV1.nodes
+      .list()
       .listen(cl)
       .flatMap(ev =>
         exec(
@@ -48,7 +49,8 @@ object Http4sExample extends IOApp {
       .drain
 
   def printNodes(cl: HttpClient[IO]) =
-    CoreV1.nodes.list
+    CoreV1.nodes
+      .list()
       .send(cl)
       .flatMap(
         _.items.toList.map(_.metadata.flatMap(_.name)).traverse(IO.println)
