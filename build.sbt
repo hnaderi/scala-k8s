@@ -244,7 +244,6 @@ lazy val manifests = module("manifests") {
 lazy val docs = project
   .in(file("site"))
   .enablePlugins(TypelevelSitePlugin)
-  .dependsOn(manifests.jvm, http4s.jvm, circe.jvm)
   .settings(
     tlSiteRelatedProjects := Seq(
       "Kubernetes" -> url("https://github.com/kubernetes/kubernetes"),
@@ -259,9 +258,12 @@ lazy val docs = project
       "Play json" -> url("https://github.com/playframework/play-json"),
       "Json4s" -> url("https://github.com/json4s/json4s"),
       "Jawn" -> url("https://github.com/typelevel/jawn")
+    ),
+    libraryDependencies ++= Seq(
+      "org.http4s" %%% "http4s-circe" % "0.23.16"
     )
   )
-  .dependsOn(example.jvm)
+  .dependsOn(http4s.jvm, circe.jvm, manifests.jvm)
 
 lazy val unidocs = project
   .in(file("unidocs"))

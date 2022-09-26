@@ -205,7 +205,7 @@ val getConfigMaps =
 
 ### ZIO based client
 Currently, ZIO based client does not support streaming watch APIs, it will support as soon as [zio-http supports streaming responses](https://github.com/hnaderi/scala-k8s/issues/17)
-```scala mdoc:to-string
+```scala
 import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.ZIOKubernetesClient
 

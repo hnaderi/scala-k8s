@@ -115,7 +115,8 @@ final case class ZIOKubernetesClient(
 
 object ZIOKubernetesClient {
   final case class DecodeError(msg: String) extends Exception(msg)
-  def send[O: Decoder](
+
+  def send[O](
       req: HttpRequest[O]
   ): ZIO[ZIOKubernetesClient, Throwable, O] =
     ZIO.service[ZIOKubernetesClient].flatMap(req.send)
