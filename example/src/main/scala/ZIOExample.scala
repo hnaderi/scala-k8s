@@ -26,10 +26,9 @@ import zio.ZIOAppArgs
 import zio.ZIOAppDefault
 import zio._
 
+//NOTE run `kubectl proxy` before running this example
 object ZIOExample extends ZIOAppDefault {
-  val client = ZIOKubernetesClient(
-    "http://localhost:8001"
-  )
+  val client = ZIOKubernetesClient("http://localhost:8001")
   val nodes = APIs.nodes.list.send(client)
   private val env = ChannelFactory.auto ++ EventLoopGroup.auto()
 

@@ -248,9 +248,20 @@ lazy val docs = project
   .settings(
     tlSiteRelatedProjects := Seq(
       "Kubernetes" -> url("https://github.com/kubernetes/kubernetes"),
-      "Circe" -> url("https://github.com/circe/circe")
+      TypelevelProject.Http4s,
+      TypelevelProject.Fs2,
+      TypelevelProject.Scalacheck,
+      "ZIO" -> url("https://github.com/zio/zio"),
+      "ZIO-http" -> url("https://github.com/zio/zio-http"),
+      "ZIO-json" -> url("https://github.com/zio/zio-json"),
+      "Circe" -> url("https://github.com/circe/circe"),
+      "Spray json" -> url("https://github.com/spray/spray-json"),
+      "Play json" -> url("https://github.com/playframework/play-json"),
+      "Json4s" -> url("https://github.com/json4s/json4s"),
+      "Jawn" -> url("https://github.com/typelevel/jawn")
     )
   )
+  .dependsOn(example.jvm)
 
 lazy val unidocs = project
   .in(file("unidocs"))
@@ -278,10 +289,10 @@ lazy val example = crossProject(JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     libraryDependencies ++= Seq(
-      "org.json4s" %%% "json4s-native-core" % "4.0.5"
+      "org.http4s" %%% "http4s-circe" % "0.23.16"
     )
   )
-  .dependsOn(http4s, json4s, zio)
+  .dependsOn(http4s, circe, zio)
   .enablePlugins(NoPublishPlugin)
 
 def addAlias(name: String)(tasks: String*) =

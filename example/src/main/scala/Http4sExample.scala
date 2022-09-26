@@ -16,44 +16,25 @@
 
 package test
 
-import cats.data.EitherT
-import cats.effect.ExitCode
-import cats.effect.IO
-import cats.effect.IOApp
+import cats.effect._
 import cats.implicits._
-import dev.hnaderi.k8s.client.APIs
-import dev.hnaderi.k8s.jawn.jawnFacade
-import dev.hnaderi.k8s.client.CoreV1
-import dev.hnaderi.k8s.client.Http4sKubernetesClient
-import dev.hnaderi.k8s.json4s._
+import dev.hnaderi.k8s.circe._
+import dev.hnaderi.k8s.client._
 import fs2.Stream._
-import org.http4s._
+import io.circe.Json
+import org.http4s.circe._
 import org.http4s.ember.client.EmberClientBuilder
-import org.json4s.JValue
-import org.json4s.native.JsonMethods._
-import org.typelevel.jawn.fs2._
 
-object Main extends IOApp {
-  private implicit val enc: EntityEncoder[IO, JValue] =
-    EntityEncoder[IO, String].contramap[JValue](j => compact(render(j)))
-  private implicit val dec: EntityDecoder[IO, JValue] =
-    EntityDecoder.decodeBy(MediaType.application.json)(m =>
-      EitherT(
-        m.body.chunks
-          .parseJsonStream[JValue]
-          .compile
-          .last
-          .map(_.toRight(InvalidMessageBodyFailure("")))
-      )
-    )
+//NOTE run `kubectl proxy` before running this example
+object Http4sExample extends IOApp {
 
   private val client =
     EmberClientBuilder
       .default[IO]
       .build
-      .map(Http4sKubernetesClient[IO, JValue]("http://localhost:8001", _))
+      .map(Http4sKubernetesClient[IO, Json]("http://localhost:8001", _))
 
-  def watchNodes(cl: Http4sKubernetesClient[IO, JValue]) =
+  def watchNodes(cl: StreamingClient[fs2.Stream[IO, *]]) =
     CoreV1.nodes.list
       .listen(cl)
       .flatMap(ev =>
@@ -66,14 +47,14 @@ object Main extends IOApp {
       .compile
       .drain
 
-  def printNodes(cl: Http4sKubernetesClient[IO, JValue]) =
+  def printNodes(cl: HttpClient[IO]) =
     CoreV1.nodes.list
       .send(cl)
       .flatMap(
         _.items.toList.map(_.metadata.flatMap(_.name)).traverse(IO.println)
       )
 
-  def debug(cl: Http4sKubernetesClient[IO, JValue]) =
+  def debug(cl: HttpClient[IO]) =
     APIs
       .namespace("kube-system")
       .configmaps
@@ -81,7 +62,7 @@ object Main extends IOApp {
       .send(cl)
       .flatMap(IO.println)
 
-  def debug2(cl: Http4sKubernetesClient[IO, JValue]) =
+  def debug2(cl: HttpClient[IO]) =
     CoreV1.resources
       .send(cl)
       .map(_.resources.map(_.name))

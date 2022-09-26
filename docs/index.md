@@ -170,35 +170,47 @@ println(config3.asManifest)
 
 ## Client
 
-### Sending requests
-```scala
-import dev.hnaderi.k8s.client.Http4sKubernetesClient
-import dev.hnaderi.k8s.client.APIs
+Currently clients does not support direct TLS connection, so you must use `kubectl proxy`, and use proxy address in clients.
+
+### Http4s based client
+http4s based client support all APIs.
+
+```scala mdoc:to-string
+import cats.effect._
 import dev.hnaderi.k8s.circe._
-
+import dev.hnaderi.k8s.client._
 import io.circe.Json
-import cats.effect.IO
-import org.http4s._
-import org.http4s.client.Client
+import org.http4s.circe._
+import org.http4s.ember.client.EmberClientBuilder
 
-implicit val enc: EntityEncoder[IO, Json] = ???
-implicit val dec: EntityDecoder[IO, Json] = ???
-val httpClient : Client[IO] = ???
+val buildClient =
+  EmberClientBuilder
+    .default[IO]
+    .build
+    .map(Http4sKubernetesClient[IO, Json]("http://localhost:8001", _))
+ 
+val getNodes = buildClient.use(APIs.nodes.list.send)
 
-val client : Http4sKubernetesClient[IO, Json] = Http4sKubernetesClient[IO, Json]("http://localhost:8001", httpClient)
+val watchNodes = fs2.Stream.resource(buildClient).flatMap(APIs.nodes.list.listen)
 
-val printConfigMaps = 
+val getConfigMaps = 
+  buildClient.use(client=>
     APIs
       .namespace("kube-system")
       .configmaps
       .get("kube-proxy")
       .send(client)
-      .flatMap(IO.println)
-      
-val getNodes = APIs.nodes.list.send(client)
+  )
+```
 
-val watchNodes = APIs.nodes.list.listen(client)
+### ZIO based client
+Currently, ZIO based client does not support streaming watch APIs, it will support as soon as [zio-http supports streaming responses](https://github.com/hnaderi/scala-k8s/issues/17)
+```scala mdoc:to-string
+import dev.hnaderi.k8s.client.APIs
+import dev.hnaderi.k8s.client.ZIOKubernetesClient
 
+val client = ZIOKubernetesClient("http://localhost:8001")
+val nodes = APIs.nodes.list.send(client)
 ```
 
 ### Working with requests
