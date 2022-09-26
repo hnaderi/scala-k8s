@@ -89,6 +89,8 @@
         
           <li class="level2"><a href="https://github.com/zio/zio-json">ZIO-json</a></li>
         
+          <li class="level2"><a href="https://sttp.softwaremill.com">sttp</a></li>
+        
           <li class="level2"><a href="https://github.com/circe/circe">Circe</a></li>
         
           <li class="level2"><a href="https://github.com/spray/spray-json">Spray json</a></li>
@@ -119,6 +121,7 @@
           <li class="level1"><a href="#client">Client</a></li>
           <li class="level2"><a href="#http4s-based-client">Http4s based client</a></li>
           <li class="level2"><a href="#zio-based-client">ZIO based client</a></li>
+          <li class="level2"><a href="#sttp-based-client">Sttp based client</a></li>
           <li class="level2"><a href="#working-with-requests">Working with requests</a></li>
           <li class="level2"><a href="#implementing-new-requests">Implementing new requests</a></li>
         </ul>
@@ -143,9 +146,10 @@
 </span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-client&quot;</span><span> % </span><span class="string-literal">&quot;0.4.0&quot;</span><span>, </span><span class="comment">// JVM, JS, Native ; k8s client kernel and requests
 </span><span>  )</span></code></pre>
         <p>The following integrations are currently available:</p>
-        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
+        <pre><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> ++= </span><span class="type-name">Seq</span><span>(
   </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-http4s&quot;</span><span> % </span><span class="string-literal">&quot;0.4.0&quot;</span><span>, </span><span class="comment">// JVM, JS, Native ; http4s and fs2 integration
 </span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-zio&quot;</span><span> % </span><span class="string-literal">&quot;0.4.0&quot;</span><span>, </span><span class="comment">// JVM ; ZIO native integration using zio-http and zio-json 
+</span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-sttp&quot;</span><span> % </span><span class="string-literal">&quot;0.4.0&quot;</span><span>, </span><span class="comment">// JVM, JS, Native ; sttp integration using jawn parser
 </span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-circe&quot;</span><span> % </span><span class="string-literal">&quot;0.4.0&quot;</span><span>, </span><span class="comment">// JVM, JS ; circe integration
 </span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-json4s&quot;</span><span> % </span><span class="string-literal">&quot;0.4.0&quot;</span><span>, </span><span class="comment">// JVM, JS, Native; json4s integration
 </span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-spray-json&quot;</span><span> % </span><span class="string-literal">&quot;0.4.0&quot;</span><span>, </span><span class="comment">// JVM ; spray-json integration
@@ -243,21 +247,21 @@
 //     port: 80
 // 
 // ---
+// data:
+//   some config: some value
+//   config file: |
+//     use flake
+// kind: ConfigMap
+// binaryData:
+//   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
+//   blob2: dmVyc2lvbiA9IDMuNS45CnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
+//   other inline data: c29tZSBvdGhlciBkYXRh
 // metadata:
 //   namespace: staging
 //   labels:
 //     app.kubernetes.io/name: example
 //     app.kubernetes.io/instance: one
 //   name: example
-// kind: ConfigMap
-// data:
-//   some config: some value
-//   config file: |
-//     use flake
-// binaryData:
-//   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
-//   blob2: dmVyc2lvbiA9IDMuNS45CnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
-//   other inline data: c29tZSBvdGhlciBkYXRh
 // apiVersion: v1
 // 
 // ---
@@ -297,11 +301,11 @@
 //     app.kubernetes.io/instance: one
 //   name: new-config
 // kind: ConfigMap
-// apiVersion: v1
 // binaryData:
 //   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
 //   blob2: dmVyc2lvbiA9IDMuNS45CnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
 //   other inline data: c29tZSBvdGhlciBkYXRh
+// apiVersion: v1
 // data:
 //   some config: some value
 //   config file: |
@@ -327,7 +331,7 @@
     .</span><span class="keyword">default</span><span>[</span><span class="type-name">IO</span><span>]
     .</span><span class="identifier">build</span><span>
     .</span><span class="identifier">map</span><span>(</span><span class="type-name">Http4sKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>, </span><span class="type-name">Json</span><span>](</span><span class="string-literal">&quot;http://localhost:8001&quot;</span><span>, </span><span class="identifier">_</span><span>))
-</span><span class="comment">// buildClient: Resource[IO, Http4sKubernetesClient[IO, Json]] = Bind(Bind(Pure(fs2.io.net.NetworkCompanionPlatform$$anon$1@29ca58a9),org.http4s.ember.client.EmberClientBuilder$$Lambda$11512/957810388@17a0354),cats.effect.kernel.Resource$$Lambda$11513/486378113@39a35128)
+</span><span class="comment">// buildClient: Resource[IO, Http4sKubernetesClient[IO, Json]] = Bind(Bind(Pure(fs2.io.net.NetworkCompanionPlatform$$anon$1@7fd85354),org.http4s.ember.client.EmberClientBuilder$$Lambda$12449/1287955929@621504e5),cats.effect.kernel.Resource$$Lambda$12450/443984989@5ce35354)
 </span><span> 
 </span><span class="keyword">val</span><span> </span><span class="identifier">getNodes</span><span> = </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>)
 </span><span class="comment">// getNodes: IO[io.k8s.api.core.v1.NodeList] = IO(...)
@@ -352,6 +356,24 @@
 
 </span><span class="keyword">val</span><span> </span><span class="identifier">client</span><span> = </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">make</span><span>(</span><span class="string-literal">&quot;http://localhost:8001&quot;</span><span>)
 </span><span class="keyword">val</span><span> </span><span class="identifier">nodes</span><span> = </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">send</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>())</span></code></pre>
+        
+        <h3 id="sttp-based-client" class="section">Sttp based client<a class="anchor-link right" href="#sttp-based-client"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">APIs</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">SttpKubernetesClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">io</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="type-name">Json</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">sttp</span><span>.</span><span class="identifier">client3</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">sttp</span><span>.</span><span class="identifier">client3</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="identifier">_</span><span>
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">simpleBackend</span><span> = </span><span class="type-name">HttpURLConnectionBackend</span><span>()
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">client</span><span> = </span><span class="keyword">new</span><span> </span><span class="type-name">SttpKubernetesClient</span><span>[</span><span class="type-name">Identity</span><span>, </span><span class="type-name">Json</span><span>](
+  </span><span class="string-literal">&quot;http://localhost:8001&quot;</span><span>,
+  </span><span class="identifier">simpleBackend</span><span>
+)
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">nodes</span><span> = </span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>(</span><span class="identifier">client</span><span>)
+</span><span class="identifier">nodes</span><span>.</span><span class="identifier">body</span><span>.</span><span class="identifier">items</span><span>.</span><span class="identifier">flatMap</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>).</span><span class="identifier">flatMap</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">name</span><span>).</span><span class="identifier">foreach</span><span>(</span><span class="identifier">println</span><span>)</span></code></pre>
         
         <h3 id="working-with-requests" class="section">Working with requests<a class="anchor-link right" href="#working-with-requests"><i class="icofont-laika">&#xef71;</i></a></h3>
         <p>Requests are plain data, so you can manipulate or pass them like any normal data</p>
