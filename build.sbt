@@ -274,10 +274,11 @@ lazy val docs = project
       "Jawn" -> url("https://github.com/typelevel/jawn")
     ),
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-circe" % "0.23.16"
+      "org.http4s" %%% "http4s-circe" % "0.23.16",
+      "com.softwaremill.sttp.client3" %%% "circe" % "3.8.0"
     )
   )
-  .dependsOn(http4s.jvm, circe.jvm, manifests.jvm)
+  .dependsOn(http4s.jvm, sttp.jvm, circe.jvm, manifests.jvm)
 
 lazy val unidocs = project
   .in(file("unidocs"))
