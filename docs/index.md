@@ -22,6 +22,7 @@ The following integrations are currently available:
 libraryDependencies ++= Seq(
   "dev.hnaderi" %% "scala-k8s-http4s" % "@VERSION@", // JVM, JS, Native ; http4s and fs2 integration
   "dev.hnaderi" %% "scala-k8s-zio" % "@VERSION@", // JVM ; ZIO native integration using zio-http and zio-json 
+  "dev.hnaderi" %% "scala-k8s-sttp" % "@VERSION@", // JVM, JS, Native ; sttp integration using jawn parser
   "dev.hnaderi" %% "scala-k8s-circe" % "@VERSION@", // JVM, JS ; circe integration
   "dev.hnaderi" %% "scala-k8s-json4s" % "@VERSION@", // JVM, JS, Native; json4s integration
   "dev.hnaderi" %% "scala-k8s-spray-json" % "@VERSION@", // JVM ; spray-json integration
@@ -211,6 +212,26 @@ import dev.hnaderi.k8s.client.ZIOKubernetesClient
 
 val client = ZIOKubernetesClient.make("http://localhost:8001")
 val nodes = ZIOKubernetesClient.send(APIs.nodes.list())
+```
+
+### Sttp based client
+```scala mdoc:compile-only
+import dev.hnaderi.k8s.circe._
+import dev.hnaderi.k8s.client.APIs
+import dev.hnaderi.k8s.client.SttpKubernetesClient
+import io.circe.Json
+import sttp.client3._
+import sttp.client3.circe._
+
+val simpleBackend = HttpURLConnectionBackend()
+
+val client = new SttpKubernetesClient[Identity, Json](
+  "http://localhost:8001",
+  simpleBackend
+)
+
+val nodes = APIs.nodes.list().send(client)
+nodes.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)
 ```
 
 ### Working with requests
