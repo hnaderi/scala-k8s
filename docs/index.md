@@ -209,8 +209,8 @@ Currently, ZIO based client does not support streaming watch APIs, it will suppo
 import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.ZIOKubernetesClient
 
-val client = ZIOKubernetesClient("http://localhost:8001")
-val nodes = APIs.nodes.list.send(client)
+val client = ZIOKubernetesClient.make("http://localhost:8001")
+val nodes = ZIOKubernetesClient.send(APIs.nodes.list)
 ```
 
 ### Working with requests

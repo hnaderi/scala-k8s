@@ -31,13 +31,14 @@ import zio.json._
 import ZIOKubernetesClient._
 
 final case class ZIOKubernetesClient(
-    serverUrl: String
-) extends HttpClient[Z] {
+    serverUrl: String,
+    client: Client[Any]
+) extends HttpClient[Task] {
 
   private def urlFor(
       url: String,
       params: Seq[(String, String)]
-  ): Z[http.URL] = for {
+  ): Task[http.URL] = for {
     u <- ZIO.fromEither(http.URL.fromString(s"$serverUrl$url"))
     qp = params.foldLeft(Map.empty[String, List[String]]) { case (qs, (k, v)) =>
       qs.get(k) match {
@@ -47,8 +48,8 @@ final case class ZIOKubernetesClient(
     }
   } yield u.setQueryParams(qp)
 
-  private def expect[O: Decoder](req: http.Request): Z[O] = for {
-    res <- Client.request(req, Client.Config.empty)
+  private def expect[O: Decoder](req: http.Request): Task[O] = for {
+    res <- client.request(req, Client.Config.empty)
     body <- res.bodyAsString
     o <- ZIO.fromEither(
       JsonDecoder[O]
@@ -63,7 +64,7 @@ final case class ZIOKubernetesClient(
       params: Seq[(String, String)],
       method: http.Method,
       body: I
-  ): Z[O] = for {
+  ): Task[O] = for {
     u <- urlFor(url, params)
     req = http.Request(
       method = method,
@@ -73,7 +74,10 @@ final case class ZIOKubernetesClient(
     o <- expect(req)
   } yield o
 
-  override def get[O: Decoder](url: String, params: (String, String)*): Z[O] =
+  override def get[O: Decoder](
+      url: String,
+      params: (String, String)*
+  ): Task[O] =
     for {
       u <- urlFor(url, params)
       req = http.Request(url = u)
@@ -83,25 +87,25 @@ final case class ZIOKubernetesClient(
   override def post[I: Encoder, O: Decoder](
       url: String,
       params: (String, String)*
-  )(body: I): Z[O] =
+  )(body: I): Task[O] =
     send(url, params, Method.POST, body)
 
   override def put[I: Encoder, O: Decoder](
       url: String,
       params: (String, String)*
-  )(body: I): Z[O] =
+  )(body: I): Task[O] =
     send(url, params, Method.PUT, body)
 
   override def patch[I: Encoder, O: Decoder](
       url: String,
       params: (String, String)*
-  )(body: I): Z[O] =
+  )(body: I): Task[O] =
     send(url, params, Method.PATCH, body)
 
   override def delete[O: Decoder](
       url: String,
       params: (String, String)*
-  ): Z[O] =
+  ): Task[O] =
     for {
       u <- urlFor(url, params)
       req = http.Request(url = u, method = Method.DELETE)
@@ -110,7 +114,15 @@ final case class ZIOKubernetesClient(
 }
 
 object ZIOKubernetesClient {
-  type Z[T] = ZIO[EventLoopGroup with ChannelFactory, Throwable, T]
-
   final case class DecodeError(msg: String) extends Exception(msg)
+  def send[O: Decoder](
+      req: HttpRequest[O]
+  ): ZIO[ZIOKubernetesClient, Throwable, O] =
+    ZIO.service[ZIOKubernetesClient].flatMap(req.send)
+
+  def make(url: String): ZLayer[
+    Any with EventLoopGroup with ChannelFactory,
+    Nothing,
+    ZIOKubernetesClient
+  ] = ZLayer(Client.make[Any].map(ZIOKubernetesClient(url, _)))
 }
