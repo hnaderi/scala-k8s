@@ -83,9 +83,9 @@ object Decoder {
       )(implicit r: Reader[T]): Either[String, Map[String, A]] =
         r.obj(t)
           .flatMap(
-            _.foldLeft[Either[String, List[(String, A)]]](Right(Nil)) {
-              case (el, (k, a)) => el.flatMap(l => dec(a).map((k, _) :: l))
-            }.map(_.toMap)
+            _.foldLeft[Either[String, Map[String, A]]](Right(Map.empty)) {
+              case (el, (k, a)) => el.flatMap(l => dec(a).map(l.updated(k, _)))
+            }
           )
     }
 
