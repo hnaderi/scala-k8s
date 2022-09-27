@@ -35,7 +35,7 @@ private[zioJson] object ZIOBuilder extends Builder[Json] {
   override def arr(a: Iterable[Json]): Json = Json.Arr(Chunk.fromIterable(a))
 
   override def obj(values: Iterable[(String, Json)]): Json =
-    Json.Obj(Chunk.fromIterable(values))
+    Json.Obj(Chunk.fromIterable(values.toMap))
 
   override def nil: Json = Json.Null
 
