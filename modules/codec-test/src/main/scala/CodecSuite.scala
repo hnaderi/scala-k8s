@@ -18,10 +18,9 @@ package dev.hnaderi.k8s
 package test
 
 import dev.hnaderi.k8s.scalacheck.Generators._
-import dev.hnaderi.k8s.utils.Builder
-import dev.hnaderi.k8s.utils.Reader
+import dev.hnaderi.k8s.utils._
 import munit.ScalaCheckSuite
-import org.scalacheck.Prop.forAll
+import org.scalacheck.Prop._
 
 abstract class CodecSuite[T: Builder: Reader] extends ScalaCheckSuite {
   property("Codec must be reversible") {
@@ -29,6 +28,16 @@ abstract class CodecSuite[T: Builder: Reader] extends ScalaCheckSuite {
       val encoded = o.foldTo[T]
       val decoded = KObject.decoder.apply(encoded)
       assertEquals(decoded, Right(o))
+    }
+  }
+
+  property("Reencoding does not change result") {
+    forAll { (sut: KObject) =>
+      val encoded = sut.encodeTo[T]
+      val decoded = encoded.decodeTo[KObject]
+      val reencoded = decoded.map(_.encodeTo[T])
+
+      assertEquals(reencoded, Right(encoded))
     }
   }
 }

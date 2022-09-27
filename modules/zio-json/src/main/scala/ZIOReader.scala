@@ -19,18 +19,29 @@ package dev.hnaderi.k8s.zioJson
 import dev.hnaderi.k8s.utils._
 import zio.json.JsonDecoder
 import zio.json.ast.Json
+import zio.json.ast.Json.Num
 
 private[zioJson] object ZIOReader extends Reader[Json] {
 
   override def string(t: Json): Either[String, String] =
     t.as(JsonDecoder.string)
 
-  override def int(t: Json): Either[String, Int] = t.as(JsonDecoder.int)
+  override def int(t: Json): Either[String, Int] = t match {
+    case Num(value) if BigDecimal(value).isValidInt =>
+      Right(value.intValueExact)
+    case other => Left(s"Expected int, but got: $other")
+  }
 
-  override def long(t: Json): Either[String, Long] = t.as(JsonDecoder.long)
+  override def long(t: Json): Either[String, Long] = t match {
+    case Num(value) if BigDecimal(value).isValidLong =>
+      Right(value.longValueExact())
+    case other => Left(s"Expected long, but got: $other")
+  }
 
-  override def double(t: Json): Either[String, Double] =
-    t.as(JsonDecoder.double)
+  override def double(t: Json): Either[String, Double] = t match {
+    case Num(value) => Right(value.doubleValue())
+    case other      => Left(s"Expected double, but got: $other")
+  }
 
   override def bool(t: Json): Either[String, Boolean] =
     t.as(JsonDecoder.boolean)
@@ -39,6 +50,6 @@ private[zioJson] object ZIOReader extends Reader[Json] {
     t.as(JsonDecoder.list[Json])
 
   override def obj(t: Json): Either[String, Iterable[(String, Json)]] =
-    t.as(JsonDecoder.map[String, Json])
+    t.as(JsonDecoder.keyValueChunk[String, Json])
 
 }
