@@ -30,11 +30,23 @@ private[circe] object CirceReader extends Reader[Json] {
 
   override def string(t: Json): Either[String, String] = convert[String](t)
 
-  override def int(t: Json): Either[String, Int] = convert[Int](t)
+  override def int(t: Json): Either[String, Int] =
+    t.asNumber.flatMap(_.toInt) match {
+      case Some(v) => Right(v)
+      case None    => Left(s"Expected Integer, but got: $t")
+    }
 
-  override def long(t: Json): Either[String, Long] = convert[Long](t)
+  override def long(t: Json): Either[String, Long] =
+    t.asNumber.flatMap(_.toLong) match {
+      case Some(v) => Right(v)
+      case None    => Left(s"Expected Long, but got: $t")
+    }
 
-  override def double(t: Json): Either[String, Double] = convert[Double](t)
+  override def double(t: Json): Either[String, Double] =
+    t.asNumber match {
+      case Some(v) => Right(v.toDouble)
+      case None    => Left(s"Expected Double, but got: $t")
+    }
 
   override def bool(t: Json): Either[String, Boolean] = convert[Boolean](t)
 
