@@ -26,8 +26,6 @@ final case class ObjectWriter[T](fields: List[(String, T)] = Nil)(implicit
   def write[A](key: String, value: Option[A])(implicit
       enc: Encoder[A]
   ): ObjectWriter[T] =
-    value.fold(this)(newValue =>
-      copy(fields = (key, newValue.encodeTo) :: fields)
-    )
+    value.fold(this)(write(key, _))
   def build: T = builder.obj(fields)
 }
