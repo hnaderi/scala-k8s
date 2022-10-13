@@ -7,7 +7,7 @@
 
 <a href="https://typelevel.org/cats/"><img src="https://typelevel.org/cats/img/cats-badge.svg" height="40px" align="right" alt="Cats friendly" /></a>
 
-![Kubernetes version](https://img.shields.io/badge/Kubernetes-v1.25.2-blue?style=flat-square&logo=kubernetes&logoColor=white)
+![Kubernetes version](https://img.shields.io/badge/Kubernetes-v1.25.3-blue?style=flat-square&logo=kubernetes&logoColor=white)
 [![scala-k8s-objects Scala version support](https://index.scala-lang.org/hnaderi/scala-k8s/scala-k8s-objects/latest-by-scala-version.svg?style=flat-square)](https://index.scala-lang.org/hnaderi/scala-k8s/scala-k8s-objects)
 [![javadoc](https://javadoc.io/badge2/dev.hnaderi/scala-k8s-docs_3/scaladoc.svg?style=flat-square)](https://javadoc.io/doc/dev.hnaderi/scala-k8s-docs_3)  
 <img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/hnaderi/scala-k8s/Continuous%20Integration?style=flat-square">
