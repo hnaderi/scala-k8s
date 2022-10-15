@@ -66,22 +66,54 @@ abstract class GetRequest[O: Decoder](url: String) extends HttpRequest[O] {
 
 abstract class CreateRequest[RES: Encoder: Decoder](
     url: String,
-    body: RES
-) // TODO parameters
-    extends HttpRequest[RES] {
+    body: RES,
+    dryRun: Option[String] = None,
+    fieldManager: Option[String] = None,
+    fieldValidation: Option[String] = None
+) extends HttpRequest[RES] {
   override def send[F[_]](
       http: HttpClient[F]
   ): F[RES] = http.post(url)(body)
 }
 
-abstract class PutRequest[IN: Encoder, OUT: Decoder](
+abstract class ReplaceRequest[IN: Encoder, OUT: Decoder](
     url: String,
-    body: IN
-) // TODO parameters
-    extends HttpRequest[OUT] {
+    body: IN,
+    dryRun: Option[String] = None,
+    fieldManager: Option[String] = None,
+    fieldValidation: Option[String] = None
+) extends HttpRequest[OUT] {
+
+  private def params: Seq[(String, String)] = Seq(
+    dryRun.map("dryRun" -> _),
+    fieldManager.map("fieldManager" -> _),
+    fieldValidation.map("fieldValidation" -> _)
+  ).flatten
+
   override def send[F[_]](
       http: HttpClient[F]
-  ): F[OUT] = http.put(url)(body)
+  ): F[OUT] = http.put(url, params: _*)(body)
+}
+
+abstract class PartialUpdateRequest[IN: Encoder, OUT: Decoder](
+    url: String,
+    body: IN,
+    dryRun: Option[String] = None,
+    fieldManager: Option[String] = None,
+    fieldValidation: Option[String] = None,
+    force: Option[Boolean] = None
+) extends HttpRequest[OUT] {
+
+  private def params: Seq[(String, String)] = Seq(
+    dryRun.map("dryRun" -> _),
+    fieldManager.map("fieldManager" -> _),
+    fieldValidation.map("fieldValidation" -> _),
+    force.map("force" -> _.toString)
+  ).flatten
+
+  override def send[F[_]](
+      http: HttpClient[F]
+  ): F[OUT] = http.patch(url, params: _*)(body)
 }
 
 abstract class DeleteRequest[OUT: Decoder](url: String) // TODO parameters
