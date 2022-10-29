@@ -84,14 +84,18 @@ final class SttpKubernetesClient[F[_], T: Builder: Reader](
       .response(respAs[O])
       .send(client)
 
-  override def delete[O: Decoder](
+  override def delete[I: Encoder, O: Decoder](
       url: String,
       params: (String, String)*
-  ): F[Response[O]] =
-    basicRequest
+  )(body: Option[I]): F[Response[O]] = {
+    val req = basicRequest
       .delete(urlFor(url, params))
       .response(respAs[O])
+
+    body
+      .fold(req)(req.body(_))
       .send(client)
+  }
 
 }
 
