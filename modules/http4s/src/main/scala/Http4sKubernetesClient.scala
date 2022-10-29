@@ -91,9 +91,11 @@ final case class Http4sKubernetesClient[F[_]: Concurrent, T](
     res <- client.expect[O](req)
   } yield res
 
-  def delete[O: Decoder](url: String, params: (String, String)*): F[O] = for {
+  def delete[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
+      body: Option[I] = None
+  ): F[O] = for {
     add <- urlFrom(url, params: _*)
-    req = DELETE(add)
+    req = body.fold(DELETE(add))(DELETE(_, add))
     res <- client.expect[O](req)
   } yield res
 

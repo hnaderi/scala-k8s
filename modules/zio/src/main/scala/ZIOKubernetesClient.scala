@@ -74,6 +74,21 @@ final case class ZIOKubernetesClient(
     o <- expect(req)
   } yield o
 
+  private def send[I: Encoder, O: Decoder](
+      url: String,
+      params: Seq[(String, String)],
+      method: http.Method,
+      body: Option[I]
+  ): Task[O] = for {
+    u <- urlFor(url, params)
+    req = http.Request(
+      method = method,
+      url = u,
+      data = body.fold(HttpData.empty)(b => HttpData.fromString(b.toJson))
+    )
+    o <- expect(req)
+  } yield o
+
   override def get[O: Decoder](
       url: String,
       params: (String, String)*
@@ -102,15 +117,11 @@ final case class ZIOKubernetesClient(
   )(body: I): Task[O] =
     send(url, params, Method.PATCH, body)
 
-  override def delete[O: Decoder](
+  override def delete[I: Encoder, O: Decoder](
       url: String,
       params: (String, String)*
-  ): Task[O] =
-    for {
-      u <- urlFor(url, params)
-      req = http.Request(url = u, method = Method.DELETE)
-      o <- expect(req)
-    } yield o
+  )(body: Option[I]): Task[O] =
+    send(url, params, Method.DELETE, body)
 }
 
 object ZIOKubernetesClient {

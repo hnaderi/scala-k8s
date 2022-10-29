@@ -21,6 +21,8 @@ import io.k8s.apimachinery.pkg.apis.meta.v1.APIGroupList
 import io.k8s.apimachinery.pkg.apis.meta.v1.APIResourceList
 
 import scala.concurrent.duration.FiniteDuration
+import io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions
+import CommonAPIs.selector
 
 abstract class ListingRequest[O: Decoder, COL: Decoder](
     url: String,
@@ -34,9 +36,6 @@ abstract class ListingRequest[O: Decoder, COL: Decoder](
     timeout: Option[FiniteDuration] = None
 ) extends HttpRequest[COL]
     with WatchRequest[WatchEvent[O]] {
-  private def selector(name: String, l: List[String]) =
-    if (l.isEmpty) None
-    else Some(name -> l.mkString(", "))
 
   private def params: Seq[(String, String)] = Seq(
     continue.map(c => "continue" -> c),
@@ -71,9 +70,15 @@ abstract class CreateRequest[RES: Encoder: Decoder](
     fieldManager: Option[String] = None,
     fieldValidation: Option[String] = None
 ) extends HttpRequest[RES] {
+  private def params: Seq[(String, String)] = Seq(
+    dryRun.map("dryRun" -> _),
+    fieldManager.map("fieldManager" -> _),
+    fieldValidation.map("fieldValidation" -> _)
+  ).flatten
+
   override def send[F[_]](
       http: HttpClient[F]
-  ): F[RES] = http.post(url)(body)
+  ): F[RES] = http.post(url, params: _*)(body)
 }
 
 abstract class ReplaceRequest[IN: Encoder, OUT: Decoder](
@@ -116,11 +121,56 @@ abstract class PartialUpdateRequest[IN: Encoder, OUT: Decoder](
   ): F[OUT] = http.patch(url, params: _*)(body)
 }
 
-abstract class DeleteRequest[OUT: Decoder](url: String) // TODO parameters
-    extends HttpRequest[OUT] {
+abstract class DeleteCollectionRequest[OUT: Decoder](
+    url: String,
+    body: Option[DeleteOptions] = None,
+    continue: Option[String] = None,
+    dryRun: Option[String] = None,
+    fieldSelector: List[String] = Nil,
+    gracePeriodSeconds: Option[Int] = None,
+    labelSelector: List[String] = Nil,
+    limit: Option[Int] = None,
+    propagationPolicy: Option[String] = None,
+    resourceVersion: Option[String] = None,
+    resourceVersionMatch: Option[String] = None,
+    timeoutSeconds: Option[Int] = None
+) extends HttpRequest[OUT] {
+
+  private val params: Seq[(String, String)] = Seq(
+    continue.map("continue" -> _),
+    dryRun.map("dryRun" -> _),
+    selector("fieldSelector", fieldSelector),
+    gracePeriodSeconds.map("gracePeriodSeconds" -> _.toString),
+    selector("labelSelector", labelSelector),
+    limit.map("limit" -> _.toString),
+    propagationPolicy.map("propagationPolicy" -> _),
+    resourceVersion.map("resourceVersion" -> _),
+    resourceVersionMatch.map("resourceVersionMatch" -> _),
+    timeoutSeconds.map("timeoutSeconds" -> _.toString)
+  ).flatten
+
   override def send[F[_]](
       http: HttpClient[F]
-  ): F[OUT] = http.delete(url)
+  ): F[OUT] = http.delete(url, params: _*)(body)
+}
+
+abstract class DeleteRequest[OUT: Decoder](
+    url: String,
+    body: Option[DeleteOptions] = None,
+    dryRun: Option[String] = None,
+    gracePeriodSeconds: Option[Int] = None,
+    propagationPolicy: Option[String] = None
+) extends HttpRequest[OUT] {
+
+  private val params: Seq[(String, String)] = Seq(
+    dryRun.map("dryRun" -> _),
+    gracePeriodSeconds.map("gracePeriodSeconds" -> _.toString),
+    propagationPolicy.map("propagationPolicy" -> _)
+  ).flatten
+
+  override def send[F[_]](
+      http: HttpClient[F]
+  ): F[OUT] = http.delete(url, params: _*)(body)
 }
 
 abstract class APIResourceListingRequest(url: String)
@@ -135,4 +185,10 @@ abstract class APIGroupListingRequest(url: String)
   override def send[F[_]](
       http: HttpClient[F]
   ): F[APIGroupList] = http.get(url)
+}
+
+private object CommonAPIs {
+  def selector(name: String, l: List[String]) =
+    if (l.isEmpty) None
+    else Some(name -> l.mkString(", "))
 }

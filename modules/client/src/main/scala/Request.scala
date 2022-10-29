@@ -38,7 +38,9 @@ trait HttpClient[F[_]] {
   def patch[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
       body: I
   ): F[O]
-  def delete[O: Decoder](url: String, params: (String, String)*): F[O]
+  def delete[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
+      body: Option[I] = None
+  ): F[O]
 
   final def send[O](req: HttpRequest[O]): F[O] = req.send(this)
 }
