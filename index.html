@@ -247,8 +247,6 @@
 //     port: 80
 // 
 // ---
-// apiVersion: v1
-// kind: ConfigMap
 // data:
 //   some config: some value
 //   config file: |
@@ -257,12 +255,14 @@
 //   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
 //   blob2: dmVyc2lvbiA9IDMuNi4wCnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
 //   other inline data: c29tZSBvdGhlciBkYXRh
+// apiVersion: v1
 // metadata:
 //   namespace: staging
 //   labels:
 //     app.kubernetes.io/name: example
 //     app.kubernetes.io/instance: one
 //   name: example
+// kind: ConfigMap
 // 
 // ---
 // apiVersion: apps/v1
@@ -298,13 +298,13 @@
 //   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCg==
 //   blob2: dmVyc2lvbiA9IDMuNi4wCnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
 //   other inline data: c29tZSBvdGhlciBkYXRh
-// kind: ConfigMap
-// apiVersion: v1
 // data:
 //   some config: some value
 //   config file: |
 //     use flake
 //   new-key: new value
+// apiVersion: v1
+// kind: ConfigMap
 // metadata:
 //   namespace: production
 //   labels:
@@ -331,7 +331,7 @@
     .</span><span class="keyword">default</span><span>[</span><span class="type-name">IO</span><span>]
     .</span><span class="identifier">build</span><span>
     .</span><span class="identifier">map</span><span>(</span><span class="type-name">Http4sKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>, </span><span class="type-name">Json</span><span>](</span><span class="string-literal">&quot;http://localhost:8001&quot;</span><span>, </span><span class="identifier">_</span><span>))
-</span><span class="comment">// buildClient: Resource[IO, Http4sKubernetesClient[IO, Json]] = Bind(Bind(Pure(fs2.io.net.NetworkCompanionPlatform$$anon$1@4b94366c),org.http4s.ember.client.EmberClientBuilder$$Lambda$11558/1480235009@2e1ac8dd),cats.effect.kernel.Resource$$Lambda$11559/1185964857@556b2e6a)
+</span><span class="comment">// buildClient: Resource[IO, Http4sKubernetesClient[IO, Json]] = Bind(Bind(Pure(fs2.io.net.NetworkCompanionPlatform$$anon$1@7d469df0),org.http4s.ember.client.EmberClientBuilder$$Lambda$12478/692364977@22c60f19),cats.effect.kernel.Resource$$Lambda$12479/971259717@b7ab0d5)
 </span><span> 
 </span><span class="keyword">val</span><span> </span><span class="identifier">getNodes</span><span> = </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>)
 </span><span class="comment">// getNodes: IO[io.k8s.api.core.v1.NodeList] = IO(...)
