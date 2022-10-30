@@ -1,4 +1,4 @@
-lazy val circeVersion = "0.14.1"
+lazy val circeVersion = "0.14.2"
 
 ThisBuild / scalaVersion := "2.12.17"
 ThisBuild / scalacOptions += "-Ypartial-unification"
