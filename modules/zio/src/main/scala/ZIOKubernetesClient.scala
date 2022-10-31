@@ -48,16 +48,26 @@ final case class ZIOKubernetesClient(
     }
   } yield u.setQueryParams(qp)
 
-  private def expect[O: Decoder](req: http.Request): Task[O] = for {
-    res <- client.request(req, Client.Config.empty)
-    body <- res.bodyAsString
-    o <- ZIO.fromEither(
-      JsonDecoder[O]
-        .decodeJson(body)
-        .left
-        .map(DecodeError(_))
-    )
-  } yield o
+  private def expect[O: Decoder](req: http.Request): Task[O] =
+    client.request(req, Client.Config.empty).flatMap { res =>
+      def readBody: Task[O] = res.bodyAsString.flatMap(body =>
+        ZIO.fromEither(
+          JsonDecoder[O]
+            .decodeJson(body)
+            .left
+            .map(DecodeError(_))
+        )
+      )
+
+      res.status match {
+        case s if s.isSuccess         => readBody
+        case http.Status.Conflict     => ZIO.die(ErrorResponse.Conflict)
+        case http.Status.BadRequest   => ZIO.die(ErrorResponse.BadRequest)
+        case http.Status.Unauthorized => ZIO.die(ErrorResponse.Unauthorized)
+        case http.Status.NotFound     => ZIO.die(ErrorResponse.NotFound)
+        case s => ZIO.die(new Exception(s"General error $s"))
+      }
+    }
 
   private def send[I: Encoder, O: Decoder](
       url: String,

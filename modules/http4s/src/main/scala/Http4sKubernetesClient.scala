@@ -28,10 +28,11 @@ import org.http4s.client.dsl.Http4sClientDsl
 import org.typelevel.jawn.Facade
 import org.typelevel.jawn.fs2._
 
-final case class Http4sKubernetesClient[F[_]: Concurrent, T](
+final case class Http4sKubernetesClient[F[_], T](
     baseUrl: String,
     client: Client[F]
 )(implicit
+    F: Concurrent[F],
     enc: EntityEncoder[F, T],
     dec: EntityDecoder[F, T],
     builder: Builder[T],
@@ -59,10 +60,21 @@ final case class Http4sKubernetesClient[F[_]: Concurrent, T](
       .fromEither(Uri.fromString(s"$baseUrl$str"))
       .map(_.withQueryParams(params.toMap))
 
+  private def send[O: Decoder](req: org.http4s.Request[F]): F[O] =
+    client.expectOr(req)(resp =>
+      F.raiseError(resp.status match {
+        case Status.Conflict     => ErrorResponse.Conflict
+        case Status.NotFound     => ErrorResponse.NotFound
+        case Status.Unauthorized => ErrorResponse.Unauthorized
+        case Status.BadRequest   => ErrorResponse.BadRequest
+        case e                   => new Exception(e.toString)
+      })
+    )
+
   def get[O: Decoder](url: String, params: (String, String)*): F[O] = for {
     add <- urlFrom(url, params: _*)
     req = GET(add)
-    res <- client.expect[O](req)
+    res <- send(req)
   } yield res
 
   def post[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
@@ -70,7 +82,7 @@ final case class Http4sKubernetesClient[F[_]: Concurrent, T](
   ): F[O] = for {
     add <- urlFrom(url, params: _*)
     req = POST(body, add)
-    res <- client.expect[O](req)
+    res <- send(req)
   } yield res
 
   def put[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
@@ -78,7 +90,7 @@ final case class Http4sKubernetesClient[F[_]: Concurrent, T](
   ): F[O] = for {
     add <- urlFrom(url, params: _*)
     req = PUT(body, add)
-    res <- client.expect[O](req)
+    res <- send(req)
   } yield res
 
   def patch[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
@@ -86,7 +98,7 @@ final case class Http4sKubernetesClient[F[_]: Concurrent, T](
   ): F[O] = for {
     add <- urlFrom(url, params: _*)
     req = PATCH(body, add)
-    res <- client.expect[O](req)
+    res <- send(req)
   } yield res
 
   def delete[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
@@ -94,7 +106,7 @@ final case class Http4sKubernetesClient[F[_]: Concurrent, T](
   ): F[O] = for {
     add <- urlFrom(url, params: _*)
     req = body.fold(DELETE(add))(DELETE(_, add))
-    res <- client.expect[O](req)
+    res <- send(req)
   } yield res
 
   def connect[O: Decoder](
