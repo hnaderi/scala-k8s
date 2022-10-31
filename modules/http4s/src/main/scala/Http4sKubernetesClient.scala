@@ -18,16 +18,15 @@ package dev.hnaderi.k8s.client
 
 import cats.effect.Concurrent
 import cats.implicits._
+import dev.hnaderi.k8s.jawn
 import dev.hnaderi.k8s.utils._
 import fs2.Stream
-import org.http4s._
 import org.http4s.Method._
+import org.http4s._
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
-import org.http4s.headers.`Content-Type`
-import org.typelevel.jawn.fs2._
-import dev.hnaderi.k8s.jawn
 import org.typelevel.jawn.Facade
+import org.typelevel.jawn.fs2._
 
 final case class Http4sKubernetesClient[F[_]: Concurrent, T](
     baseUrl: String,
@@ -47,7 +46,6 @@ final case class Http4sKubernetesClient[F[_]: Concurrent, T](
   private implicit def encoder[A: Encoder]: EntityEncoder[F, A] =
     enc
       .contramap[A](_.encodeTo)
-      .withContentType(`Content-Type`(MediaType.application.`merge-patch+json`))
 
   private implicit def decoder[A: Decoder]: EntityDecoder[F, A] =
     dec.flatMapR(t =>

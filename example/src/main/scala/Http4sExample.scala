@@ -20,8 +20,11 @@ import cats.effect._
 import cats.implicits._
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client._
+import dev.hnaderi.k8s.implicits._
 import fs2.Stream._
 import io.circe.Json
+import io.k8s.api.core.v1.ConfigMap
+import io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
 import org.http4s.circe._
 import org.http4s.ember.client.EmberClientBuilder
 
@@ -56,6 +59,27 @@ object Http4sExample extends IOApp {
         _.items.toList.map(_.metadata.flatMap(_.name)).traverse(IO.println)
       )
 
+  def operations(cl: HttpClient[IO]) = for {
+    _ <- APIs
+      .namespace("default")
+      .configmaps
+      .create(
+        ConfigMap(
+          metadata = ObjectMeta(name = "example"),
+          data = Map("test" -> "value")
+        )
+      )
+      .send(cl)
+    a <- APIs.namespace("default").configmaps.get("example").send(cl)
+    b <- APIs
+      .namespace("default")
+      .configmaps
+      .replace("example", a.withData(Map("test2" -> "value2")))
+      .send(cl)
+    _ <- IO.println(b)
+    _ <- APIs.namespace("default").configmaps.delete("example").send(cl)
+  } yield ()
+
   def debug(cl: HttpClient[IO]) =
     APIs
       .namespace("kube-system")
@@ -71,6 +95,6 @@ object Http4sExample extends IOApp {
       .flatMap(IO.println)
 
   override def run(args: List[String]): IO[ExitCode] = client
-    .use(debug2)
+    .use(operations)
     .as(ExitCode.Success)
 }
