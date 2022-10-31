@@ -21,6 +21,7 @@ import dev.hnaderi.k8s.utils._
 import org.typelevel.jawn.Facade
 import org.typelevel.jawn.Parser.parseFromByteArray
 import sttp.client3._
+import sttp.model.StatusCode
 import sttp.model.Uri
 
 import SttpKubernetesClient._
@@ -33,9 +34,20 @@ final class SttpKubernetesClient[F[_], T: Builder: Reader](
 
   private implicit val jawn: Facade.SimpleFacade[T] = jawnFacade[T]
   private val ra: ResponseAs[Either[Throwable, T], Any] =
-    ResponseAsByteArray.map(parseFromByteArray[T](_).toEither)
+    ResponseAsByteArray.mapWithMetadata { case (b, resp) =>
+      resp.code match {
+        case s if s.isSuccess        => parseFromByteArray[T](b).toEither
+        case StatusCode.Conflict     => Left(ErrorResponse.Conflict)
+        case StatusCode.Unauthorized => Left(ErrorResponse.Unauthorized)
+        case StatusCode.NotFound     => Left(ErrorResponse.NotFound)
+        case StatusCode.BadRequest   => Left(ErrorResponse.BadRequest)
+        case other => Left(new Exception(s"General error $other"))
+      }
+    }
+
   private def respAs[O: Decoder]: ResponseAs[O, Any] =
     ra.map(_.flatMap(_.decodeTo[O].left.map(DecodeError(_)))).getRight
+
   private def urlFor(url: String, params: Seq[(String, String)]) =
     Uri
       .parse(s"$serverUrl$url")
