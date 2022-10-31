@@ -81,13 +81,13 @@ abstract class CreateRequest[RES: Encoder: Decoder](
   ): F[RES] = http.post(url, params: _*)(body)
 }
 
-abstract class ReplaceRequest[IN: Encoder, OUT: Decoder](
+abstract class ReplaceRequest[RES: Encoder: Decoder](
     url: String,
-    body: IN,
+    body: RES,
     dryRun: Option[String] = None,
     fieldManager: Option[String] = None,
     fieldValidation: Option[String] = None
-) extends HttpRequest[OUT] {
+) extends HttpRequest[RES] {
 
   private def params: Seq[(String, String)] = Seq(
     dryRun.map("dryRun" -> _),
@@ -97,7 +97,7 @@ abstract class ReplaceRequest[IN: Encoder, OUT: Decoder](
 
   override def send[F[_]](
       http: HttpClient[F]
-  ): F[OUT] = http.put(url, params: _*)(body)
+  ): F[RES] = http.put(url, params: _*)(body)
 }
 
 abstract class PartialUpdateRequest[IN: Encoder, OUT: Decoder](

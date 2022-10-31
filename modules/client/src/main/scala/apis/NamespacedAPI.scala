@@ -81,8 +81,19 @@ abstract class APIGroupAPI(base: String) {
 
     case class ListInNamespace(namespace: String)
         extends ListingRequest[RES, COL](baseUrlIn(namespace))
-    case class Create(namespace: String, configmap: RES)
-        extends CreateRequest(baseUrlIn(namespace), configmap)
+    case class Create(
+        namespace: String,
+        configmap: RES,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ) extends CreateRequest(
+          baseUrlIn(namespace),
+          configmap,
+          dryRun = dryRun,
+          fieldManager = fieldManager,
+          fieldValidation = fieldValidation
+        )
     case class Get(namespace: String, name: String)
         extends GetRequest[RES](urlFor(namespace, name))
     case class Delete(
@@ -125,6 +136,20 @@ abstract class APIGroupAPI(base: String) {
           resourceVersion = resourceVersion,
           resourceVersionMatch = resourceVersionMatch,
           timeoutSeconds = timeoutSeconds
+        )
+    case class Replace(
+        name: String,
+        namespace: String,
+        body: RES,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ) extends ReplaceRequest(
+          urlFor(namespace, name),
+          body,
+          dryRun = dryRun,
+          fieldManager = fieldManager,
+          fieldValidation = fieldValidation
         )
 
     trait NamespacedAPIBuilders extends NamespacedAPI {
@@ -171,6 +196,34 @@ abstract class APIGroupAPI(base: String) {
         resourceVersionMatch = resourceVersionMatch,
         timeoutSeconds = timeoutSeconds
       )
+
+      def create(
+          configmap: RES,
+          dryRun: Option[String] = None,
+          fieldManager: Option[String] = None,
+          fieldValidation: Option[String] = None
+      ): Create = Create(
+        namespace,
+        configmap,
+        dryRun = dryRun,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation
+      )
+      def replace(
+          name: String,
+          configmap: RES,
+          dryRun: Option[String] = None,
+          fieldManager: Option[String] = None,
+          fieldValidation: Option[String] = None
+      ): Replace = Replace(
+        name,
+        namespace,
+        configmap,
+        dryRun = dryRun,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation
+      )
+
     }
   }
 
