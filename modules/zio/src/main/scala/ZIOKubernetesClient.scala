@@ -19,6 +19,7 @@ package dev.hnaderi.k8s.client
 import dev.hnaderi.k8s.utils.Decoder
 import dev.hnaderi.k8s.utils.Encoder
 import dev.hnaderi.k8s.zioJson._
+import io.k8s.apimachinery.pkg.apis.meta.v1.Patch
 import zhttp.http
 import zhttp.http.HttpData
 import zhttp.http.Method
@@ -73,28 +74,15 @@ final case class ZIOKubernetesClient(
       url: String,
       params: Seq[(String, String)],
       method: http.Method,
-      body: I
+      body: Option[I],
+      contentType: String = "application/json"
   ): Task[O] = for {
     u <- urlFor(url, params)
     req = http.Request(
       method = method,
       url = u,
-      data = HttpData.fromString(body.toJson)
-    )
-    o <- expect(req)
-  } yield o
-
-  private def send[I: Encoder, O: Decoder](
-      url: String,
-      params: Seq[(String, String)],
-      method: http.Method,
-      body: Option[I]
-  ): Task[O] = for {
-    u <- urlFor(url, params)
-    req = http.Request(
-      method = method,
-      url = u,
-      data = body.fold(HttpData.empty)(b => HttpData.fromString(b.toJson))
+      data = body.fold(HttpData.empty)(b => HttpData.fromString(b.toJson)),
+      headers = http.Headers.contentType(contentType)
     )
     o <- expect(req)
   } yield o
@@ -113,19 +101,18 @@ final case class ZIOKubernetesClient(
       url: String,
       params: (String, String)*
   )(body: I): Task[O] =
-    send(url, params, Method.POST, body)
+    send(url, params, Method.POST, Some(body))
 
   override def put[I: Encoder, O: Decoder](
       url: String,
       params: (String, String)*
   )(body: I): Task[O] =
-    send(url, params, Method.PUT, body)
+    send(url, params, Method.PUT, Some(body))
 
-  override def patch[I: Encoder, O: Decoder](
-      url: String,
-      params: (String, String)*
-  )(body: I): Task[O] =
-    send(url, params, Method.PATCH, body)
+  override def patch[O: Decoder](url: String, params: (String, String)*)(
+      body: Patch
+  ): Task[O] =
+    send(url, params, Method.PATCH, Some(body), contentType = body.contentType)
 
   override def delete[I: Encoder, O: Decoder](
       url: String,

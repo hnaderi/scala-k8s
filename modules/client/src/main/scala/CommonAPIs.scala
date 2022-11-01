@@ -23,6 +23,7 @@ import io.k8s.apimachinery.pkg.apis.meta.v1.APIResourceList
 import scala.concurrent.duration.FiniteDuration
 import io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions
 import CommonAPIs.selector
+import io.k8s.apimachinery.pkg.apis.meta.v1.Patch
 
 abstract class ListingRequest[O: Decoder, COL: Decoder](
     url: String,
@@ -100,25 +101,55 @@ abstract class ReplaceRequest[RES: Encoder: Decoder](
   ): F[RES] = http.put(url, params: _*)(body)
 }
 
-abstract class PartialUpdateRequest[IN: Encoder, OUT: Decoder](
+// sealed abstract class PartialUpdateRequestBase[IN: Encoder, OUT: Decoder](
+//     _body: Patch
+// ) extends HttpRequest[OUT] {
+//   protected val url: String
+//   protected val dryRun: Option[String]
+//   protected val fieldManager: Option[String]
+//   protected val fieldValidation: Option[String]
+//   protected val force: Option[Boolean]
+
+//   private def params: Seq[(String, String)] = Seq(
+//     dryRun.map("dryRun" -> _),
+//     fieldManager.map("fieldManager" -> _),
+//     fieldValidation.map("fieldValidation" -> _),
+//     force.map("force" -> _.toString)
+//   ).flatten
+
+//   override def send[F[_]](
+//       http: HttpClient[F]
+//   ): F[OUT] = http.patch(url, params: _*)(_body)
+// }
+
+// abstract class PartialUpdateRequest[IN: Encoder, OUT: Decoder](
+//     url: String,
+//     body: IN,
+//     dryRun: Option[String] = None,
+//     fieldManager: Option[String] = None,
+//     fieldValidation: Option[String] = None,
+//     force: Option[Boolean] = None
+// ) extends PartialUpdateRequestBase(Patch.JsonMergePatch(body))
+
+abstract class ServerSideApplyRequest[IN: Encoder, OUT: Decoder](
     url: String,
     body: IN,
+    fieldManager: String,
     dryRun: Option[String] = None,
-    fieldManager: Option[String] = None,
     fieldValidation: Option[String] = None,
     force: Option[Boolean] = None
 ) extends HttpRequest[OUT] {
 
   private def params: Seq[(String, String)] = Seq(
+    Some("fieldManager" -> fieldManager),
     dryRun.map("dryRun" -> _),
-    fieldManager.map("fieldManager" -> _),
     fieldValidation.map("fieldValidation" -> _),
     force.map("force" -> _.toString)
   ).flatten
 
   override def send[F[_]](
       http: HttpClient[F]
-  ): F[OUT] = http.patch(url, params: _*)(body)
+  ): F[OUT] = http.patch(url, params: _*)(Patch.ServerSideApply(body))
 }
 
 abstract class DeleteCollectionRequest[OUT: Decoder](

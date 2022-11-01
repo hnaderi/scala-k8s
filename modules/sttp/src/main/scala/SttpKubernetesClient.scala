@@ -18,6 +18,7 @@ package dev.hnaderi.k8s.client
 
 import dev.hnaderi.k8s.jawn.jawnFacade
 import dev.hnaderi.k8s.utils._
+import io.k8s.apimachinery.pkg.apis.meta.v1.Patch
 import org.typelevel.jawn.Facade
 import org.typelevel.jawn.Parser.parseFromByteArray
 import sttp.client3._
@@ -86,13 +87,14 @@ final class SttpKubernetesClient[F[_], T: Builder: Reader](
       .response(respAs[O])
       .send(client)
 
-  override def patch[I: Encoder, O: Decoder](
+  override def patch[O: Decoder](
       url: String,
       params: (String, String)*
-  )(body: I): F[Response[O]] =
+  )(body: Patch): F[Response[O]] =
     basicRequest
       .patch(urlFor(url, params))
       .body(body)
+      .contentType(body.contentType)
       .response(respAs[O])
       .send(client)
 

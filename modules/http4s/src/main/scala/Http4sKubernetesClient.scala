@@ -21,10 +21,12 @@ import cats.implicits._
 import dev.hnaderi.k8s.jawn
 import dev.hnaderi.k8s.utils._
 import fs2.Stream
+import io.k8s.apimachinery.pkg.apis.meta.v1.Patch
 import org.http4s.Method._
 import org.http4s._
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
+import org.http4s.headers.`Content-Type`
 import org.typelevel.jawn.Facade
 import org.typelevel.jawn.fs2._
 
@@ -93,11 +95,13 @@ final case class Http4sKubernetesClient[F[_], T](
     res <- send(req)
   } yield res
 
-  def patch[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
-      body: I
+  def patch[O: Decoder](url: String, params: (String, String)*)(
+      body: Patch
   ): F[O] = for {
     add <- urlFrom(url, params: _*)
-    req = PATCH(body, add)
+    req = PATCH(body, add).withContentType(
+      `Content-Type`(MediaType.unsafeParse(body.contentType))
+    )
     res <- send(req)
   } yield res
 
