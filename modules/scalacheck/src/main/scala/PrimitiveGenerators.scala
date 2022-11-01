@@ -78,10 +78,6 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       Gen.const(io.k8s.api.apiserverinternal.v1alpha1.StorageVersionSpec())
     )
 
-  implicit lazy val arbitrary_io_k8s_apimachinery_pkg_apis_meta_v1Patch
-      : Arbitrary[io.k8s.apimachinery.pkg.apis.meta.v1.Patch] =
-    Arbitrary(Gen.const(io.k8s.apimachinery.pkg.apis.meta.v1.Patch()))
-
   implicit lazy val arbitrary_io_k8s_apimachinery_pkg_util_intstrIntOrString
       : Arbitrary[io.k8s.apimachinery.pkg.util.intstr.IntOrString] = Arbitrary(
     Gen.oneOf(
