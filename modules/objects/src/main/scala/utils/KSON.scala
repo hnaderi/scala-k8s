@@ -16,16 +16,35 @@
 
 package dev.hnaderi.k8s.utils
 
-sealed trait KSON extends Serializable with Product
+sealed trait KSON extends Serializable with Product {
+  def foldTo[T: Builder]: T
+}
 object KSON {
-  final case class KString(value: String) extends KSON
-  final case class KInt(value: Int) extends KSON
-  final case class KLong(value: Long) extends KSON
-  final case class KDouble(value: Double) extends KSON
-  final case class KBool(value: Boolean) extends KSON
-  final case class KArr(value: Iterable[KSON]) extends KSON
-  final case class KObj(value: Iterable[(String, KSON)]) extends KSON
-  case object KNull extends KSON
+  final case class KString(value: String) extends KSON {
+    def foldTo[T](implicit b: Builder[T]): T = b.of(value)
+  }
+  final case class KInt(value: Int) extends KSON {
+    def foldTo[T](implicit b: Builder[T]): T = b.of(value)
+  }
+  final case class KLong(value: Long) extends KSON {
+    def foldTo[T](implicit b: Builder[T]): T = b.of(value)
+  }
+  final case class KDouble(value: Double) extends KSON {
+    def foldTo[T](implicit b: Builder[T]): T = b.of(value)
+  }
+  final case class KBool(value: Boolean) extends KSON {
+    def foldTo[T](implicit b: Builder[T]): T = b.of(value)
+  }
+  final case class KArr(value: Iterable[KSON]) extends KSON {
+    def foldTo[T](implicit b: Builder[T]): T = b.arr(value.map(_.foldTo[T]))
+  }
+  final case class KObj(value: Iterable[(String, KSON)]) extends KSON {
+    def foldTo[T](implicit b: Builder[T]): T =
+      b.obj(value.map { case (k, v) => (k, v.foldTo[T]) })
+  }
+  case object KNull extends KSON {
+    def foldTo[T](implicit b: Builder[T]): T = b.nil
+  }
 
   implicit val builderInstance: Builder[KSON] = new Builder[KSON] {
 
@@ -90,5 +109,9 @@ object KSON {
         case KObj(fs) => Right(fs)
         case _        => Left("Not an object!")
       }
+  }
+
+  implicit val encoder: Encoder[KSON] = new Encoder[KSON] {
+    def apply[T: Builder](r: KSON): T = r.foldTo[T]
   }
 }
