@@ -79,7 +79,10 @@ lazy val client = module("client") {
   crossProject(JVMPlatform, JSPlatform, NativePlatform)
     .crossType(CrossType.Pure)
     .settings(
-      description := "client core for kubernetes"
+      description := "client core for kubernetes",
+      libraryDependencies ++= Seq(
+        "org.scalameta" %%% "munit" % munitVersion % Test
+      )
     )
     .dependsOn(objects)
 }

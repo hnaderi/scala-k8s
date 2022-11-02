@@ -58,6 +58,9 @@ object Encoder {
       def apply[T](r: Seq[A])(implicit b: Builder[T]): T = b.arr(r.map(enc(_)))
     }
 
+  implicit def listBuilder[A](implicit enc: Encoder[A]): Encoder[List[A]] =
+    seqBuilder[A].contramap(_.toList)
+
   implicit def mapBuilder[A](implicit
       enc: Encoder[A]
   ): Encoder[Map[String, A]] =
