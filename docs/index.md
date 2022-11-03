@@ -1,6 +1,6 @@
-## scala-k8s
+# scala-k8s
 
-### Usage
+## Usage
 
 This library is currently available for Scala binary versions 2.12, 2.13 and 3.2 on JVM/JS/Native.  
 This library is architecured in a microkernel fashion and all the main kubernetes stuff are implemented/generated in pure scala, and integration modules are provided separately.  
@@ -34,7 +34,7 @@ libraryDependencies ++= Seq(
 )
 ```
 
-## Manifest and object generation
+# Manifest and object generation
 first off, we'll import the following
 ```scala mdoc
 import dev.hnaderi.k8s._  // base packages
@@ -63,7 +63,7 @@ import java.io.File
 
 Now we can define any kubernetes object
 
-### ConfigMap example
+## ConfigMap example
 
 ```scala mdoc:silent
 val config = ConfigMap(
@@ -95,7 +95,7 @@ val config2 = ConfigMap(
 )
 ```
 
-### Deployment example
+## Deployment example
 
 ```scala mdoc:silent
 val deployment = Deployment(
@@ -119,7 +119,7 @@ val deployment = Deployment(
 )
 ```
 
-### Service example
+## Service example
 
 ```scala mdoc:silent
 val service = Service(
@@ -134,7 +134,7 @@ val service = Service(
 )
 ```
 
-### Manifest example
+## Manifest example
 
 Now you can merge all of your kubernetes resource definitions in to one manifest
 ```scala mdoc:silent
@@ -148,7 +148,7 @@ which will output like this
 println(manifest)
 ```
 
-### Helpers
+## Helpers
 You can also use helpers to manipulate data models easily
 
 ```scala mdoc:silent
@@ -169,11 +169,11 @@ All fields have the following helper methods:
 println(config3.asManifest)
 ```
 
-## Client
+# Client
 
 Currently clients does not support direct TLS connection, so you must use `kubectl proxy`, and use proxy address in clients.
 
-### Http4s based client
+## Http4s based client
 http4s based client support all APIs.
 
 ```scala mdoc:to-string
@@ -204,7 +204,7 @@ val getConfigMaps =
   )
 ```
 
-### ZIO based client
+## ZIO based client
 Currently, ZIO based client does not support streaming watch APIs, it will support as soon as [zio-http supports streaming responses](https://github.com/hnaderi/scala-k8s/issues/17)
 ```scala
 import dev.hnaderi.k8s.client.APIs
@@ -214,7 +214,7 @@ val client = ZIOKubernetesClient.make("http://localhost:8001")
 val nodes = ZIOKubernetesClient.send(APIs.nodes.list())
 ```
 
-### Sttp based client
+## Sttp based client
 ```scala mdoc:compile-only
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client.APIs
@@ -234,7 +234,8 @@ val nodes = APIs.nodes.list().send(client)
 nodes.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)
 ```
 
-### Working with requests
+# API calls
+## Working with requests
 Requests are plain data, so you can manipulate or pass them like any normal data
 
 ```scala mdoc
@@ -247,7 +248,77 @@ val sysConfig = APIs
 val defaultConfig = sysConfig.copy(namespace = "default")
 ```
 
-### Implementing new requests
+## Advanced requests
+
+For doing simple strategical merge patches:
+```scala mdoc:to-string
+val patch1 = APIs
+  .namespace("default")
+  .configmaps
+  .patch(
+    "test",
+    ConfigMap(metadata = ObjectMeta(labels = Map("new" -> "label")))
+  )
+```
+
+
+For doing [Json patch](https://www.rfc-editor.org/rfc/rfc6902):
+```scala mdoc:to-string
+// You need to import pointer instances
+import dev.hnaderi.k8s.client.implicits._
+
+val patch2 = APIs
+  .namespace("default")
+  .configmaps
+  .jsonPatch("test")(
+    JsonPatch[ConfigMap].builder
+      .add(_.metadata.labels.at("new"), "label")
+      .move(_.metadata.labels.at("a"), _.metadata.labels.at("b"))
+      .remove(_.data.at("to-delete"))
+  )
+```
+
+
+Server side apply:
+```scala mdoc:to-string
+val patch3 = APIs
+  .namespace("default")
+  .configmaps
+  .serverSideApply("test", ConfigMap(), fieldManager = "my-operator")
+```
+
+
+Or [json merge patches](https://www.rfc-editor.org/rfc/rfc7386):
+```scala mdoc:to-string
+val patch4 = APIs
+  .namespace("default")
+  .configmaps
+  .patch(
+    "test",
+    ConfigMap(metadata = ObjectMeta(labels = Map("new" -> "label"))),
+    patch = PatchType.Merge
+  )
+```
+
+
+Your own custom type merge, for times that you need all the control:
+```scala mdoc:to-string
+type CustomMerge = String // Your custom object to be send to kubernetes
+val customMergeObject : CustomMerge = ""
+// You need to define encoder for your type
+// implicit val customMergeObjectEncoder : Encoder[CustomMerge] = ???
+
+val patch5 = APIs
+  .namespace("default")
+  .configmaps
+  .patchGeneric(
+    "test",
+    customMergeObject,
+    patch = PatchType.Merge
+  )
+```
+
+## Implementing new requests
 you can also implement your own requests easily, however if you need a request that is widely used and is standard, please open an issue or better, a pull request, so everyone can use it.
 
 ```scala mdoc
