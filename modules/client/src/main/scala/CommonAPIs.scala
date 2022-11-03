@@ -101,56 +101,26 @@ abstract class ReplaceRequest[RES: Encoder: Decoder](
   ): F[RES] = http.put(url, params: _*)(body)
 }
 
-// sealed abstract class PartialUpdateRequestBase[IN: Encoder, OUT: Decoder](
-//     _body: Patch
-// ) extends HttpRequest[OUT] {
-//   protected val url: String
-//   protected val dryRun: Option[String]
-//   protected val fieldManager: Option[String]
-//   protected val fieldValidation: Option[String]
-//   protected val force: Option[Boolean]
+abstract class PartialUpdateRequest[IN: Encoder, OUT: Decoder](
+    body: IN,
+    patch: PatchType,
+    url: String,
+    dryRun: Option[String],
+    fieldManager: Option[String],
+    fieldValidation: Option[String],
+    force: Option[Boolean]
+) extends HttpRequest[OUT] {
+  private def params: Seq[(String, String)] = Seq(
+    dryRun.map("dryRun" -> _),
+    fieldManager.map("fieldManager" -> _),
+    fieldValidation.map("fieldValidation" -> _),
+    force.map("force" -> _.toString)
+  ).flatten
 
-//   private def params: Seq[(String, String)] = Seq(
-//     dryRun.map("dryRun" -> _),
-//     fieldManager.map("fieldManager" -> _),
-//     fieldValidation.map("fieldValidation" -> _),
-//     force.map("force" -> _.toString)
-//   ).flatten
-
-//   override def send[F[_]](
-//       http: HttpClient[F]
-//   ): F[OUT] = http.patch(url, params: _*)(_body)
-// }
-
-// abstract class PartialUpdateRequest[IN: Encoder, OUT: Decoder](
-//     url: String,
-//     body: IN,
-//     dryRun: Option[String] = None,
-//     fieldManager: Option[String] = None,
-//     fieldValidation: Option[String] = None,
-//     force: Option[Boolean] = None
-// ) extends PartialUpdateRequestBase(Patch.JsonMergePatch(body))
-
-// abstract class ServerSideApplyRequest[IN: Encoder, OUT: Decoder](
-//     url: String,
-//     body: IN,
-//     fieldManager: String,
-//     dryRun: Option[String] = None,
-//     fieldValidation: Option[String] = None,
-//     force: Option[Boolean] = None
-// ) extends HttpRequest[OUT] {
-
-//   private def params: Seq[(String, String)] = Seq(
-//     Some("fieldManager" -> fieldManager),
-//     dryRun.map("dryRun" -> _),
-//     fieldValidation.map("fieldValidation" -> _),
-//     force.map("force" -> _.toString)
-//   ).flatten
-
-//   override def send[F[_]](
-//       http: HttpClient[F]
-//   ): F[OUT] = http.patch(url, params: _*)(Patch.ServerSideApply(body))
-// }
+  override def send[F[_]](
+      http: HttpClient[F]
+  ): F[OUT] = http.patch(url, patch, params: _*)(body)
+}
 
 abstract class DeleteCollectionRequest[OUT: Decoder](
     url: String,
