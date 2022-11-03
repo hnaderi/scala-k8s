@@ -19,8 +19,6 @@ package dev.hnaderi.k8s.client
 import munit.FunSuite
 import munit.Location
 
-import Pointer.Plain
-
 class JsonPointerSuite extends FunSuite {
   private def assertPath[T](p: Pointer[T], jp: String)(implicit loc: Location) =
     assertEquals(p.path.toJsonPointer, jp)
