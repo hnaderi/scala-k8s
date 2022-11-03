@@ -33,6 +33,7 @@ lazy val root =
     .aggregate(
       objects,
       objectsTest,
+      clientTest,
       client,
       http4s,
       zio,
@@ -149,6 +150,19 @@ lazy val objectsTest = module("objects-test") {
       )
     )
     .dependsOn(objects)
+    .enablePlugins(NoPublishPlugin)
+}
+
+lazy val clientTest = module("client-test") {
+  crossProject(JVMPlatform, JSPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "internal tests for scala-k8s client",
+      libraryDependencies ++= Seq(
+        "org.scalameta" %%% "munit" % munitVersion % Test
+      )
+    )
+    .dependsOn(client)
     .enablePlugins(NoPublishPlugin)
 }
 
