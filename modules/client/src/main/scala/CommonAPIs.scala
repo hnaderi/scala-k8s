@@ -19,11 +19,11 @@ package dev.hnaderi.k8s.client
 import dev.hnaderi.k8s.utils._
 import io.k8s.apimachinery.pkg.apis.meta.v1.APIGroupList
 import io.k8s.apimachinery.pkg.apis.meta.v1.APIResourceList
+import io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions
 
 import scala.concurrent.duration.FiniteDuration
-import io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions
+
 import CommonAPIs.selector
-import io.k8s.apimachinery.pkg.apis.meta.v1.Patch
 
 abstract class ListingRequest[O: Decoder, COL: Decoder](
     url: String,
@@ -131,26 +131,26 @@ abstract class ReplaceRequest[RES: Encoder: Decoder](
 //     force: Option[Boolean] = None
 // ) extends PartialUpdateRequestBase(Patch.JsonMergePatch(body))
 
-abstract class ServerSideApplyRequest[IN: Encoder, OUT: Decoder](
-    url: String,
-    body: IN,
-    fieldManager: String,
-    dryRun: Option[String] = None,
-    fieldValidation: Option[String] = None,
-    force: Option[Boolean] = None
-) extends HttpRequest[OUT] {
+// abstract class ServerSideApplyRequest[IN: Encoder, OUT: Decoder](
+//     url: String,
+//     body: IN,
+//     fieldManager: String,
+//     dryRun: Option[String] = None,
+//     fieldValidation: Option[String] = None,
+//     force: Option[Boolean] = None
+// ) extends HttpRequest[OUT] {
 
-  private def params: Seq[(String, String)] = Seq(
-    Some("fieldManager" -> fieldManager),
-    dryRun.map("dryRun" -> _),
-    fieldValidation.map("fieldValidation" -> _),
-    force.map("force" -> _.toString)
-  ).flatten
+//   private def params: Seq[(String, String)] = Seq(
+//     Some("fieldManager" -> fieldManager),
+//     dryRun.map("dryRun" -> _),
+//     fieldValidation.map("fieldValidation" -> _),
+//     force.map("force" -> _.toString)
+//   ).flatten
 
-  override def send[F[_]](
-      http: HttpClient[F]
-  ): F[OUT] = http.patch(url, params: _*)(Patch.ServerSideApply(body))
-}
+//   override def send[F[_]](
+//       http: HttpClient[F]
+//   ): F[OUT] = http.patch(url, params: _*)(Patch.ServerSideApply(body))
+// }
 
 abstract class DeleteCollectionRequest[OUT: Decoder](
     url: String,

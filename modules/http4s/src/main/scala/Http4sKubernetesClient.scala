@@ -21,12 +21,12 @@ import cats.implicits._
 import dev.hnaderi.k8s.jawn
 import dev.hnaderi.k8s.utils._
 import fs2.Stream
-import io.k8s.apimachinery.pkg.apis.meta.v1.Patch
 import org.http4s.Method._
 import org.http4s._
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.headers.`Content-Type`
+import org.http4s.syntax.literals._
 import org.typelevel.jawn.Facade
 import org.typelevel.jawn.fs2._
 
@@ -73,6 +73,14 @@ final case class Http4sKubernetesClient[F[_], T](
       })
     )
 
+  private def mediaTypeFor: PatchType => MediaType = {
+    case PatchType.JsonPatch => MediaType.application.`json-patch+json`
+    case PatchType.Merge     => MediaType.application.`merge-patch+json`
+    case PatchType.StrategicMerge =>
+      mediaType"application/strategic-merge-patch+json"
+    case PatchType.ServerSide => mediaType"application/apply-patch+yaml"
+  }
+
   def get[O: Decoder](url: String, params: (String, String)*): F[O] = for {
     add <- urlFrom(url, params: _*)
     req = GET(add)
@@ -95,12 +103,16 @@ final case class Http4sKubernetesClient[F[_], T](
     res <- send(req)
   } yield res
 
-  def patch[O: Decoder](url: String, params: (String, String)*)(
-      body: Patch
+  def patch[I: Encoder, O: Decoder](
+      url: String,
+      patch: PatchType,
+      params: (String, String)*
+  )(
+      body: I
   ): F[O] = for {
     add <- urlFrom(url, params: _*)
     req = PATCH(body, add).withContentType(
-      `Content-Type`(MediaType.unsafeParse(body.contentType))
+      `Content-Type`(mediaTypeFor(patch))
     )
     res <- send(req)
   } yield res

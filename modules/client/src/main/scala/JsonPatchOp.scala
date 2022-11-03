@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package dev.hnaderi.k8s.utils
+package dev.hnaderi.k8s
+package client
 
+import utils._
 import KSON._
 
 /** implementation of Json patch spec from

@@ -2,6 +2,7 @@ package dev.hnaderi.k8s.generator
 
 import sbt._
 import sbt.Keys._
+import scala.util.matching.Regex
 
 object KubernetesSpecPlugin extends AutoPlugin {
   object autoImport {
@@ -23,6 +24,9 @@ object KubernetesSpecPlugin extends AutoPlugin {
     val kubernetesSpecFetch: TaskKey[Map[String, Definition]] = taskKey(
       "Fetch specified spec version from kubernetes repository"
     )
+    val kubernetesSpecIgnore: SettingKey[Set[String]] = settingKey(
+      "Objects to ignore and filter out"
+    )
   }
 
   import autoImport._
@@ -34,6 +38,9 @@ object KubernetesSpecPlugin extends AutoPlugin {
       s"https://github.com/kubernetes/kubernetes/raw/v${(ThisBuild / kubernetesVersion).value}/api/openapi-spec/swagger.json"
     ),
     kubernetesSpecFileName := s"kubernetes-spec-v${(ThisBuild / kubernetesVersion).value}.json",
+    kubernetesSpecIgnore := Set(
+      "io.k8s.apimachinery.pkg.apis.meta.v1.Patch"
+    ),
     kubernetesSpecFile := (ThisBuild / kubernetesSpecificationDir).value / (ThisBuild / kubernetesSpecFileName).value,
     Compile / kubernetesSpecFetch := {
       val uri = kubernetesSpecAddress.value
@@ -55,7 +62,9 @@ object KubernetesSpecPlugin extends AutoPlugin {
         case Left(err) =>
           log.error(s"Invalid kubernetes API specification!")
           throw err
-        case Right(defs) => defs
+        case Right(defs) =>
+          val ignoreList = kubernetesSpecIgnore.value
+          defs.filterKeys(!ignoreList.contains(_))
       }
     }
   )

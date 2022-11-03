@@ -18,7 +18,6 @@ package dev.hnaderi.k8s
 package client
 
 import dev.hnaderi.k8s.utils._
-import io.k8s.apimachinery.pkg.apis.meta.v1.Patch
 
 sealed trait Request
 trait HttpRequest[O] extends Request {
@@ -36,8 +35,12 @@ trait HttpClient[F[_]] {
   def put[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
       body: I
   ): F[O]
-  def patch[O: Decoder](url: String, params: (String, String)*)(
-      body: Patch
+  def patch[I: Encoder, O: Decoder](
+      url: String,
+      patch: PatchType,
+      params: (String, String)*
+  )(
+      body: I
   ): F[O]
   def delete[I: Encoder, O: Decoder](url: String, params: (String, String)*)(
       body: Option[I] = None

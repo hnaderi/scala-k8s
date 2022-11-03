@@ -19,7 +19,6 @@ package dev.hnaderi.k8s.client
 import dev.hnaderi.k8s.utils.Decoder
 import dev.hnaderi.k8s.utils.Encoder
 import dev.hnaderi.k8s.zioJson._
-import io.k8s.apimachinery.pkg.apis.meta.v1.Patch
 import zhttp.http
 import zhttp.http.HttpData
 import zhttp.http.Method
@@ -109,10 +108,14 @@ final case class ZIOKubernetesClient(
   )(body: I): Task[O] =
     send(url, params, Method.PUT, Some(body))
 
-  override def patch[O: Decoder](url: String, params: (String, String)*)(
-      body: Patch
+  override def patch[I: Encoder, O: Decoder](
+      url: String,
+      patch: PatchType,
+      params: (String, String)*
+  )(
+      body: I
   ): Task[O] =
-    send(url, params, Method.PATCH, Some(body), contentType = body.contentType)
+    send(url, params, Method.PATCH, Some(body), contentType = patch.contentType)
 
   override def delete[I: Encoder, O: Decoder](
       url: String,
