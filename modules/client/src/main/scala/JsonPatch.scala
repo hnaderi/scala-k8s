@@ -23,7 +23,6 @@ import dev.hnaderi.k8s.utils.KSON
 
 final case class JsonPatch(operations: List[JsonPatchOp] = Nil) {
   def foldTo[T: Builder]: T = Builder[T].arr(operations.map(_.encodeTo))
-  val contentType: String = "application/json-patch+json"
 
   def append(op: JsonPatchOp*): JsonPatch = JsonPatch(operations ++ op)
 
@@ -44,5 +43,42 @@ final case class JsonPatch(operations: List[JsonPatchOp] = Nil) {
 object JsonPatch {
   implicit val encoder: Encoder[JsonPatch] = new Encoder[JsonPatch] {
     def apply[T: Builder](r: JsonPatch): T = r.foldTo[T]
+  }
+  def apply[T] = new PartialBuilder[T]
+
+  final class PartialBuilder[T](private val dummy: Boolean = false)
+      extends AnyVal {
+    def builder[P <: Pointer[T]](implicit p: Pointable[T, P]) =
+      new TypedBuilder[T, P](JsonPatch(), p.point(PointerPath()))
+  }
+
+  final class TypedBuilder[T, P <: Pointer[T]](val build: JsonPatch, base: P) {
+    private def append(op: JsonPatchOp) =
+      new TypedBuilder[T, P](build.append(op), base)
+
+    def add[V: Encoder](path: P => Pointer[V], value: V) = append(
+      JsonPatchOp.Add(path(base).path.toJsonPointer, value.encodeTo[KSON])
+    )
+    def remove[V](path: P => Pointer[V]) = append(
+      JsonPatchOp.Remove(path(base).path.toJsonPointer)
+    )
+    def replace[V: Encoder](path: P => Pointer[V], value: V) = append(
+      JsonPatchOp.Replace(path(base).path.toJsonPointer, value.encodeTo[KSON])
+    )
+    def test[V: Encoder](path: P => Pointer[V], value: V) = append(
+      JsonPatchOp.Test(path(base).path.toJsonPointer, value.encodeTo[KSON])
+    )
+    def move[V](from: P => Pointer[V], path: P => Pointer[V]) = append(
+      JsonPatchOp.Move(
+        from(base).path.toJsonPointer,
+        path(base).path.toJsonPointer
+      )
+    )
+    def copy[V](from: P => Pointer[V], path: P => Pointer[V]) = append(
+      JsonPatchOp.Copy(
+        from(base).path.toJsonPointer,
+        path(base).path.toJsonPointer
+      )
+    )
   }
 }
