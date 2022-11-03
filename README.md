@@ -14,13 +14,16 @@
 <img alt="GitHub" src="https://img.shields.io/github/license/hnaderi/scala-k8s?style=flat-square">
 [![Scala Steward badge](https://img.shields.io/badge/Scala_Steward-helping-blue.svg?style=flat-square&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAQCAMAAAARSr4IAAAAVFBMVEUAAACHjojlOy5NWlrKzcYRKjGFjIbp293YycuLa3pYY2LSqql4f3pCUFTgSjNodYRmcXUsPD/NTTbjRS+2jomhgnzNc223cGvZS0HaSD0XLjbaSjElhIr+AAAAAXRSTlMAQObYZgAAAHlJREFUCNdNyosOwyAIhWHAQS1Vt7a77/3fcxxdmv0xwmckutAR1nkm4ggbyEcg/wWmlGLDAA3oL50xi6fk5ffZ3E2E3QfZDCcCN2YtbEWZt+Drc6u6rlqv7Uk0LdKqqr5rk2UCRXOk0vmQKGfc94nOJyQjouF9H/wCc9gECEYfONoAAAAASUVORK5CYII=)](https://scala-steward.org)
 
+## What
+This library provides a full blown extensible client that you can use to interact directly with kubernetes API server, to create operators or accomplish other automation tasks, also you can use it to create or manipulate manifests in scala.
+
 ## Why
-Kubernetes spec is large enough to fit in ones brain, and YAML and helm are a joke! instead of using different tooling and languages with no to little IDE and compiler support, you can use this library to have latest kubernetes API spec under your tool belt, in scala!
+Kubernetes spec is large enough to fit in one's brain, and YAML and helm are a joke! instead of using different tooling and languages with no to little IDE and compiler support, you can use this library to have the latest kubernetes API spec under your tool belt, in scala!
 so the most complex templates are just simple functions, and you can use whatever abstraction you like to create objects; and create manifests easily.  
-for easy to use recipes and integration with sbt, visit [this project](https://github.com/hnaderi/sbt-k8s)
+for easy to use recipes and integration with sbt, visit [this project](https://github.com/hnaderi/sbt-k8s)  
 
 ## Goals
-- to become defacto k8s integration library in all scala ecosystems 
+- to become the defacto k8s integration library in all scala ecosystems 
 
 ## Design principles
 - As extensible as possible
