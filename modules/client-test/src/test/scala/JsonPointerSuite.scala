@@ -21,7 +21,7 @@ import munit.Location
 
 class JsonPointerSuite extends FunSuite {
   private def assertPath[T](p: Pointer[T], jp: String)(implicit loc: Location) =
-    assertEquals(p.path.toJsonPointer, jp)
+    assertEquals(p.currentPath.toJsonPointer, jp)
 
   test("Root") {
     assertPath[SampleData](Pointer[SampleData].root, "")

@@ -57,27 +57,36 @@ object JsonPatch {
       new TypedBuilder[T, P](build.append(op), base)
 
     def add[V: Encoder](path: P => Pointer[V], value: V) = append(
-      JsonPatchOp.Add(path(base).path.toJsonPointer, value.encodeTo[KSON])
+      JsonPatchOp.Add(
+        path(base).currentPath.toJsonPointer,
+        value.encodeTo[KSON]
+      )
     )
     def remove[V](path: P => Pointer[V]) = append(
-      JsonPatchOp.Remove(path(base).path.toJsonPointer)
+      JsonPatchOp.Remove(path(base).currentPath.toJsonPointer)
     )
     def replace[V: Encoder](path: P => Pointer[V], value: V) = append(
-      JsonPatchOp.Replace(path(base).path.toJsonPointer, value.encodeTo[KSON])
+      JsonPatchOp.Replace(
+        path(base).currentPath.toJsonPointer,
+        value.encodeTo[KSON]
+      )
     )
     def test[V: Encoder](path: P => Pointer[V], value: V) = append(
-      JsonPatchOp.Test(path(base).path.toJsonPointer, value.encodeTo[KSON])
+      JsonPatchOp.Test(
+        path(base).currentPath.toJsonPointer,
+        value.encodeTo[KSON]
+      )
     )
     def move[V](from: P => Pointer[V], path: P => Pointer[V]) = append(
       JsonPatchOp.Move(
-        from(base).path.toJsonPointer,
-        path(base).path.toJsonPointer
+        from(base).currentPath.toJsonPointer,
+        path(base).currentPath.toJsonPointer
       )
     )
     def copy[V](from: P => Pointer[V], path: P => Pointer[V]) = append(
       JsonPatchOp.Copy(
-        from(base).path.toJsonPointer,
-        path(base).path.toJsonPointer
+        from(base).currentPath.toJsonPointer,
+        path(base).currentPath.toJsonPointer
       )
     )
   }
