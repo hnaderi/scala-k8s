@@ -16,4 +16,16 @@
 
 package dev.hnaderi.k8s.client
 
-object implicits extends PointerInstances
+import munit.FunSuite
+
+class PointerPathSuite extends FunSuite {
+  test("escaped /") {
+    val path = PointerPath() / "a/b"
+    assertEquals(path.toJsonPointer, "/a~1b")
+  }
+
+  test("escaped ~") {
+    val path = PointerPath() / "a~b"
+    assertEquals(path.toJsonPointer, "/a~0b")
+  }
+}

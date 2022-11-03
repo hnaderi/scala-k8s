@@ -18,18 +18,22 @@ object PointerGenerator {
     val indent = " " * 10
     val tpe = model.fullName
 
+    def pathFor(p: ModelProperty) = {
+      val name = p.name.replaceAll("\\$", "\\$\\$")
+      s"""currentPath / s"$name""""
+    }
     def pointerFor(p: ModelProperty) = p.typeName match {
       case ModelPropertyType.Primitive(name) =>
-        s"""Pointer.Plain[$name] = Pointer.Plain(currentPath / "${p.name}")"""
+        s"""Pointer.Plain[$name] = Pointer.Plain(${pathFor(p)})"""
       case ModelPropertyType.Ref(name) if blackboxTypes.contains(name) =>
-        s"""Pointer.Plain[$name] = Pointer.Plain(currentPath / "${p.name}")"""
+        s"""Pointer.Plain[$name] = Pointer.Plain(${pathFor(p)})"""
       case ModelPropertyType.Ref(name) =>
         val ptrType = s"pointers.${name}Pointer"
-        s""" $ptrType = $ptrType(currentPath / "${p.name}")"""
+        s""" $ptrType = $ptrType(${pathFor(p)})"""
       case ModelPropertyType.Object(valueType) =>
-        s"""MapPointer[$valueType] = MapPointer(currentPath / "${p.name}")"""
+        s"""MapPointer[$valueType] = MapPointer(${pathFor(p)})"""
       case ModelPropertyType.List(valueType) =>
-        s"""ListPointer[$valueType] = ListPointer(currentPath / "${p.name}")"""
+        s"""ListPointer[$valueType] = ListPointer(${pathFor(p)})"""
     }
     def fieldFor(p: ModelProperty) =
       s"""  def ${p.fieldName} : ${pointerFor(p)}"""
@@ -59,7 +63,7 @@ $fields
 
     s"""package dev.hnaderi.k8s.client
 
-trait PointerInstances {
+private[client] trait PointerInstances {
 $pointables
 }
 """
