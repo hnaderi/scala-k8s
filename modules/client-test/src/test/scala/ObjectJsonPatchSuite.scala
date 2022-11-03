@@ -27,13 +27,12 @@ class ObjectJsonPatchSuite extends FunSuite {
     assertEquals(
       JsonPatch[Pod].builder
         .add(_.metadata.labels.at(Labels.version), "v1.0.0")
-        .build,
-      JsonPatch(
-        List(
-          JsonPatchOp.Add(
-            "/metadata/labels/app.kubernetes.io~1version",
-            "v1.0.0".encodeTo[KSON]
-          )
+        .toRaw
+        .operations,
+      List(
+        JsonPatchOp.Add(
+          "/metadata/labels/app.kubernetes.io~1version",
+          "v1.0.0".encodeTo[KSON]
         )
       )
     )

@@ -151,6 +151,42 @@ abstract class APIGroupAPI(base: String) {
           fieldManager = fieldManager,
           fieldValidation = fieldValidation
         )
+    case class ServerSideApply(
+        name: String,
+        namespace: String,
+        body: RES,
+        fieldManager: String,
+        dryRun: Option[String] = None,
+        fieldValidation: Option[String] = None,
+        force: Option[Boolean] = None
+    ) extends PartialUpdateRequest[RES, RES](
+          body,
+          PatchType.ServerSide,
+          url = urlFor(namespace, name),
+          dryRun = dryRun,
+          fieldValidation = fieldValidation,
+          fieldManager = Some(fieldManager),
+          force = force
+        )
+
+    case class GenericPatch[BODY: Encoder](
+        name: String,
+        namespace: String,
+        body: BODY,
+        patch: PatchType,
+        dryRun: Option[String] = None,
+        fieldValidation: Option[String] = None,
+        fieldManager: Option[String] = None,
+        force: Option[Boolean] = None
+    ) extends PartialUpdateRequest[BODY, RES](
+          body,
+          patch,
+          url = urlFor(namespace, name),
+          dryRun = dryRun,
+          fieldValidation = fieldValidation,
+          fieldManager = fieldManager,
+          force = force
+        )
 
     trait NamespacedAPIBuilders extends NamespacedAPI {
       def get(name: String): Get = Get(namespace, name)
@@ -223,7 +259,95 @@ abstract class APIGroupAPI(base: String) {
         fieldManager = fieldManager,
         fieldValidation = fieldValidation
       )
-
+      def serverSideApply(
+          name: String,
+          body: RES,
+          fieldManager: String,
+          dryRun: Option[String] = None,
+          fieldValidation: Option[String] = None,
+          force: Option[Boolean] = None
+      ): ServerSideApply = ServerSideApply(
+        name,
+        namespace,
+        body,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation,
+        dryRun = dryRun,
+        force = force
+      )
+      def jsonPatch[P <: Pointer[RES]](
+          name: String,
+          dryRun: Option[String] = None,
+          fieldValidation: Option[String] = None,
+          fieldManager: Option[String] = None,
+          force: Option[Boolean] = None
+      )(
+          body: JsonPatch[RES, P]
+      ): GenericPatch[JsonPatch[RES, P]] =
+        GenericPatch[JsonPatch[RES, P]](
+          name,
+          namespace,
+          body,
+          patch = PatchType.JsonPatch,
+          fieldManager = fieldManager,
+          fieldValidation = fieldValidation,
+          dryRun = dryRun,
+          force = force
+        )
+      def patchRaw(
+          name: String,
+          dryRun: Option[String] = None,
+          fieldValidation: Option[String] = None,
+          fieldManager: Option[String] = None,
+          force: Option[Boolean] = None
+      )(
+          body: JsonPatchRaw => JsonPatchRaw
+      ): GenericPatch[JsonPatchRaw] = GenericPatch[JsonPatchRaw](
+        name,
+        namespace,
+        body(JsonPatchRaw()),
+        patch = PatchType.JsonPatch,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation,
+        dryRun = dryRun,
+        force = force
+      )
+      def patch(
+          name: String,
+          body: RES,
+          patch: PatchType = PatchType.StrategicMerge,
+          dryRun: Option[String] = None,
+          fieldValidation: Option[String] = None,
+          fieldManager: Option[String] = None,
+          force: Option[Boolean] = None
+      ): GenericPatch[RES] = GenericPatch[RES](
+        name,
+        namespace,
+        body,
+        patch,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation,
+        dryRun = dryRun,
+        force = force
+      )
+      def patchGeneric[T: Encoder](
+          name: String,
+          body: T,
+          patch: PatchType = PatchType.StrategicMerge,
+          dryRun: Option[String] = None,
+          fieldValidation: Option[String] = None,
+          fieldManager: Option[String] = None,
+          force: Option[Boolean] = None
+      ): GenericPatch[T] = GenericPatch[T](
+        name,
+        namespace,
+        body,
+        patch,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation,
+        dryRun = dryRun,
+        force = force
+      )
     }
   }
 

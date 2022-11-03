@@ -21,30 +21,30 @@ import munit.FunSuite
 
 class JsonPatchSuite extends FunSuite {
   test("Sanity") {
-    val patch = JsonPatch()
-    assertEquals(patch, JsonPatch(Nil))
+    val patch = JsonPatchRaw()
+    assertEquals(patch.operations, Nil)
   }
 
   test("Add") {
-    val patch = JsonPatch().add("/a/b", "havij")
+    val patch = JsonPatchRaw().add("/a/b", "havij")
     assertEquals(
-      patch,
-      JsonPatch(List(JsonPatchOp.Add("/a/b", "havij".encodeTo[KSON])))
+      patch.operations,
+      List(JsonPatchOp.Add("/a/b", "havij".encodeTo[KSON]))
     )
   }
 
   test("Typed builder") {
     assertEquals(
-      JsonPatch[SampleData].builder.add(_.a, 1).build,
-      JsonPatch(List(JsonPatchOp.Add("/a", 1.encodeTo[KSON])))
+      JsonPatch[SampleData].builder.add(_.a, 1).operations,
+      List(JsonPatchOp.Add("/a", 1.encodeTo[KSON]))
     )
     assertEquals(
-      JsonPatch[SampleData].builder.add(_.d.at("key").b, "hello").build,
-      JsonPatch(List(JsonPatchOp.Add("/d/key/b", "hello".encodeTo[KSON])))
+      JsonPatch[SampleData].builder.add(_.d.at("key").b, "hello").operations,
+      List(JsonPatchOp.Add("/d/key/b", "hello".encodeTo[KSON]))
     )
     assertEquals(
-      JsonPatch[SampleData].builder.add(_.c.at(3).e, Nil).build,
-      JsonPatch(List(JsonPatchOp.Add("/c/3/e", Seq.empty[Int].encodeTo[KSON])))
+      JsonPatch[SampleData].builder.add(_.c.at(3).e, Nil).operations,
+      List(JsonPatchOp.Add("/c/3/e", Seq.empty[Int].encodeTo[KSON]))
     )
   }
 }

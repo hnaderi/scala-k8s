@@ -21,6 +21,7 @@ import cats.implicits._
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client._
 import dev.hnaderi.k8s.implicits._
+import dev.hnaderi.k8s.client.implicits._
 import fs2.Stream._
 import io.circe.Json
 import io.k8s.api.core.v1.ConfigMap
@@ -78,6 +79,28 @@ object Http4sExample extends IOApp {
       .send(cl)
     _ <- IO.println(b)
     _ <- APIs.namespace("default").configmaps.delete("example").send(cl)
+  } yield ()
+
+  def operations2(cl: HttpClient[IO]) = for {
+    _ <- APIs
+      .namespace("default")
+      .configmaps
+      .patch(
+        "test",
+        ConfigMap(metadata = ObjectMeta(labels = Map("new" -> "label")))
+      )
+      .send(cl)
+
+    _ <- APIs
+      .namespace("default")
+      .configmaps
+      .jsonPatch("test")(
+        JsonPatch[ConfigMap].builder
+          .add(_.metadata.labels.at("new"), "label")
+          .move(_.metadata.labels.at("a"), _.metadata.labels.at("b"))
+          .remove(_.data.at("to-delete"))
+      )
+      .send(cl)
   } yield ()
 
   def debug(cl: HttpClient[IO]) =
