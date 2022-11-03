@@ -122,7 +122,9 @@
           <li class="level2"><a href="#http4s-based-client">Http4s based client</a></li>
           <li class="level2"><a href="#zio-based-client">ZIO based client</a></li>
           <li class="level2"><a href="#sttp-based-client">Sttp based client</a></li>
+          <li class="level1"><a href="#api-calls">API calls</a></li>
           <li class="level2"><a href="#working-with-requests">Working with requests</a></li>
+          <li class="level2"><a href="#advanced-requests">Advanced requests</a></li>
           <li class="level2"><a href="#implementing-new-requests">Implementing new requests</a></li>
         </ul>
 
@@ -133,7 +135,7 @@
 
         <h1 id="scala-k8s" class="title">scala-k8s</h1>
         
-        <h3 id="usage" class="section">Usage<a class="anchor-link right" href="#usage"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h2 id="usage" class="section">Usage<a class="anchor-link right" href="#usage"><i class="icofont-laika">&#xef71;</i></a></h2>
         <p>This library is currently available for Scala binary versions 2.12, 2.13 and 3.2 on JVM/JS/Native.<br>
         This library is architecured in a microkernel fashion and all the main kubernetes stuff are implemented/generated in pure scala, and integration modules are provided separately.<br>
         main modules are:</p>
@@ -160,7 +162,7 @@
 </span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-scalacheck&quot;</span><span> % </span><span class="string-literal">&quot;0.5.2&quot;</span><span> </span><span class="comment">// JVM, JS, Native; scalacheck instances
 </span><span>)</span></code></pre>
         
-        <h2 id="manifest-and-object-generation" class="section">Manifest and object generation<a class="anchor-link right" href="#manifest-and-object-generation"><i class="icofont-laika">&#xef71;</i></a></h2>
+        <h1 id="manifest-and-object-generation" class="section">Manifest and object generation<a class="anchor-link right" href="#manifest-and-object-generation"><i class="icofont-laika">&#xef71;</i></a></h1>
         <p>first off, we&#39;ll import the following</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">_</span><span>  </span><span class="comment">// base packages  // base packages
 </span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">implicits</span><span>.</span><span class="identifier">_</span><span>  </span><span class="comment">// implicit coversions and helpers  // implicit coversions and helpers
@@ -169,7 +171,7 @@
         IDE auto import for those.</p>
         <p>Now we can define any kubernetes object</p>
         
-        <h3 id="configmap-example" class="section">ConfigMap example<a class="anchor-link right" href="#configmap-example"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h2 id="configmap-example" class="section">ConfigMap example<a class="anchor-link right" href="#configmap-example"><i class="icofont-laika">&#xef71;</i></a></h2>
         <pre><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">config</span><span> = </span><span class="type-name">ConfigMap</span><span>(
   </span><span class="identifier">metadata</span><span> = </span><span class="type-name">ObjectMeta</span><span>(
     </span><span class="identifier">name</span><span> = </span><span class="string-literal">&quot;example&quot;</span><span>,
@@ -194,7 +196,7 @@
   </span><span class="identifier">data</span><span> = </span><span class="type-name">DataMap</span><span>.</span><span class="identifier">fromDir</span><span>(</span><span class="keyword">new</span><span> </span><span class="type-name">File</span><span>(</span><span class="string-literal">&quot;objects/src/test/resources/data&quot;</span><span>))
 )</span></code></pre>
         
-        <h3 id="deployment-example" class="section">Deployment example<a class="anchor-link right" href="#deployment-example"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h2 id="deployment-example" class="section">Deployment example<a class="anchor-link right" href="#deployment-example"><i class="icofont-laika">&#xef71;</i></a></h2>
         <pre><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">deployment</span><span> = </span><span class="type-name">Deployment</span><span>(
   </span><span class="identifier">metadata</span><span> = </span><span class="type-name">ObjectMeta</span><span>(
     </span><span class="identifier">name</span><span> = </span><span class="string-literal">&quot;example&quot;</span><span>,
@@ -215,7 +217,7 @@
   )
 )</span></code></pre>
         
-        <h3 id="service-example" class="section">Service example<a class="anchor-link right" href="#service-example"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h2 id="service-example" class="section">Service example<a class="anchor-link right" href="#service-example"><i class="icofont-laika">&#xef71;</i></a></h2>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">service</span><span> = </span><span class="type-name">Service</span><span>(
   </span><span class="identifier">metadata</span><span> = </span><span class="type-name">ObjectMeta</span><span>(
     </span><span class="identifier">name</span><span> = </span><span class="string-literal">&quot;example&quot;</span><span>,
@@ -227,7 +229,7 @@
   )
 )</span></code></pre>
         
-        <h3 id="manifest-example" class="section">Manifest example<a class="anchor-link right" href="#manifest-example"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h2 id="manifest-example" class="section">Manifest example<a class="anchor-link right" href="#manifest-example"><i class="icofont-laika">&#xef71;</i></a></h2>
         <p>Now you can merge all of your kubernetes resource definitions in to one manifest</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">all</span><span> : </span><span class="type-name">Seq</span><span>[</span><span class="type-name">KObject</span><span>] = </span><span class="type-name">Seq</span><span>(</span><span class="identifier">service</span><span>, </span><span class="identifier">config</span><span>, </span><span class="identifier">deployment</span><span>)
 </span><span class="keyword">val</span><span> </span><span class="identifier">manifest</span><span> = </span><span class="identifier">all</span><span>.</span><span class="identifier">asManifest</span></code></pre>
@@ -247,7 +249,6 @@
 //     port: 80
 // 
 // ---
-// kind: ConfigMap
 // data:
 //   some config: some value
 //   config file: |
@@ -257,6 +258,7 @@
 //   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCi8uZGlyZW52Lwo=
 //   blob2: dmVyc2lvbiA9IDMuNi4wCnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
 //   other inline data: c29tZSBvdGhlciBkYXRh
+// kind: ConfigMap
 // metadata:
 //   namespace: staging
 //   labels:
@@ -281,7 +283,7 @@
 //         name: abc
 //</span></code></pre>
         
-        <h3 id="helpers" class="section">Helpers<a class="anchor-link right" href="#helpers"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h2 id="helpers" class="section">Helpers<a class="anchor-link right" href="#helpers"><i class="icofont-laika">&#xef71;</i></a></h2>
         <p>You can also use helpers to manipulate data models easily</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">config3</span><span> = </span><span class="identifier">config</span><span>
   .</span><span class="identifier">addData</span><span>(</span><span class="string-literal">&quot;new-key&quot;</span><span> -&gt; </span><span class="string-literal">&quot;new value&quot;</span><span>)
@@ -294,30 +296,30 @@
           <li><code>mapFieldName</code> transforms using a function</li>
         </ul>
         <pre><code class="nohighlight"><span class="identifier">println</span><span>(</span><span class="identifier">config3</span><span>.</span><span class="identifier">asManifest</span><span>)
-</span><span class="comment">// immutable: true
-// metadata:
+</span><span class="comment">// metadata:
 //   namespace: production
 //   labels:
 //     app.kubernetes.io/name: example
 //     app.kubernetes.io/instance: one
 //   name: new-config
+// apiVersion: v1
+// kind: ConfigMap
 // binaryData:
 //   blob: IyBzYnQKdGFyZ2V0Lwpwcm9qZWN0L3BsdWdpbnMvcHJvamVjdC8KYm9vdC8KbGliX21hbmFnZWQvCnNyY19tYW5hZ2VkLwoKIyB2aW0KKi5zdz8KCiMgaW50ZWxsaWoKLmlkZWEvCgojIGlnbm9yZSBbY2VddGFncyBmaWxlcwp0YWdzCgojIG1ldGFscwoubWV0YWxzLwouYnNwLwouYmxvb3AvCm1ldGFscy5zYnQKLnZzY29kZQoKIyBucG0Kbm9kZV9tb2R1bGVzLwovc3BlY2lmaWNhdGlvbnMvCi8uZGlyZW52Lwo=
 //   blob2: dmVyc2lvbiA9IDMuNi4wCnJ1bm5lci5kaWFsZWN0ID0gc2NhbGEyMTMKZmlsZU92ZXJyaWRlIHsKICAiZ2xvYjoqKi9saWIvc3JjL21haW4vc2NhbGEvKioiIHsKICAgICBydW5uZXIuZGlhbGVjdCA9IHNjYWxhMwogIH0KfQo=
 //   other inline data: c29tZSBvdGhlciBkYXRh
-// apiVersion: v1
+// immutable: true
 // data:
 //   some config: some value
 //   config file: |
 //     use flake
 //   new-key: new value
-// kind: ConfigMap
 //</span></code></pre>
         
-        <h2 id="client" class="section">Client<a class="anchor-link right" href="#client"><i class="icofont-laika">&#xef71;</i></a></h2>
+        <h1 id="client" class="section">Client<a class="anchor-link right" href="#client"><i class="icofont-laika">&#xef71;</i></a></h1>
         <p>Currently clients does not support direct TLS connection, so you must use <code>kubectl proxy</code>, and use proxy address in clients.</p>
         
-        <h3 id="http4s-based-client" class="section">Http4s based client<a class="anchor-link right" href="#http4s-based-client"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h2 id="http4s-based-client" class="section">Http4s based client<a class="anchor-link right" href="#http4s-based-client"><i class="icofont-laika">&#xef71;</i></a></h2>
         <p>http4s based client support all APIs.</p>
         <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">cats</span><span>.</span><span class="identifier">effect</span><span>.</span><span class="identifier">_</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="identifier">_</span><span>
@@ -331,7 +333,7 @@
     .</span><span class="keyword">default</span><span>[</span><span class="type-name">IO</span><span>]
     .</span><span class="identifier">build</span><span>
     .</span><span class="identifier">map</span><span>(</span><span class="type-name">Http4sKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>, </span><span class="type-name">Json</span><span>](</span><span class="string-literal">&quot;http://localhost:8001&quot;</span><span>, </span><span class="identifier">_</span><span>))
-</span><span class="comment">// buildClient: Resource[IO, Http4sKubernetesClient[IO, Json]] = Bind(Bind(Pure(fs2.io.net.NetworkCompanionPlatform$$anon$1@311b5374),org.http4s.ember.client.EmberClientBuilder$$Lambda$12623/2003246609@37adae4b),cats.effect.kernel.Resource$$Lambda$12624/1203140241@342ca2f5)
+</span><span class="comment">// buildClient: Resource[IO, Http4sKubernetesClient[IO, Json]] = Bind(Bind(Pure(fs2.io.net.NetworkCompanionPlatform$$anon$1@30ec700),org.http4s.ember.client.EmberClientBuilder$$Lambda$11631/574430844@32155cc4),cats.effect.kernel.Resource$$Lambda$11632/439614338@65b78032)
 </span><span> 
 </span><span class="keyword">val</span><span> </span><span class="identifier">getNodes</span><span> = </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>)
 </span><span class="comment">// getNodes: IO[io.k8s.api.core.v1.NodeList] = IO(...)
@@ -349,7 +351,7 @@
   )
 </span><span class="comment">// getConfigMaps: IO[ConfigMap] = IO(...)</span></code></pre>
         
-        <h3 id="zio-based-client" class="section">ZIO based client<a class="anchor-link right" href="#zio-based-client"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h2 id="zio-based-client" class="section">ZIO based client<a class="anchor-link right" href="#zio-based-client"><i class="icofont-laika">&#xef71;</i></a></h2>
         <p>Currently, ZIO based client does not support streaming watch APIs, it will support as soon as <a href="https://github.com/hnaderi/scala-k8s/issues/17">zio-http supports streaming responses</a></p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">APIs</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">ZIOKubernetesClient</span><span>
@@ -357,7 +359,7 @@
 </span><span class="keyword">val</span><span> </span><span class="identifier">client</span><span> = </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">make</span><span>(</span><span class="string-literal">&quot;http://localhost:8001&quot;</span><span>)
 </span><span class="keyword">val</span><span> </span><span class="identifier">nodes</span><span> = </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">send</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>())</span></code></pre>
         
-        <h3 id="sttp-based-client" class="section">Sttp based client<a class="anchor-link right" href="#sttp-based-client"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h2 id="sttp-based-client" class="section">Sttp based client<a class="anchor-link right" href="#sttp-based-client"><i class="icofont-laika">&#xef71;</i></a></h2>
         <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="identifier">_</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">APIs</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">SttpKubernetesClient</span><span>
@@ -375,7 +377,9 @@
 </span><span class="keyword">val</span><span> </span><span class="identifier">nodes</span><span> = </span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>(</span><span class="identifier">client</span><span>)
 </span><span class="identifier">nodes</span><span>.</span><span class="identifier">body</span><span>.</span><span class="identifier">items</span><span>.</span><span class="identifier">flatMap</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>).</span><span class="identifier">flatMap</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">name</span><span>).</span><span class="identifier">foreach</span><span>(</span><span class="identifier">println</span><span>)</span></code></pre>
         
-        <h3 id="working-with-requests" class="section">Working with requests<a class="anchor-link right" href="#working-with-requests"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h1 id="api-calls" class="section">API calls<a class="anchor-link right" href="#api-calls"><i class="icofont-laika">&#xef71;</i></a></h1>
+        
+        <h2 id="working-with-requests" class="section">Working with requests<a class="anchor-link right" href="#working-with-requests"><i class="icofont-laika">&#xef71;</i></a></h2>
         <p>Requests are plain data, so you can manipulate or pass them like any normal data</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">APIs</span><span>
 
@@ -387,7 +391,64 @@
 </span><span class="keyword">val</span><span> </span><span class="identifier">defaultConfig</span><span> = </span><span class="identifier">sysConfig</span><span>.</span><span class="identifier">copy</span><span>(</span><span class="identifier">namespace</span><span> = </span><span class="string-literal">&quot;default&quot;</span><span>)
 </span><span class="comment">// defaultConfig: apis.corev1.ConfigMapAPI = ConfigMapAPI(&quot;default&quot;)</span></code></pre>
         
-        <h3 id="implementing-new-requests" class="section">Implementing new requests<a class="anchor-link right" href="#implementing-new-requests"><i class="icofont-laika">&#xef71;</i></a></h3>
+        <h2 id="advanced-requests" class="section">Advanced requests<a class="anchor-link right" href="#advanced-requests"><i class="icofont-laika">&#xef71;</i></a></h2>
+        <p>For doing simple strategical merge patches:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch1</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">patch</span><span>(
+    </span><span class="string-literal">&quot;test&quot;</span><span>,
+    </span><span class="type-name">ConfigMap</span><span>(</span><span class="identifier">metadata</span><span> = </span><span class="type-name">ObjectMeta</span><span>(</span><span class="identifier">labels</span><span> = </span><span class="type-name">Map</span><span>(</span><span class="string-literal">&quot;new&quot;</span><span> -&gt; </span><span class="string-literal">&quot;label&quot;</span><span>)))
+  )
+</span><span class="comment">// patch1: apis.corev1.ConfigMapAPI.GenericPatch[ConfigMap] = GenericPatch(test,default,ConfigMap(None,None,None,Some(ObjectMeta(None,None,None,None,None,None,None,None,None,None,None,Some(Map(new -&gt; label)),None,None,None))),StrategicMerge,None,None,None,None)</span></code></pre>
+        <p>For doing <a href="https://www.rfc-editor.org/rfc/rfc6902">Json patch</a>:</p>
+        <pre><code class="nohighlight"><span class="comment">// You need to import pointer instances
+</span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">implicits</span><span>.</span><span class="identifier">_</span><span>
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">patch2</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">jsonPatch</span><span>(</span><span class="string-literal">&quot;test&quot;</span><span>)(
+    </span><span class="type-name">JsonPatch</span><span>[</span><span class="type-name">ConfigMap</span><span>].</span><span class="identifier">builder</span><span>
+      .</span><span class="identifier">add</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;new&quot;</span><span>), </span><span class="string-literal">&quot;label&quot;</span><span>)
+      .</span><span class="identifier">move</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;a&quot;</span><span>), </span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;b&quot;</span><span>))
+      .</span><span class="identifier">remove</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">data</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;to-delete&quot;</span><span>))
+  )
+</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, pointers.io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@38aecc66,JsonPatch,None,None,None,None)</span></code></pre>
+        <p>Server side apply:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch3</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">serverSideApply</span><span>(</span><span class="string-literal">&quot;test&quot;</span><span>, </span><span class="type-name">ConfigMap</span><span>(), </span><span class="identifier">fieldManager</span><span> = </span><span class="string-literal">&quot;my-operator&quot;</span><span>)
+</span><span class="comment">// patch3: apis.corev1.ConfigMapAPI.ServerSideApply = ServerSideApply(test,default,ConfigMap(None,None,None,None),my-operator,None,None,None)</span></code></pre>
+        <p>Or <a href="https://www.rfc-editor.org/rfc/rfc7386">json merge patches</a>:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch4</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">patch</span><span>(
+    </span><span class="string-literal">&quot;test&quot;</span><span>,
+    </span><span class="type-name">ConfigMap</span><span>(</span><span class="identifier">metadata</span><span> = </span><span class="type-name">ObjectMeta</span><span>(</span><span class="identifier">labels</span><span> = </span><span class="type-name">Map</span><span>(</span><span class="string-literal">&quot;new&quot;</span><span> -&gt; </span><span class="string-literal">&quot;label&quot;</span><span>))),
+    </span><span class="identifier">patch</span><span> = </span><span class="type-name">PatchType</span><span>.</span><span class="type-name">Merge</span><span>
+  )
+</span><span class="comment">// patch4: apis.corev1.ConfigMapAPI.GenericPatch[ConfigMap] = GenericPatch(test,default,ConfigMap(None,None,None,Some(ObjectMeta(None,None,None,None,None,None,None,None,None,None,None,Some(Map(new -&gt; label)),None,None,None))),Merge,None,None,None,None)</span></code></pre>
+        <p>Your own custom type merge, for times that you need all the control:</p>
+        <pre><code class="nohighlight"><span class="keyword">type</span><span> </span><span class="type-name">CustomMerge</span><span> = </span><span class="type-name">String</span><span> </span><span class="comment">// Your custom object to be send to kubernetes // Your custom object to be send to kubernetes
+</span><span class="keyword">val</span><span> </span><span class="identifier">customMergeObject</span><span> : </span><span class="type-name">CustomMerge</span><span> = </span><span class="string-literal">&quot;&quot;</span><span>
+</span><span class="comment">// customMergeObject: CustomMerge = 
+// You need to define encoder for your type
+// implicit val customMergeObjectEncoder : Encoder[CustomMerge] = ???
+</span><span>
+</span><span class="keyword">val</span><span> </span><span class="identifier">patch5</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">patchGeneric</span><span>(
+    </span><span class="string-literal">&quot;test&quot;</span><span>,
+    </span><span class="identifier">customMergeObject</span><span>,
+    </span><span class="identifier">patch</span><span> = </span><span class="type-name">PatchType</span><span>.</span><span class="type-name">Merge</span><span>
+  )
+</span><span class="comment">// patch5: apis.corev1.ConfigMapAPI.GenericPatch[CustomMerge] = GenericPatch(test,default,,Merge,None,None,None,None)</span></code></pre>
+        
+        <h2 id="implementing-new-requests" class="section">Implementing new requests<a class="anchor-link right" href="#implementing-new-requests"><i class="icofont-laika">&#xef71;</i></a></h2>
         <p>you can also implement your own requests easily, however if you need a request that is widely used and is standard, please open an issue or better, a pull request, so everyone can use it.</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">_</span><span>
 
