@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package dev.hnaderi.k8s.utils
+package dev.hnaderi.k8s.client
 
-import io.k8s.apimachinery.pkg.apis.meta.v1.Patch
+import dev.hnaderi.k8s.utils._
+
 import munit.FunSuite
 
 class JsonPatchSuite extends FunSuite {
   test("Sanity") {
-    val patch = Patch.JsonPatch()
-    assertEquals(patch, Patch.JsonPatch(Nil))
+    val patch = JsonPatch()
+    assertEquals(patch, JsonPatch(Nil))
   }
 
   test("Add") {
-    val patch = Patch.JsonPatch().add("/a/b", "havij")
+    val patch = JsonPatch().add("/a/b", "havij")
     assertEquals(
       patch,
-      Patch.JsonPatch(List(JsonPatchOp.Add("/a/b", "havij".encodeTo[KSON])))
+      JsonPatch(List(JsonPatchOp.Add("/a/b", "havij".encodeTo[KSON])))
     )
   }
 }
