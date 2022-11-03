@@ -82,10 +82,7 @@ lazy val client = module("client") {
     .crossType(CrossType.Pure)
     .settings(
       description := "client core for kubernetes",
-      k8sUnmanagedTarget := rootDir.value / "modules" / "client" / "src" / "main" / "scala",
-      libraryDependencies ++= Seq(
-        "org.scalameta" %%% "munit" % munitVersion % Test
-      )
+      k8sUnmanagedTarget := rootDir.value / "modules" / "client" / "src" / "main" / "scala"
     )
     .dependsOn(objects)
     .enablePlugins(KubernetesJsonPointerGeneratorPlugin)

@@ -24,7 +24,7 @@ final case class PointerPath(parts: List[RefToken] = Nil) extends AnyVal {
   def /(p: RefToken): PointerPath = PointerPath(parts ++ Seq(p))
   def /(key: String): PointerPath = this / RefToken.Obj(key)
   def /(idx: Int): PointerPath = this / RefToken.Arr(idx)
-  def /- = this / RefToken.LastIdx
+  def last = this / RefToken.LastIdx
 
   final def toJsonPointer: String =
     if (parts.isEmpty) "" else s"/${parts.map(_.render).mkString("/")}"
@@ -65,7 +65,7 @@ final case class ListPointer[T](currentPath: PointerPath = PointerPath())
     extends Pointer[List[T]] {
   def at[P <: Pointer[T]](idx: Int)(implicit p: Pointable[T, P]): P =
     p.point(currentPath / idx)
-  def last: Plain[T] = Plain(currentPath /-)
+  def last: Plain[T] = Plain(currentPath.last)
 }
 
 final case class MapPointer[T](currentPath: PointerPath = PointerPath())
