@@ -35,7 +35,7 @@ sealed trait RefToken extends Serializable with Product {
 }
 object RefToken {
   final case class Obj(name: String) extends RefToken {
-    def render: String = name
+    def render: String = name.replaceAll("~", "~0").replaceAll("/", "~1")
   }
   final case class Arr(idx: Int) extends RefToken {
     def render: String = idx.toString
