@@ -28,13 +28,13 @@ final case class SampleData(
 )
 
 object SampleData {
-  final case class SampleDataPointer(path: PointerPath = PointerPath())
+  final case class SampleDataPointer(currentPath: PointerPath = PointerPath())
       extends Pointer[SampleData] {
-    def a: Plain[Int] = Plain(path / "a")
-    def b: Plain[String] = Plain(path / "b")
-    def c: ListPointer[SampleData] = ListPointer(path / "c")
-    def d: MapPointer[SampleData] = MapPointer(path / "d")
-    def e: ListPointer[Int] = ListPointer(path / "e")
+    def a: Plain[Int] = Plain(currentPath / "a")
+    def b: Plain[String] = Plain(currentPath / "b")
+    def c: ListPointer[SampleData] = ListPointer(currentPath / "c")
+    def d: MapPointer[SampleData] = MapPointer(currentPath / "d")
+    def e: ListPointer[Int] = ListPointer(currentPath / "e")
   }
   implicit val pointableInstance: Pointable[SampleData, SampleDataPointer] =
     Pointable(

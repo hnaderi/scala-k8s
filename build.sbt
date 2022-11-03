@@ -1,3 +1,4 @@
+import dev.hnaderi.k8s.generator.KubernetesJsonPointerGeneratorPlugin
 import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
 import sbtcrossproject.CrossProject
 
@@ -81,11 +82,13 @@ lazy val client = module("client") {
     .crossType(CrossType.Pure)
     .settings(
       description := "client core for kubernetes",
+      k8sUnmanagedTarget := rootDir.value / "modules" / "client" / "src" / "main" / "scala",
       libraryDependencies ++= Seq(
         "org.scalameta" %%% "munit" % munitVersion % Test
       )
     )
     .dependsOn(objects)
+    .enablePlugins(KubernetesJsonPointerGeneratorPlugin)
 }
 
 lazy val http4s = module("http4s") {

@@ -21,6 +21,7 @@ sealed trait DataModel extends Serializable with Product {
   val pkg: String
   val description: Option[String]
   val properties: Seq[ModelProperty]
+  final val fullName: String = s"$pkg.$name".replace('-', '_')
 }
 
 object DataModel {

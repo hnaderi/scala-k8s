@@ -46,10 +46,10 @@ object RefToken {
 }
 
 trait Pointer[+T] {
-  def path: PointerPath
+  def currentPath: PointerPath
 }
 object Pointer {
-  final case class Plain[+A](path: PointerPath = PointerPath())
+  final case class Plain[+A](currentPath: PointerPath = PointerPath())
       extends Pointer[A]
 
   final class Builder[T](private val dummy: Boolean = false) extends AnyVal {
@@ -61,17 +61,17 @@ object Pointer {
   val self = Plain()
 }
 
-final case class ListPointer[T](path: PointerPath = PointerPath())
+final case class ListPointer[T](currentPath: PointerPath = PointerPath())
     extends Pointer[List[T]] {
   def at[P <: Pointer[T]](idx: Int)(implicit p: Pointable[T, P]): P =
-    p.point(path / idx)
-  def last: Plain[T] = Plain(path /-)
+    p.point(currentPath / idx)
+  def last: Plain[T] = Plain(currentPath /-)
 }
 
-final case class MapPointer[T](path: PointerPath = PointerPath())
+final case class MapPointer[T](currentPath: PointerPath = PointerPath())
     extends Pointer[Map[String, T]] {
   def at[P <: Pointer[T]](key: String)(implicit p: Pointable[T, P]): P =
-    p.point(path / key)
+    p.point(currentPath / key)
 }
 
 @implicitNotFound("Cannot find the root pointer for type ${T}!")
