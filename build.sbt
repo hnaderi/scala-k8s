@@ -281,6 +281,7 @@ lazy val docs = project
   .settings(
     tlSiteRelatedProjects := Seq(
       "Kubernetes" -> url("https://github.com/kubernetes/kubernetes"),
+      "sbt k8s" -> url("https://github.com/hnaderi/sbt-k8s"),
       TypelevelProject.Http4s,
       TypelevelProject.Fs2,
       TypelevelProject.Scalacheck,
