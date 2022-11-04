@@ -2,7 +2,7 @@ import dev.hnaderi.k8s.generator.KubernetesJsonPointerGeneratorPlugin
 import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
 import sbtcrossproject.CrossProject
 
-ThisBuild / tlBaseVersion := "0.6"
+ThisBuild / tlBaseVersion := "0.7"
 
 ThisBuild / organization := "dev.hnaderi"
 ThisBuild / organizationName := "Hossein Naderi"

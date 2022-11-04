@@ -28,7 +28,7 @@ object PointerGenerator {
       case ModelPropertyType.Ref(name) if blackboxTypes.contains(name) =>
         s"""Pointer.Plain[$name] = Pointer.Plain(${pathFor(p)})"""
       case ModelPropertyType.Ref(name) =>
-        val ptrType = s"pointers.${name}Pointer"
+        val ptrType = s"${name}Pointer"
         s""" $ptrType = $ptrType(${pathFor(p)})"""
       case ModelPropertyType.Object(valueType) =>
         s"""MapPointer[$valueType] = MapPointer(${pathFor(p)})"""
@@ -40,10 +40,11 @@ object PointerGenerator {
     val fields = model.properties.map(fieldFor).mkString("\n")
     val ptrName = s"${model.name}Pointer"
 
-    s"""package dev.hnaderi.k8s.client.pointers.${pkgName(model)}
+    s"""package ${pkgName(model)}
 
 import dev.hnaderi.k8s.client._
 
+/** Pointer for ${model.name} */
 final case class $ptrName(currentPath: PointerPath = PointerPath()) extends Pointer[$tpe] {
 $fields
 }
@@ -54,7 +55,7 @@ $fields
   private def instances(models: Iterable[DataModel]): String = {
     def pointable(model: DataModel) = {
       val tpe = model.fullName
-      val ptr = s"pointers.${tpe}Pointer"
+      val ptr = s"${tpe}Pointer"
       val instName = tpe.replace('.', '_').replace('-', '_')
 
       s"""  implicit lazy val $instName : Pointable[$tpe, $ptr] = Pointable($ptr(_))"""
@@ -81,7 +82,7 @@ $pointables
 
     m.foreach(model =>
       scg
-        .managed(s"pointers.${model.pkg}", model.name)
+        .managed(s"pointers.${model.pkg}", s"${model.name}Pointer")
         .write(PointerGenerator(model, blackboxTypes))
     )
     scg
