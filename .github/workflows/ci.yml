@@ -28,11 +28,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.12.16, 2.13.8, 3.2.0]
+        scala: [2.12.17, 2.13.10, 3.2.0]
         java: [temurin@8, temurin@17]
         project: [rootJS, rootJVM, rootNative]
         exclude:
-          - scala: 2.13.8
+          - scala: 2.13.10
             java: temurin@17
           - scala: 3.2.0
             java: temurin@17
@@ -92,7 +92,7 @@ jobs:
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
       - name: Check that workflows are up to date
-        run: sbt 'project ${{ matrix.project }}' '++${{ matrix.scala }}' 'project /' githubWorkflowCheck
+        run: sbt githubWorkflowCheck
 
       - name: Check headers and formatting
         if: matrix.java == 'temurin@8'
@@ -119,11 +119,11 @@ jobs:
 
       - name: Make target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: mkdir -p json4s/.js/target circe/.jvm/target scalacheck/.native/target target unidocs/target .js/target site/target json4s/.native/target codecTest/.jvm/target objectsTest/.js/target circe/.js/target objects/.js/target objects/.jvm/target spray-json/.jvm/target play-json/.jvm/target codecTest/.js/target lib/.jvm/target .jvm/target .native/target objectsTest/.jvm/target objects/.native/target json4s/.jvm/target scalacheck/.jvm/target scalacheck/.js/target project/target
+        run: mkdir -p modules/json4s/.js/target modules/http4s/.jvm/target modules/http4s/.js/target modules/client-test/.js/target modules/circe/.jvm/target modules/scalacheck/.native/target target modules/client/.native/target modules/client-test/.jvm/target unidocs/target modules/sttp/.native/target .js/target site/target modules/client/.js/target modules/json4s/.native/target modules/jawn/.jvm/target modules/codec-test/.jvm/target modules/objects-test/.js/target modules/client/.jvm/target modules/circe/.js/target modules/objects/.js/target modules/objects/.jvm/target modules/jawn/.js/target modules/spray-json/.jvm/target modules/play-json/.jvm/target modules/zio/.jvm/target modules/codec-test/.js/target modules/manifests/.jvm/target .jvm/target .native/target modules/sttp/.js/target modules/objects-test/.jvm/target modules/http4s/.native/target modules/sttp/.jvm/target modules/jawn/.native/target example/.jvm/target modules/zio-json/.js/target modules/objects/.native/target modules/json4s/.jvm/target modules/scalacheck/.jvm/target modules/zio-json/.jvm/target modules/scalacheck/.js/target project/target
 
       - name: Compress target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: tar cf targets.tar json4s/.js/target circe/.jvm/target scalacheck/.native/target target unidocs/target .js/target site/target json4s/.native/target codecTest/.jvm/target objectsTest/.js/target circe/.js/target objects/.js/target objects/.jvm/target spray-json/.jvm/target play-json/.jvm/target codecTest/.js/target lib/.jvm/target .jvm/target .native/target objectsTest/.jvm/target objects/.native/target json4s/.jvm/target scalacheck/.jvm/target scalacheck/.js/target project/target
+        run: tar cf targets.tar modules/json4s/.js/target modules/http4s/.jvm/target modules/http4s/.js/target modules/client-test/.js/target modules/circe/.jvm/target modules/scalacheck/.native/target target modules/client/.native/target modules/client-test/.jvm/target unidocs/target modules/sttp/.native/target .js/target site/target modules/client/.js/target modules/json4s/.native/target modules/jawn/.jvm/target modules/codec-test/.jvm/target modules/objects-test/.js/target modules/client/.jvm/target modules/circe/.js/target modules/objects/.js/target modules/objects/.jvm/target modules/jawn/.js/target modules/spray-json/.jvm/target modules/play-json/.jvm/target modules/zio/.jvm/target modules/codec-test/.js/target modules/manifests/.jvm/target .jvm/target .native/target modules/sttp/.js/target modules/objects-test/.jvm/target modules/http4s/.native/target modules/sttp/.jvm/target modules/jawn/.native/target example/.jvm/target modules/zio-json/.js/target modules/objects/.native/target modules/json4s/.jvm/target modules/scalacheck/.jvm/target modules/zio-json/.jvm/target modules/scalacheck/.js/target project/target
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
@@ -139,7 +139,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.12.16]
+        scala: [2.12.17]
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -192,62 +192,62 @@ jobs:
             ~/Library/Caches/Coursier/v1
           key: ${{ runner.os }}-sbt-cache-v2-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
 
-      - name: Download target directories (2.12.16, rootJS)
+      - name: Download target directories (2.12.17, rootJS)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.16-rootJS
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-rootJS
 
-      - name: Inflate target directories (2.12.16, rootJS)
+      - name: Inflate target directories (2.12.17, rootJS)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.16, rootJVM)
+      - name: Download target directories (2.12.17, rootJVM)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.16-rootJVM
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-rootJVM
 
-      - name: Inflate target directories (2.12.16, rootJVM)
+      - name: Inflate target directories (2.12.17, rootJVM)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.12.16, rootNative)
+      - name: Download target directories (2.12.17, rootNative)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.16-rootNative
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12.17-rootNative
 
-      - name: Inflate target directories (2.12.16, rootNative)
+      - name: Inflate target directories (2.12.17, rootNative)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.13.8, rootJS)
+      - name: Download target directories (2.13.10, rootJS)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13.8-rootJS
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13.10-rootJS
 
-      - name: Inflate target directories (2.13.8, rootJS)
+      - name: Inflate target directories (2.13.10, rootJS)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.13.8, rootJVM)
+      - name: Download target directories (2.13.10, rootJVM)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13.8-rootJVM
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13.10-rootJVM
 
-      - name: Inflate target directories (2.13.8, rootJVM)
+      - name: Inflate target directories (2.13.10, rootJVM)
         run: |
           tar xf targets.tar
           rm targets.tar
 
-      - name: Download target directories (2.13.8, rootNative)
+      - name: Download target directories (2.13.10, rootNative)
         uses: actions/download-artifact@v2
         with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13.8-rootNative
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.13.10-rootNative
 
-      - name: Inflate target directories (2.13.8, rootNative)
+      - name: Inflate target directories (2.13.10, rootNative)
         run: |
           tar xf targets.tar
           rm targets.tar
@@ -301,7 +301,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.12.16]
+        scala: [2.12.17]
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:

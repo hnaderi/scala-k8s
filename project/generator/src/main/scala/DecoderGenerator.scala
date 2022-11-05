@@ -37,8 +37,8 @@ object DecoderGenerator {
     val fieldReads = reads.mkString(s"\n$indent")
 
     s"""
-    implicit def decoderOf[T : Reader] : Decoder[T, $name] = new Decoder[T, $name] {
-      def apply(t: T): Either[String, $name] = for {
+    implicit val decoder: Decoder[$name] = new Decoder[$name] {
+      def apply[T : Reader](t: T): Either[String, $name] = for {
           obj <- ObjectReader(t)
 $indent$fieldReads
       } yield $name (
@@ -77,7 +77,7 @@ ${resourceDecoder(sorted)}
       def matchers(rs: Seq[Resource]) = rs
         .map { r =>
           val name = typeName(r)
-          s"""    case ("${r.kind.kind}", "${r.kind.version}") => Decoder[T, $name].apply(t)"""
+          s"""    case ("${r.kind.kind}", "${r.kind.version}") => Decoder[$name].apply(t)"""
         }
         .mkString("\n")
 
@@ -105,8 +105,8 @@ ${matchers(rs)}
         }
         .mkString("\n")
       s"""  ${groupDecoders(sorted)}
-  implicit def resourceDecoder[T : Reader] : Decoder[T, KObject] = new Decoder[T, KObject]{
-    def apply(t: T): Either[String, KObject] = for {
+  implicit val resourceDecoder : Decoder[KObject] = new Decoder[KObject]{
+    def apply[T : Reader](t: T): Either[String, KObject] = for {
       obj <- ObjectReader(t)
       kind <- obj.read[String]("kind")
       apiVersion <- obj.read[String]("apiVersion")

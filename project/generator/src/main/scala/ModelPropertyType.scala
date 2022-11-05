@@ -36,6 +36,10 @@ object ModelPropertyType {
     val isArray: Boolean = false
     val isObject: Boolean = false
   }
+  final case class Ref(name: String) extends ModelPropertyType {
+    val isArray: Boolean = false
+    val isObject: Boolean = false
+  }
 
   def apply(prop: Property): ModelPropertyType = {
     baseTypeName(prop).getOrElse("") match {
@@ -45,6 +49,8 @@ object ModelPropertyType {
       case "array" =>
         val itemType = prop.items.map(apply).get.name
         ModelPropertyType.List(itemType)
+      case RefName(name) =>
+        ModelPropertyType.Ref(name)
       case other =>
         ModelPropertyType.Primitive(simpleTypeName(other, prop.format))
     }
@@ -54,10 +60,9 @@ object ModelPropertyType {
       tpe: String,
       format: Option[String] = None
   ): String = tpe.trim match {
-    case RefName(name) => name
-    case "string"      => "String"
-    case "integer"     => "Int"
-    case "boolean"     => "Boolean"
+    case "string"  => "String"
+    case "integer" => "Int"
+    case "boolean" => "Boolean"
     case "number" =>
       format match {
         case Some("int64")  => "Long"

@@ -30,8 +30,8 @@ object EncoderGenerator {
         .mkString("\n")
 
     s"""
-    implicit def encoder[T](implicit builder : Builder[T]) : Encoder[$tpe, T] = new Encoder[$tpe, T] {
-        def apply(o: $tpe) : T = {
+    implicit val encoder : Encoder[$tpe] = new Encoder[$tpe] {
+        def apply[T : Builder](o: $tpe) : T = {
           val obj = ObjectWriter[T]()
           obj
 $encoderFields
