@@ -2,7 +2,7 @@ import dev.hnaderi.k8s.generator.KubernetesJsonPointerGeneratorPlugin
 import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
 import sbtcrossproject.CrossProject
 
-ThisBuild / tlBaseVersion := "0.7"
+ThisBuild / tlBaseVersion := "0.8"
 
 ThisBuild / organization := "dev.hnaderi"
 ThisBuild / organizationName := "Hossein Naderi"
@@ -25,7 +25,7 @@ ThisBuild / tlSitePublishBranch := Some("main")
 ThisBuild / scalaVersion := scala212
 ThisBuild / crossScalaVersions := supportScalaVersions
 ThisBuild / githubWorkflowJavaVersions := Seq(PrimaryJava, LTSJava)
-ThisBuild / kubernetesVersion := "1.25.4"
+ThisBuild / kubernetesVersion := "1.26.1"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
   new NodeJSEnv(NodeJSEnv.Config().withArgs(List("--max-old-space-size=6144")))
@@ -98,7 +98,7 @@ lazy val http4s = module("http4s") {
     .settings(
       description := "http4s based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-ember-client" % "0.23.16",
+        "org.http4s" %%% "http4s-ember-client" % "0.23.18",
         "org.typelevel" %%% "jawn-fs2" % "2.4.0"
       )
     )
@@ -111,7 +111,7 @@ lazy val sttp = module("sttp") {
     .settings(
       description := "sttp based client for kubernetes",
       libraryDependencies ++= Seq(
-        "com.softwaremill.sttp.client3" %%% "core" % "3.8.3"
+        "com.softwaremill.sttp.client3" %%% "core" % "3.8.9"
       )
     )
     .dependsOn(client, jawn)
@@ -124,7 +124,7 @@ lazy val zio = module("zio") {
       description := "zio-http based client for kubernetes",
       libraryDependencies ++= Seq(
         "io.d11" %%% "zhttp" % "2.0.0-RC10",
-        "dev.zio" %%% "zio-json" % "0.3.0"
+        "dev.zio" %%% "zio-json" % "0.4.2"
       )
     )
     .dependsOn(client, `zio-json`)
@@ -217,7 +217,7 @@ lazy val `play-json` = module("play-json") {
     .settings(
       description := "play-json codecs for kubernetes data models",
       libraryDependencies ++= Seq(
-        ("com.typesafe.play" %%% "play-json" % "2.9.3")
+        ("com.typesafe.play" %%% "play-json" % "2.9.4")
           .cross(CrossVersion.for3Use2_13)
       )
     )
@@ -243,7 +243,7 @@ lazy val `zio-json` = module("zio-json") {
     .settings(
       description := "zio-json codecs for kubernetes data models",
       libraryDependencies ++= Seq(
-        "dev.zio" %%% "zio-json" % "0.3.0"
+        "dev.zio" %%% "zio-json" % "0.4.2"
       )
     )
     .dependsOn(objects)
@@ -296,8 +296,8 @@ lazy val docs = project
       "Jawn" -> url("https://github.com/typelevel/jawn")
     ),
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-circe" % "0.23.16",
-      "com.softwaremill.sttp.client3" %%% "circe" % "3.8.3"
+      "org.http4s" %%% "http4s-circe" % "0.23.18",
+      "com.softwaremill.sttp.client3" %%% "circe" % "3.8.9"
     )
   )
   .dependsOn(http4s.jvm, sttp.jvm, circe.jvm, manifests.jvm)
@@ -329,8 +329,8 @@ lazy val example = crossProject(JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-circe" % "0.23.16",
-      "com.softwaremill.sttp.client3" %%% "circe" % "3.8.3"
+      "org.http4s" %%% "http4s-circe" % "0.23.18",
+      "com.softwaremill.sttp.client3" %%% "circe" % "3.8.9"
     )
   )
   .dependsOn(http4s, circe, zio, sttp)

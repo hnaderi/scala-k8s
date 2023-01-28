@@ -12,17 +12,15 @@
           inherit system;
           overlays = [ typelevel-nix.overlay ];
         };
-      in
-      {
+      in {
         devShell = pkgs.devshell.mkShell {
           imports = [ typelevel-nix.typelevelShell ];
           name = "scala-k8s-shell";
           typelevelShell = {
             jdk.package = pkgs.jdk8;
             nodejs.enable = true;
-	    native.enable = true;
+            native.enable = true;
           };
         };
-      }
-    );
+      });
 }

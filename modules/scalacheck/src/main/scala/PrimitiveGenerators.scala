@@ -260,4 +260,10 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       maxLength = maxLength,
       allOf = allOf
     )
+
+  implicit lazy val arbitrary_io_k8s_api_admissionregistration_v1alpha1_ParamKind
+      : Arbitrary[io.k8s.api.admissionregistration.v1alpha1.ParamKind] =
+    Arbitrary(
+      Gen.resultOf(io.k8s.api.admissionregistration.v1alpha1.ParamKind(_))
+    )
 }
