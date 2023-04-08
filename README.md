@@ -73,5 +73,3 @@ see [this project](https://github.com/hnaderi/sbt-k8s)
 
 ## Future plans
 - more integrations (akka-http, ...)!
-- more requests and options
-- direct TLS support
