@@ -235,6 +235,7 @@ lazy val json4s = module("json4s") {
       )
     )
     .dependsOn(objects)
+    .dependsOn(codecTest % Test)
 }
 
 lazy val `zio-json` = module("zio-json") {
