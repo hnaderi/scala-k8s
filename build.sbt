@@ -2,7 +2,7 @@ import dev.hnaderi.k8s.generator.KubernetesJsonPointerGeneratorPlugin
 import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
 import sbtcrossproject.CrossProject
 
-ThisBuild / tlBaseVersion := "0.8"
+ThisBuild / tlBaseVersion := "0.9"
 
 ThisBuild / organization := "dev.hnaderi"
 ThisBuild / organizationName := "Hossein Naderi"
@@ -60,8 +60,8 @@ lazy val root =
       name := "scala-k8s"
     )
 
-lazy val circeVersion = "0.14.2"
-lazy val munitVersion = "0.7.29"
+lazy val circeVersion = "0.14.5"
+lazy val munitVersion = "1.0.0-M7"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
@@ -171,7 +171,7 @@ lazy val clientTest = module("client-test") {
 }
 
 lazy val codecTest = module("codec-test") {
-  crossProject(JVMPlatform, JSPlatform)
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
     .crossType(CrossType.Pure)
     .settings(
       name := "scala-k8s-codec-test",
@@ -186,7 +186,7 @@ lazy val codecTest = module("codec-test") {
 }
 
 lazy val circe = module("circe") {
-  crossProject(JVMPlatform, JSPlatform)
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
     .crossType(CrossType.Pure)
     .settings(
       description := "circe codecs for kubernetes data models",
@@ -235,6 +235,7 @@ lazy val json4s = module("json4s") {
       )
     )
     .dependsOn(objects)
+    .dependsOn(codecTest % Test)
 }
 
 lazy val `zio-json` = module("zio-json") {
@@ -268,7 +269,7 @@ lazy val manifests = module("manifests") {
     .settings(
       description := "kubernetes manifests utilities",
       libraryDependencies ++= Seq(
-        "io.circe" %%% "circe-yaml" % circeVersion,
+        "io.circe" %% "circe-yaml" % "0.14.2",
         "io.circe" %%% "circe-parser" % circeVersion
       )
     )

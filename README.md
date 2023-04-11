@@ -55,7 +55,7 @@ libraryDependencies ++= Seq(
   "dev.hnaderi" %% "scala-k8s-http4s" % "@VERSION@", // JVM, JS, Native ; http4s and fs2 integration
   "dev.hnaderi" %% "scala-k8s-zio" % "@VERSION@", // JVM ; ZIO native integration using zio-http and zio-json 
   "dev.hnaderi" %% "scala-k8s-sttp" % "@VERSION@", // JVM, JS, Native ; sttp integration using jawn parser
-  "dev.hnaderi" %% "scala-k8s-circe" % "@VERSION@", // JVM, JS ; circe integration
+  "dev.hnaderi" %% "scala-k8s-circe" % "@VERSION@", // JVM, JS, Native ; circe integration
   "dev.hnaderi" %% "scala-k8s-json4s" % "@VERSION@", // JVM, JS, Native; json4s integration
   "dev.hnaderi" %% "scala-k8s-spray-json" % "@VERSION@", // JVM ; spray-json integration
   "dev.hnaderi" %% "scala-k8s-play-json" % "@VERSION@", // JVM ; play-json integration
@@ -73,5 +73,3 @@ see [this project](https://github.com/hnaderi/sbt-k8s)
 
 ## Future plans
 - more integrations (akka-http, ...)!
-- more requests and options
-- direct TLS support

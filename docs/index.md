@@ -171,7 +171,10 @@ println(config3.asManifest)
 
 # Client
 
-Currently clients does not support direct TLS connection, so you must use `kubectl proxy`, and use proxy address in clients.
+Scala k8s provides a kubernetes client built on top of a generic http client, this allows us to use different http clients based on project ecosystem and other considerations.
+Being modular and not depending on a specific environment opens the door to extensibility, and also means it does restrict you in any imaginable way and you can choose whatever you want, configure however you want!  
+
+The following are some examples that use `kubectl proxy` for simplicity sake.
 
 ## Http4s based client
 http4s based client support all APIs.
