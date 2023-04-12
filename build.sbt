@@ -25,6 +25,7 @@ ThisBuild / tlSitePublishBranch := Some("main")
 ThisBuild / scalaVersion := scala212
 ThisBuild / crossScalaVersions := supportScalaVersions
 ThisBuild / githubWorkflowJavaVersions := Seq(PrimaryJava, LTSJava)
+ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 ThisBuild / kubernetesVersion := "1.27.0"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
