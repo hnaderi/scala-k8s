@@ -77,9 +77,16 @@ lazy val objects = module("objects") {
     .crossType(CrossType.Pure)
     .settings(
       description := "data models for kubernetes",
-      k8sUnmanagedTarget := rootDir.value / "modules" / "objects" / "src" / "main" / "scala"
+      k8sUnmanagedTarget := rootDir.value / "modules" / "objects" / "src" / "main" / "scala",
+      buildInfoKeys := Seq[BuildInfoKey](
+        version,
+        scalaVersion,
+        kubernetesVersion
+      ),
+      buildInfoPackage := "dev.hnaderi.k8s",
+      buildInfoOptions ++= Seq(BuildInfoOption.ConstantValue)
     )
-    .enablePlugins(KubernetesObjectGeneratorPlugin)
+    .enablePlugins(KubernetesObjectGeneratorPlugin, BuildInfoPlugin)
 }
 
 lazy val client = module("client") {
