@@ -26,7 +26,7 @@ ThisBuild / scalaVersion := scala212
 ThisBuild / crossScalaVersions := supportScalaVersions
 ThisBuild / githubWorkflowJavaVersions := Seq(PrimaryJava, LTSJava)
 ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
-ThisBuild / kubernetesVersion := "1.27.0"
+ThisBuild / kubernetesVersion := "1.27.1"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
   new NodeJSEnv(NodeJSEnv.Config().withArgs(List("--max-old-space-size=6144")))
