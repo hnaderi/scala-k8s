@@ -272,16 +272,16 @@ lazy val jawn = module("jawn") {
 }
 
 lazy val manifests = module("manifests") {
-  crossProject(JVMPlatform)
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
     .crossType(CrossType.Pure)
     .settings(
       description := "kubernetes manifests utilities",
       libraryDependencies ++= Seq(
-        "io.circe" %% "circe-yaml" % "0.14.2",
-        "io.circe" %%% "circe-parser" % circeVersion
+        "dev.hnaderi" %%% "yaml4s-backend" % "0.1.0"
       )
     )
-    .dependsOn(circe)
+    .dependsOn(objects)
+    .dependsOn(codecTest % Test)
 }
 
 lazy val docs = project

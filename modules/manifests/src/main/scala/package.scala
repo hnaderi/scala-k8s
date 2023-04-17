@@ -16,17 +16,66 @@
 
 package dev.hnaderi.k8s
 
-import dev.hnaderi.k8s.circe._
-import io.circe.Json
-import io.circe.yaml.syntax._
+import dev.hnaderi.k8s.utils._
+import dev.hnaderi.yaml4s.Backend
+import dev.hnaderi.yaml4s.YAML
+
+import scala.annotation.tailrec
 
 package object manifest {
+  implicit val yamlReader: Reader[YAML] = KObjectYAMLReader
+  implicit val yamlBuilder: Builder[YAML] = KObjectYAMLBuilder
+
   implicit class KObjectsOps(val objs: Iterable[KObject]) extends AnyVal {
     def asManifest: String =
-      objs.map(_.asManifest).mkString("\n---\n")
+      Backend.printDocuments(objs.map(_.foldTo[YAML]))
   }
+
   implicit class KObjectOps(val obj: KObject) extends AnyVal {
-    def asManifest: String = obj.asJsonManifest.asYaml.spaces2
-    def asJsonManifest: Json = obj.foldTo[Json].deepDropNullValues
+    def asManifest: String = Backend.print(obj.foldTo[YAML])
   }
+
+  private def toKObject(y: YAML): Either[Throwable, KObject] =
+    Decoder[KObject].apply(y) match {
+      case Left(value)  => Left(new Exception(value))
+      case e @ Right(_) => e.asInstanceOf[Either[Throwable, KObject]]
+    }
+
+  private def toKObject(
+      docs: Iterable[YAML]
+  ): Either[Throwable, List[KObject]] = {
+    import collection.mutable.ListBuffer
+    val out = ListBuffer.empty[KObject]
+
+    @tailrec
+    def go(
+        error: Option[Throwable],
+        it: Iterator[YAML]
+    ): Either[Throwable, List[KObject]] = error match {
+      case Some(value) => Left(value)
+      case None if it.hasNext =>
+        toKObject(it.next()) match {
+          case Left(err) => Left(err)
+          case Right(kobj) =>
+            out.append(kobj)
+            go(None, it)
+        }
+      case _ => Right(out.result())
+    }
+
+    go(None, docs.iterator)
+  }
+
+  /** Parses a single document manifest
+    */
+  def parse(str: String): Either[Throwable, KObject] =
+    Backend
+      .parse[YAML](str)
+      .flatMap(toKObject)
+
+  /** Parses a possibly multi document manifest
+    */
+  def parseAll(str: String): Either[Throwable, List[KObject]] =
+    Backend.parseDocuments[YAML](str).flatMap(toKObject)
+
 }
