@@ -19,6 +19,7 @@ package dev.hnaderi.k8s
 import dev.hnaderi.k8s.utils.Builder
 import dev.hnaderi.k8s.utils.Reader
 import dev.hnaderi.yaml4s.YAML
+import dev.hnaderi.yaml4s.YAML.YNull
 
 private object KObjectYAMLBuilder extends Builder[YAML] {
   def arr(a: Iterable[YAML]): YAML = YAML.arr(a.toVector)
@@ -46,4 +47,8 @@ private object KObjectYAMLReader extends Reader[YAML] {
     t.asArray.toRight(s"Not an array!")
   override def obj(t: YAML): Either[String, Iterable[(String, YAML)]] =
     t.asObject.toRight("Not an object!")
+  override def opt(t: YAML): Option[YAML] = t match {
+    case YNull => None
+    case other => Some(other)
+  }
 }

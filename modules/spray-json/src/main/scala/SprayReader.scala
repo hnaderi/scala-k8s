@@ -62,4 +62,9 @@ private[sprayJson] object SprayReader extends Reader[JsValue] {
       case _                => Left("Not an object!")
     }
 
+  override def opt(t: JsValue): Option[JsValue] = t match {
+    case JsNull => None
+    case other  => Some(other)
+  }
+
 }

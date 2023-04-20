@@ -23,7 +23,7 @@ final case class ObjectReader[T](fields: Iterable[(String, T)])(implicit
   def get(key: String): Either[String, T] =
     m.get(key).toRight(s"no such field $key exists!")
   def getOpt(key: String): Either[Nothing, Option[T]] =
-    Right(m.get(key).map(Some(_)).getOrElse(None))
+    Right(m.get(key).map(reader.opt).getOrElse(None))
 
   def read[A](key: String)(implicit dec: Decoder[A]): Either[String, A] =
     get(key).flatMap(dec(_))

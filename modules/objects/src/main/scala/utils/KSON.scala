@@ -109,6 +109,11 @@ object KSON {
         case KObj(fs) => Right(fs)
         case _        => Left("Not an object!")
       }
+
+    override def opt(t: KSON): Option[KSON] = t match {
+      case KNull => None
+      case other => Some(other)
+    }
   }
 
   implicit val encoder: Encoder[KSON] = new Encoder[KSON] {

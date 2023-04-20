@@ -24,4 +24,5 @@ trait Reader[T] {
   def bool(t: T): Either[String, Boolean]
   def array(t: T): Either[String, Iterable[T]]
   def obj(t: T): Either[String, Iterable[(String, T)]]
+  def opt(t: T): Option[T]
 }

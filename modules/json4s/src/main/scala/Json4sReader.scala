@@ -62,4 +62,9 @@ private[json4s] object Json4sReader extends Reader[JValue] {
       case _               => Left("Not an object!")
     }
 
+  override def opt(t: JValue): Option[JValue] = t match {
+    case JNull => None
+    case other => Some(other)
+  }
+
 }

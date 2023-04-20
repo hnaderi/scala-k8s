@@ -55,4 +55,6 @@ private[circe] object CirceReader extends Reader[Json] {
 
   override def obj(t: Json): Either[String, Iterable[(String, Json)]] =
     convert[JsonObject](t).map(_.toMap)
+
+  override def opt(t: Json): Option[Json] = if (t.isNull) None else Some(t)
 }

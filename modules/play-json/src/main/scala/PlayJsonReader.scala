@@ -55,4 +55,9 @@ private[playJson] object PlayJsonReader extends Reader[JsValue] {
   override def obj(t: JsValue): Either[String, Iterable[(String, JsValue)]] =
     read[Map[String, JsValue]](t)
 
+  override def opt(t: JsValue): Option[JsValue] = t match {
+    case JsNull => None
+    case other  => Some(other)
+  }
+
 }

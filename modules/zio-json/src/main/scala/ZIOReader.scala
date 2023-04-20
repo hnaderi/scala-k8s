@@ -52,4 +52,9 @@ private[zioJson] object ZIOReader extends Reader[Json] {
   override def obj(t: Json): Either[String, Iterable[(String, Json)]] =
     t.as(JsonDecoder.keyValueChunk[String, Json])
 
+  override def opt(t: Json): Option[Json] = t match {
+    case Json.Null => None
+    case other     => Some(other)
+  }
+
 }

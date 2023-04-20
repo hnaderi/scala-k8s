@@ -40,4 +40,12 @@ abstract class CodecSuite[T: Builder: Reader] extends ScalaCheckSuite {
       assertEquals(reencoded, Right(encoded))
     }
   }
+
+  test("Explicit null values are optional") {
+    val obj = ObjectReader(Seq("a" -> Builder[T].nil))
+    assertEquals(
+      obj.getOpt("a"),
+      Right(None)
+    )
+  }
 }
