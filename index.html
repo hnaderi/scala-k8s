@@ -160,7 +160,7 @@
 </span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-play-json&quot;</span><span> % </span><span class="string-literal">&quot;0.9.0&quot;</span><span>, </span><span class="comment">// JVM ; play-json integration
 </span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-zio-json&quot;</span><span> % </span><span class="string-literal">&quot;0.9.0&quot;</span><span>, </span><span class="comment">// JVM, JS ; zio-json integration
 </span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-jawn&quot;</span><span> % </span><span class="string-literal">&quot;0.9.0&quot;</span><span>, </span><span class="comment">// JVM, JS, Native ; jawn integration
-</span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-manifests&quot;</span><span> % </span><span class="string-literal">&quot;0.9.0&quot;</span><span>, </span><span class="comment">// JVM ; yaml manifest generation
+</span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-manifests&quot;</span><span> % </span><span class="string-literal">&quot;0.9.0&quot;</span><span>, </span><span class="comment">// JVM, JS, Native ; yaml manifest reading and generation
 </span><span>  </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-scalacheck&quot;</span><span> % </span><span class="string-literal">&quot;0.9.0&quot;</span><span> </span><span class="comment">// JVM, JS, Native; scalacheck instances
 </span><span>)</span></code></pre>
         
@@ -330,7 +330,7 @@
     .</span><span class="keyword">default</span><span>[</span><span class="type-name">IO</span><span>]
     .</span><span class="identifier">build</span><span>
     .</span><span class="identifier">map</span><span>(</span><span class="type-name">Http4sKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>, </span><span class="type-name">Json</span><span>](</span><span class="string-literal">&quot;http://localhost:8001&quot;</span><span>, </span><span class="identifier">_</span><span>))
-</span><span class="comment">// buildClient: Resource[IO, Http4sKubernetesClient[IO, Json]] = Bind(Bind(Pure(fs2.io.net.NetworkCompanionPlatform$$anon$1@4f46aeb),org.http4s.ember.client.EmberClientBuilder$$Lambda$12458/1590072341@302d7c15),cats.effect.kernel.Resource$$Lambda$12459/734208470@44a121a9)
+</span><span class="comment">// buildClient: Resource[IO, Http4sKubernetesClient[IO, Json]] = Bind(Bind(Pure(fs2.io.net.NetworkCompanionPlatform$$anon$1@f29783f),org.http4s.ember.client.EmberClientBuilder$$Lambda$11545/1515634940@71a0c50b),cats.effect.kernel.Resource$$Lambda$11546/1132977033@520903c2)
 </span><span> 
 </span><span class="keyword">val</span><span> </span><span class="identifier">getNodes</span><span> = </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>)
 </span><span class="comment">// getNodes: IO[io.k8s.api.core.v1.NodeList] = IO(...)
@@ -411,7 +411,7 @@
       .</span><span class="identifier">move</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;a&quot;</span><span>), </span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;b&quot;</span><span>))
       .</span><span class="identifier">remove</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">data</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;to-delete&quot;</span><span>))
   )
-</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@51995397,JsonPatch,None,None,None,None)</span></code></pre>
+</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@6054a6e9,JsonPatch,None,None,None,None)</span></code></pre>
         <p>Server side apply:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch3</span><span> = </span><span class="type-name">APIs</span><span>
   .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
