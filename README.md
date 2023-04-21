@@ -61,7 +61,7 @@ libraryDependencies ++= Seq(
   "dev.hnaderi" %% "scala-k8s-play-json" % "@VERSION@", // JVM ; play-json integration
   "dev.hnaderi" %% "scala-k8s-zio-json" % "@VERSION@", // JVM, JS ; zio-json integration
   "dev.hnaderi" %% "scala-k8s-jawn" % "@VERSION@", // JVM, JS, Native ; jawn integration
-  "dev.hnaderi" %% "scala-k8s-manifests" % "@VERSION@", // JVM ; yaml manifest generation
+  "dev.hnaderi" %% "scala-k8s-manifests" % "@VERSION@", // JVM, JS, Native ; yaml manifest reading and generation
   "dev.hnaderi" %% "scala-k8s-scalacheck" % "@VERSION@" // JVM, JS, Native; scalacheck instances
 )
 ```
