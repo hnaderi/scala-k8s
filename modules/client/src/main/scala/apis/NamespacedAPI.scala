@@ -352,7 +352,7 @@ abstract class APIGroupAPI(base: String) {
   }
 
   abstract class ClusterResourceAPI[
-      RES: Decoder,
+      RES: Decoder: Encoder,
       COL: Decoder
   ](resourceName: String)
       extends ResourceAPIBase[RES, COL](resourceName) {
@@ -360,6 +360,104 @@ abstract class APIGroupAPI(base: String) {
       s"$clusterwideUrl/$name"
 
     case class Get(name: String) extends GetRequest[RES](urlFor(name))
+
+    case class Create(
+        configmap: RES,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ) extends CreateRequest(
+          clusterwideUrl,
+          configmap,
+          dryRun = dryRun,
+          fieldManager = fieldManager,
+          fieldValidation = fieldValidation
+        )
+    case class Delete(
+        name: String,
+        options: Option[DeleteOptions] = None,
+        dryRun: Option[String] = None,
+        gracePeriodSeconds: Option[Int] = None,
+        propagationPolicy: Option[String] = None
+    ) extends DeleteRequest[RES](
+          urlFor(name),
+          options,
+          dryRun = dryRun,
+          gracePeriodSeconds = gracePeriodSeconds,
+          propagationPolicy = propagationPolicy
+        )
+    case class DeleteCollection(
+        options: Option[DeleteOptions] = None,
+        continue: Option[String] = None,
+        dryRun: Option[String] = None,
+        fieldSelector: List[String] = Nil,
+        gracePeriodSeconds: Option[Int] = None,
+        labelSelector: List[String] = Nil,
+        limit: Option[Int] = None,
+        propagationPolicy: Option[String] = None,
+        resourceVersion: Option[String] = None,
+        resourceVersionMatch: Option[String] = None,
+        timeoutSeconds: Option[Int] = None
+    ) extends DeleteCollectionRequest[RES](
+          clusterwideUrl,
+          options,
+          continue = continue,
+          dryRun = dryRun,
+          fieldSelector = fieldSelector,
+          gracePeriodSeconds = gracePeriodSeconds,
+          labelSelector = labelSelector,
+          limit = limit,
+          propagationPolicy = propagationPolicy,
+          resourceVersion = resourceVersion,
+          resourceVersionMatch = resourceVersionMatch,
+          timeoutSeconds = timeoutSeconds
+        )
+    case class Replace(
+        name: String,
+        body: RES,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ) extends ReplaceRequest(
+          urlFor(name),
+          body,
+          dryRun = dryRun,
+          fieldManager = fieldManager,
+          fieldValidation = fieldValidation
+        )
+    case class ServerSideApply(
+        name: String,
+        body: RES,
+        fieldManager: String,
+        dryRun: Option[String] = None,
+        fieldValidation: Option[String] = None,
+        force: Option[Boolean] = None
+    ) extends PartialUpdateRequest[RES, RES](
+          body,
+          PatchType.ServerSide,
+          url = urlFor(name),
+          dryRun = dryRun,
+          fieldValidation = fieldValidation,
+          fieldManager = Some(fieldManager),
+          force = force
+        )
+    case class GenericPatch[BODY: Encoder](
+        name: String,
+        body: BODY,
+        patch: PatchType,
+        dryRun: Option[String] = None,
+        fieldValidation: Option[String] = None,
+        fieldManager: Option[String] = None,
+        force: Option[Boolean] = None
+    ) extends PartialUpdateRequest[BODY, RES](
+          body,
+          patch,
+          url = urlFor(name),
+          dryRun = dryRun,
+          fieldValidation = fieldValidation,
+          fieldManager = fieldManager,
+          force = force
+        )
 
     def get(name: String): Get = Get(name)
     def list(
@@ -381,6 +479,155 @@ abstract class APIGroupAPI(base: String) {
       resourceVersionMatch = resourceVersionMatch,
       timeout = timeout
     )
+    def delete(
+        name: String,
+        options: Option[DeleteOptions] = None,
+        dryRun: Option[String] = None,
+        gracePeriodSeconds: Option[Int] = None,
+        propagationPolicy: Option[String] = None
+    ): Delete = Delete(
+      name,
+      options,
+      dryRun = dryRun,
+      gracePeriodSeconds = gracePeriodSeconds,
+      propagationPolicy = propagationPolicy
+    )
+
+    def deleteAll(
+        options: Option[DeleteOptions] = None,
+        continue: Option[String] = None,
+        dryRun: Option[String] = None,
+        fieldSelector: List[String] = Nil,
+        gracePeriodSeconds: Option[Int] = None,
+        labelSelector: List[String] = Nil,
+        limit: Option[Int] = None,
+        propagationPolicy: Option[String] = None,
+        resourceVersion: Option[String] = None,
+        resourceVersionMatch: Option[String] = None,
+        timeoutSeconds: Option[Int] = None
+    ): DeleteCollection = DeleteCollection(
+      options = options,
+      continue = continue,
+      dryRun = dryRun,
+      fieldSelector = fieldSelector,
+      gracePeriodSeconds = gracePeriodSeconds,
+      labelSelector = labelSelector,
+      limit = limit,
+      propagationPolicy = propagationPolicy,
+      resourceVersion = resourceVersion,
+      resourceVersionMatch = resourceVersionMatch,
+      timeoutSeconds = timeoutSeconds
+    )
+
+    def create(
+        configmap: RES,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ): Create = Create(
+      configmap,
+      dryRun = dryRun,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation
+    )
+    def replace(
+        name: String,
+        configmap: RES,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ): Replace = Replace(
+      name,
+      configmap,
+      dryRun = dryRun,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation
+    )
+    def serverSideApply(
+        name: String,
+        body: RES,
+        fieldManager: String,
+        dryRun: Option[String] = None,
+        fieldValidation: Option[String] = None,
+        force: Option[Boolean] = None
+    ): ServerSideApply = ServerSideApply(
+      name,
+      body,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation,
+      dryRun = dryRun,
+      force = force
+    )
+    def jsonPatch[P <: Pointer[RES]](
+        name: String,
+        dryRun: Option[String] = None,
+        fieldValidation: Option[String] = None,
+        fieldManager: Option[String] = None,
+        force: Option[Boolean] = None
+    )(
+        body: JsonPatch[RES, P]
+    ): GenericPatch[JsonPatch[RES, P]] =
+      GenericPatch[JsonPatch[RES, P]](
+        name,
+        body,
+        patch = PatchType.JsonPatch,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation,
+        dryRun = dryRun,
+        force = force
+      )
+    def patchRaw(
+        name: String,
+        dryRun: Option[String] = None,
+        fieldValidation: Option[String] = None,
+        fieldManager: Option[String] = None,
+        force: Option[Boolean] = None
+    )(
+        body: JsonPatchRaw => JsonPatchRaw
+    ): GenericPatch[JsonPatchRaw] = GenericPatch[JsonPatchRaw](
+      name,
+      body(JsonPatchRaw()),
+      patch = PatchType.JsonPatch,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation,
+      dryRun = dryRun,
+      force = force
+    )
+    def patch(
+        name: String,
+        body: RES,
+        patch: PatchType = PatchType.StrategicMerge,
+        dryRun: Option[String] = None,
+        fieldValidation: Option[String] = None,
+        fieldManager: Option[String] = None,
+        force: Option[Boolean] = None
+    ): GenericPatch[RES] = GenericPatch[RES](
+      name,
+      body,
+      patch,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation,
+      dryRun = dryRun,
+      force = force
+    )
+    def patchGeneric[T: Encoder](
+        name: String,
+        body: T,
+        patch: PatchType = PatchType.StrategicMerge,
+        dryRun: Option[String] = None,
+        fieldValidation: Option[String] = None,
+        fieldManager: Option[String] = None,
+        force: Option[Boolean] = None
+    ): GenericPatch[T] = GenericPatch[T](
+      name,
+      body,
+      patch,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation,
+      dryRun = dryRun,
+      force = force
+    )
+
   }
 
 }
