@@ -15,15 +15,12 @@
  */
 
 package dev.hnaderi.k8s.client
+package apis.api_extensions
 
-trait APIs
-    extends CoreV1
-    with AppsV1
-    with BatchV1
-    with NetworkingV1
-    with APIExtensionsV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
-}
+import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1._
 
-object APIs extends APIs
+object CustomResourceAPI
+    extends APIExtensionsV1.ClusterResourceAPI[
+      CustomResourceDefinition,
+      CustomResourceDefinitionList
+    ]("customresourcedefinitions")

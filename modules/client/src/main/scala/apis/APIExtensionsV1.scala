@@ -16,14 +16,12 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs
-    extends CoreV1
-    with AppsV1
-    with BatchV1
-    with NetworkingV1
-    with APIExtensionsV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
+import apis.api_extensions._
+
+trait APIExtensionsV1 {
+  val crds = CustomResourceAPI
 }
 
-object APIs extends APIs
+object APIExtensionsV1
+    extends APIGroupAPI("/apis/apiextensions.k8s.io/v1")
+    with APIExtensionsV1
