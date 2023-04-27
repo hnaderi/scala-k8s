@@ -19,10 +19,10 @@ package dev.hnaderi.k8s.client
 import apis.appsv1._
 
 trait AppsV1 {
-  val deployments = ClusterDeploymentAPI
-  val daemonsets = ClusterDaemonSetAPI
-  val replicasets = ClusterReplicaSetAPI
-  val statefulsets = ClusterStatefulSetAPI
+  final val deployments = ClusterDeploymentAPI
+  final val daemonsets = ClusterDaemonSetAPI
+  final val replicasets = ClusterReplicaSetAPI
+  final val statefulsets = ClusterStatefulSetAPI
 }
 
 object AppsV1 extends APIGroupAPI("/apis/apps/v1") with AppsV1

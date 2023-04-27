@@ -19,8 +19,8 @@ package dev.hnaderi.k8s.client
 import apis.appsv1._
 
 trait AppsV1Namespaced { self: NamespacedAPI =>
-  val deployments = DeploymentAPI(namespace)
-  val daemonsets = DaemonSetAPI(namespace)
-  val replicasets = ReplicaSetAPI(namespace)
-  val statefulsets = StatefulSetAPI(namespace)
+  final val deployments = DeploymentAPI(namespace)
+  final val daemonsets = DaemonSetAPI(namespace)
+  final val replicasets = ReplicaSetAPI(namespace)
+  final val statefulsets = StatefulSetAPI(namespace)
 }
