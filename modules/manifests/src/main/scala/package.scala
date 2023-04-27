@@ -35,23 +35,25 @@ package object manifest {
     def asManifest: String = Backend.print(obj.foldTo[YAML])
   }
 
-  private def toKObject(y: YAML): Either[Throwable, KObject] =
-    Decoder[KObject].apply(y) match {
+  private def toKObject[T](
+      y: YAML
+  )(implicit dec: Decoder[T]): Either[Throwable, T] =
+    dec.apply(y) match {
       case Left(value)  => Left(new Exception(value))
-      case e @ Right(_) => e.asInstanceOf[Either[Throwable, KObject]]
+      case e @ Right(_) => e.asInstanceOf[Either[Throwable, T]]
     }
 
-  private def toKObject(
+  private def toKObject[T](
       docs: Iterable[YAML]
-  ): Either[Throwable, List[KObject]] = {
+  )(implicit dec: Decoder[T]): Either[Throwable, List[T]] = {
     import collection.mutable.ListBuffer
-    val out = ListBuffer.empty[KObject]
+    val out = ListBuffer.empty[T]
 
     @tailrec
     def go(
         error: Option[Throwable],
         it: Iterator[YAML]
-    ): Either[Throwable, List[KObject]] = error match {
+    ): Either[Throwable, List[T]] = error match {
       case Some(value) => Left(value)
       case None if it.hasNext =>
         toKObject(it.next()) match {
@@ -68,14 +70,23 @@ package object manifest {
 
   /** Parses a single document manifest
     */
-  def parse(str: String): Either[Throwable, KObject] =
+  def parse[T: Decoder](str: String): Either[Throwable, T] =
     Backend
       .parse[YAML](str)
-      .flatMap(toKObject)
+      .flatMap(toKObject[T])
 
   /** Parses a possibly multi document manifest
     */
-  def parseAll(str: String): Either[Throwable, List[KObject]] =
-    Backend.parseDocuments[YAML](str).flatMap(toKObject)
+  def parseAll[T: Decoder](str: String): Either[Throwable, List[T]] =
+    Backend.parseDocuments[YAML](str).flatMap(toKObject[T])
 
+  /** Parses a single document manifest
+    */
+  def parseObj(str: String): Either[Throwable, KObject] =
+    parse[KObject](str)
+
+  /** Parses a possibly multi document manifest
+    */
+  def parseAllObjects(str: String): Either[Throwable, List[KObject]] =
+    parseAll[KObject](str)
 }
