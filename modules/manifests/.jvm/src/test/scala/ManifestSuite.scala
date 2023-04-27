@@ -79,13 +79,13 @@ spec:
 """
 
   test("single doc") {
-    val result = parse(singleDoc)
+    val result = parseObj(singleDoc)
 
     assert(result.isRight)
   }
 
   test("multi docs") {
-    val result = parseAll(multiDoc)
+    val result = parseAllObjects(multiDoc)
 
     assert(result.isRight)
   }
