@@ -19,15 +19,15 @@ package dev.hnaderi.k8s.client
 import apis.corev1._
 
 trait CoreV1 {
-  val configmaps = ClusterConfigMapAPI
-  val nodes = NodeAPI
-  val secrets = ClusterSecretAPI
-  val services = ClusterServiceAPI
-  val pods = ClusterPodAPI
-  val limitRanges = ClusterLimitRangeAPI
-  val events = ClusterEventAPI
-  val serviceAccounts = ClusterServiceAccountAPI
-  val resourceQuotas = ClusterResourceQuotaAPI
+  final val configmaps = ClusterConfigMapAPI
+  final val nodes = NodeAPI
+  final val secrets = ClusterSecretAPI
+  final val services = ClusterServiceAPI
+  final val pods = ClusterPodAPI
+  final val limitRanges = ClusterLimitRangeAPI
+  final val events = ClusterEventAPI
+  final val serviceAccounts = ClusterServiceAccountAPI
+  final val resourceQuotas = ClusterResourceQuotaAPI
 }
 
 object CoreV1 extends APIGroupAPI("/api/v1") with CoreV1

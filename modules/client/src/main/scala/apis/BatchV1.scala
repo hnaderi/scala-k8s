@@ -19,8 +19,8 @@ package dev.hnaderi.k8s.client
 import apis.batchv1._
 
 trait BatchV1 {
-  val jobs = ClusterJobAPI
-  val cronjobs = ClusterCronJobAPI
+  final val jobs = ClusterJobAPI
+  final val cronjobs = ClusterCronJobAPI
 }
 
 object BatchV1 extends APIGroupAPI("/apis/batch/v1") with BatchV1

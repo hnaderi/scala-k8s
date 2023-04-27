@@ -19,6 +19,6 @@ package dev.hnaderi.k8s.client
 import apis.batchv1._
 
 trait BatchV1Namespaced { self: NamespacedAPI =>
-  val jobs = JobAPI(namespace)
-  val cronJobs = CronJobAPI(namespace)
+  final val jobs = JobAPI(namespace)
+  final val cronJobs = CronJobAPI(namespace)
 }

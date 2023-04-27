@@ -19,14 +19,14 @@ package dev.hnaderi.k8s.client
 import apis.corev1._
 
 trait CoreV1Namespaced { self: NamespacedAPI =>
-  val configmaps: ConfigMapAPI = ConfigMapAPI(namespace)
-  val secrets: SecretAPI = SecretAPI(namespace)
-  val services: ServiceAPI = ServiceAPI(namespace)
-  val pods: PodAPI = PodAPI(namespace)
+  final val configmaps: ConfigMapAPI = ConfigMapAPI(namespace)
+  final val secrets: SecretAPI = SecretAPI(namespace)
+  final val services: ServiceAPI = ServiceAPI(namespace)
+  final val pods: PodAPI = PodAPI(namespace)
 
-  val limitRanges: LimitRangeAPI = LimitRangeAPI(namespace)
-  val events: EventAPI = EventAPI(namespace)
-  val serviceAccounts: ServiceAccountAPI = ServiceAccountAPI(namespace)
-  val resourceQuotas: ResourceQuotaAPI = ResourceQuotaAPI(namespace)
+  final val limitRanges: LimitRangeAPI = LimitRangeAPI(namespace)
+  final val events: EventAPI = EventAPI(namespace)
+  final val serviceAccounts: ServiceAccountAPI = ServiceAccountAPI(namespace)
+  final val resourceQuotas: ResourceQuotaAPI = ResourceQuotaAPI(namespace)
 
 }

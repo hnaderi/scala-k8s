@@ -19,7 +19,7 @@ package dev.hnaderi.k8s.client
 import apis.api_extensions._
 
 trait APIExtensionsV1 {
-  val crds = CustomResourceAPI
+  final val crds = CustomResourceAPI
 }
 
 object APIExtensionsV1

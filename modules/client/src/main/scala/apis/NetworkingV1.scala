@@ -19,8 +19,8 @@ package dev.hnaderi.k8s.client
 import apis.networkingv1._
 
 trait NetworkingV1 {
-  val ingresses = ClusterIngressAPI
-  val networkPolicies = ClusterNetworkPolicyAPI
+  final val ingresses = ClusterIngressAPI
+  final val networkPolicies = ClusterNetworkPolicyAPI
 }
 
 object NetworkingV1
