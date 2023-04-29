@@ -17,6 +17,8 @@
 package dev.hnaderi.k8s.client
 
 import cats.effect.Concurrent
+import cats.effect.kernel.Async
+import cats.effect.kernel.Resource
 import cats.implicits._
 import dev.hnaderi.k8s.jawn
 import dev.hnaderi.k8s.utils._
@@ -25,12 +27,13 @@ import org.http4s.Method._
 import org.http4s._
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
+import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.headers.`Content-Type`
 import org.http4s.syntax.literals._
 import org.typelevel.jawn.Facade
 import org.typelevel.jawn.fs2._
 
-final case class Http4sKubernetesClient[F[_], T](
+final case class Http4sKubernetesClient[F[_], T] private (
     baseUrl: String,
     client: Client[F]
 )(implicit
@@ -139,4 +142,31 @@ final case class Http4sKubernetesClient[F[_], T](
           .fold(err => raiseError[F](new Exception(s"$err\n$s")), emit(_))
       }
   }
+}
+
+object Http4sKubernetesClient {
+  type KClient[F[_]] = HttpClient[F] with StreamingClient[Stream[F, *]]
+
+  def fromClient[F[_], T](
+      baseUrl: String,
+      client: Client[F]
+  )(implicit
+      F: Concurrent[F],
+      enc: EntityEncoder[F, T],
+      dec: EntityDecoder[F, T],
+      builder: Builder[T],
+      reader: Reader[T]
+  ): KClient[F] =
+    Http4sKubernetesClient(baseUrl, client)
+
+  def fromUrl[F[_], T](
+      baseUrl: String
+  )(implicit
+      F: Async[F],
+      enc: EntityEncoder[F, T],
+      dec: EntityDecoder[F, T],
+      builder: Builder[T],
+      reader: Reader[T]
+  ): Resource[F, KClient[F]] =
+    EmberClientBuilder.default[F].build.map(fromClient(baseUrl, _))
 }

@@ -27,16 +27,12 @@ import io.circe.Json
 import io.k8s.api.core.v1.ConfigMap
 import io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
 import org.http4s.circe._
-import org.http4s.ember.client.EmberClientBuilder
 
 //NOTE run `kubectl proxy` before running this example
 object Http4sExample extends IOApp {
 
   private val client =
-    EmberClientBuilder
-      .default[IO]
-      .build
-      .map(Http4sKubernetesClient[IO, Json]("http://localhost:8001", _))
+    Http4sKubernetesClient.fromUrl[IO, Json]("http://localhost:8001")
 
   def watchNodes(cl: StreamingClient[fs2.Stream[IO, *]]) =
     CoreV1.nodes
