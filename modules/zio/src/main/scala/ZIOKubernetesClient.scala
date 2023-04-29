@@ -19,38 +19,34 @@ package dev.hnaderi.k8s.client
 import dev.hnaderi.k8s.utils.Decoder
 import dev.hnaderi.k8s.utils.Encoder
 import dev.hnaderi.k8s.zioJson._
-import zhttp.http
-import zhttp.http.HttpData
-import zhttp.http.Method
-import zhttp.service.ChannelFactory
-import zhttp.service.Client
-import zhttp.service.EventLoopGroup
 import zio._
+import zio.http._
 import zio.json._
 
 import ZIOKubernetesClient._
 
 final case class ZIOKubernetesClient(
     serverUrl: String,
-    client: Client[Any]
+    client: Client
 ) extends HttpClient[Task] {
 
   private def urlFor(
       url: String,
       params: Seq[(String, String)]
   ): Task[http.URL] = for {
-    u <- ZIO.fromEither(http.URL.fromString(s"$serverUrl$url"))
-    qp = params.foldLeft(Map.empty[String, List[String]]) { case (qs, (k, v)) =>
-      qs.get(k) match {
-        case None        => qs.updated(k, List(v))
-        case Some(value) => qs.updated(k, v :: value)
-      }
+    u <- ZIO.fromEither(URL.decode(s"$serverUrl$url"))
+    qp = params.foldLeft(Map.empty[String, Chunk[String]]) {
+      case (qs, (k, v)) =>
+        qs.get(k) match {
+          case None        => qs.updated(k, Chunk(v))
+          case Some(value) => qs.updated(k, Chunk(v) ++ value)
+        }
     }
-  } yield u.setQueryParams(qp)
+  } yield u.withQueryParams(qp)
 
   private def expect[O: Decoder](req: http.Request): Task[O] =
-    client.request(req, Client.Config.empty).flatMap { res =>
-      def readBody: Task[O] = res.bodyAsString.flatMap(body =>
+    client.request(req).flatMap { res =>
+      def readBody: Task[O] = res.body.asString.flatMap(body =>
         ZIO.fromEither(
           JsonDecoder[O]
             .decodeJson(body)
@@ -77,11 +73,16 @@ final case class ZIOKubernetesClient(
       contentType: String = "application/json"
   ): Task[O] = for {
     u <- urlFor(url, params)
-    req = http.Request(
+    con <- ZIO.fromEither(
+      Header.ContentType.parse(contentType).left.map(new Exception(_))
+    )
+    req = Request(
       method = method,
       url = u,
-      data = body.fold(HttpData.empty)(b => HttpData.fromString(b.toJson)),
-      headers = http.Headers.contentType(contentType)
+      body = body.fold(Body.empty)(b => Body.fromString(b.toJson)),
+      headers = Headers(con),
+      version = Version.`HTTP/1.1`,
+      remoteAddress = None
     )
     o <- expect(req)
   } yield o
@@ -92,7 +93,7 @@ final case class ZIOKubernetesClient(
   ): Task[O] =
     for {
       u <- urlFor(url, params)
-      req = http.Request(url = u)
+      req = Request.get(u)
       o <- expect(req)
     } yield o
 
@@ -132,9 +133,6 @@ object ZIOKubernetesClient {
   ): ZIO[ZIOKubernetesClient, Throwable, O] =
     ZIO.service[ZIOKubernetesClient].flatMap(req.send)
 
-  def make(url: String): ZLayer[
-    Any with EventLoopGroup with ChannelFactory,
-    Nothing,
-    ZIOKubernetesClient
-  ] = ZLayer(Client.make[Any].map(ZIOKubernetesClient(url, _)))
+  def make(url: String): ZLayer[Any, Throwable, ZIOKubernetesClient] =
+    Client.default.map(zc => ZEnvironment(ZIOKubernetesClient(url, zc.get)))
 }

@@ -96,6 +96,9 @@ lazy val client = module("client") {
       description := "client core for kubernetes",
       k8sUnmanagedTarget := rootDir.value / "modules" / "client" / "src" / "main" / "scala"
     )
+    .jvmSettings(
+      libraryDependencies += "org.bouncycastle" % "bcpkix-jdk18on" % "1.73"
+    )
     .dependsOn(objects)
     .enablePlugins(KubernetesJsonPointerGeneratorPlugin)
 }
@@ -131,7 +134,7 @@ lazy val zio = module("zio") {
     .settings(
       description := "zio-http based client for kubernetes",
       libraryDependencies ++= Seq(
-        "io.d11" %%% "zhttp" % "2.0.0-RC10",
+        "dev.zio" %% "zio-http" % "3.0.0-RC1",
         "dev.zio" %%% "zio-json" % "0.5.0"
       )
     )

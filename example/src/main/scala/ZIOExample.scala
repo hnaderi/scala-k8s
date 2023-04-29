@@ -18,8 +18,6 @@ package test
 
 import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.ZIOKubernetesClient
-import zhttp.service.ChannelFactory
-import zhttp.service.EventLoopGroup
 import zio.Scope
 import zio.ZIO
 import zio.ZIOAppArgs
@@ -28,12 +26,7 @@ import zio._
 
 //NOTE run `kubectl proxy` before running this example
 object ZIOExample extends ZIOAppDefault {
-  // val client = ZIOKubernetesClient("http://localhost:8001")
-  // val nodes = APIs.nodes.list.send(client)
-  private val env =
-    (ChannelFactory.auto ++ EventLoopGroup.auto()) >>> ZIOKubernetesClient.make(
-      "http://localhost:8001"
-    )
+  private val env = ZIOKubernetesClient.make("http://localhost:8001")
 
   private val app =
     for {
