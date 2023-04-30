@@ -63,7 +63,8 @@ object HttpClient {
         s"$baseUri$url",
         APIVerb.GET,
         params = params,
-        headers = headers
+        headers = headers,
+        cookies = Nil
       )
 
     override def post[I: Encoder, O: Decoder](
@@ -75,7 +76,8 @@ object HttpClient {
         APIVerb.POST,
         body,
         params = params,
-        headers = headers
+        headers = headers,
+        cookies = Nil
       )
 
     override def put[I: Encoder, O: Decoder](
@@ -87,7 +89,8 @@ object HttpClient {
         APIVerb.PUT,
         body,
         params = params,
-        headers = headers
+        headers = headers,
+        cookies = Nil
       )
 
     override def patch[I: Encoder, O: Decoder](
@@ -100,7 +103,8 @@ object HttpClient {
         APIVerb.PATCH(patch),
         body,
         params = params,
-        headers = headers
+        headers = headers,
+        cookies = Nil
       )
 
     override def delete[I: Encoder, O: Decoder](
@@ -111,7 +115,8 @@ object HttpClient {
         s"$baseUri$url",
         APIVerb.DELETE,
         params = params,
-        headers = headers
+        headers = headers,
+        cookies = Nil
       )
 
   }
@@ -126,13 +131,13 @@ object HttpClient {
       baseUri: String,
       backend: HttpBackend[F] with StreamingBackend[S],
       headers: (String, String)*
-  ): HttpClient[F] = new Simple[F](baseUri, backend, headers)
-    with StreamingClient[S] {
-    override def connect[O: Decoder](
-        url: String,
-        params: (String, String)*
-    ): S[O] = backend.connect(url, APIVerb.GET, headers, params)
-  }
+  ): HttpClient[F] with StreamingClient[S] =
+    new Simple[F](baseUri, backend, headers) with StreamingClient[S] {
+      override def connect[O: Decoder](
+          url: String,
+          params: (String, String)*
+      ): S[O] = backend.connect(url, APIVerb.GET, headers, params)
+    }
 }
 
 trait StreamingClient[F[_]] {
@@ -156,7 +161,8 @@ trait HttpBackend[F[_]] {
       url: String,
       verb: APIVerb,
       headers: Seq[(String, String)],
-      params: Seq[(String, String)]
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
   ): F[O]
 
   def send[I: Encoder, O: Decoder](
@@ -164,7 +170,8 @@ trait HttpBackend[F[_]] {
       verb: APIVerb,
       body: I,
       headers: Seq[(String, String)],
-      params: Seq[(String, String)]
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
   ): F[O]
 }
 

@@ -33,7 +33,8 @@ final case class ZIOBackend(
       url: String,
       verb: APIVerb,
       headers: Seq[(String, String)],
-      params: Seq[(String, String)]
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
   ): Task[O] = for {
     u <- urlFor(url, params)
     con <- contentType(verb)
@@ -41,7 +42,7 @@ final case class ZIOBackend(
       method = methodFor(verb),
       url = u,
       body = Body.empty,
-      headers = Headers(con),
+      headers = Headers(con) ++ cookiesFor(cookies),
       version = Version.`HTTP/1.1`,
       remoteAddress = None
     )
@@ -53,7 +54,8 @@ final case class ZIOBackend(
       verb: APIVerb,
       body: I,
       headers: Seq[(String, String)],
-      params: Seq[(String, String)]
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
   ): Task[O] = for {
     u <- urlFor(url, params)
     con <- contentType(verb)
@@ -61,12 +63,19 @@ final case class ZIOBackend(
       method = methodFor(verb),
       url = u,
       body = Body.fromString(body.toJson),
-      headers = Headers(con),
+      headers = Headers(con) ++ cookiesFor(cookies),
       version = Version.`HTTP/1.1`,
       remoteAddress = None
     )
     o <- expect(req)
   } yield o
+
+  private def cookiesFor(values: Seq[(String, String)]) = NonEmptyChunk
+    .fromIterableOption(values.map { case (k, v) =>
+      Cookie.Request(k, v)
+    })
+    .map(Header.Cookie(_))
+    .fold(Headers.empty)(Headers(_))
 
   private def methodFor: APIVerb => Method = {
     case APIVerb.POST             => Method.POST
