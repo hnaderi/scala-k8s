@@ -46,13 +46,14 @@ final case class Http4sBackend[F[_], T] private (client: Client[F])(implicit
       url: String,
       verb: APIVerb,
       headers: Seq[(String, String)],
-      params: Seq[(String, String)]
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
   ): F[O] =
     urlFrom(url, params)
       .map { url =>
         methodFor(verb)(
           url,
-          Headers(headers)
+          Headers(headers) ++ cookiesFor(cookies)
         ).withContentType(`Content-Type`(contentType(verb)))
       }
       .flatMap(sendRequest(_))
@@ -62,19 +63,27 @@ final case class Http4sBackend[F[_], T] private (client: Client[F])(implicit
       verb: APIVerb,
       body: I,
       headers: Seq[(String, String)],
-      params: Seq[(String, String)]
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
   ): F[O] =
     urlFrom(url, params)
       .map { url =>
         methodFor(verb)(
           body.encodeTo[T],
           url,
-          Headers(headers)
+          Headers(headers) ++ cookiesFor(cookies)
         ).withContentType(`Content-Type`(contentType(verb)))
       }
       .flatMap(sendRequest(_))
 
   type Req = http4s.Request[F]
+
+  private def cookiesFor(cookies: Seq[(String, String)]) = cookies
+    .map { case (k, v) => RequestCookie(k, v) }
+    .toList
+    .toNel
+    .map(http4s.headers.Cookie(_))
+    .fold(Headers.empty)(Headers(_))
 
   private def sendRequest[O: Decoder](req: http4s.Request[F]): F[O] = client
     .expectOr[T](req)(resp =>
@@ -166,4 +175,15 @@ object Http4sBackend {
       reader: Reader[T]
   ): Resource[F, KClient[F]] =
     http4s.ember.client.EmberClientBuilder.default[F].build.map(fromClient(_))
+
+  def from[F[_], T](
+      config: Config,
+      context: Option[String] = None
+  )(implicit
+      F: Async[F],
+      enc: EntityEncoder[F, T],
+      dec: EntityDecoder[F, T],
+      builder: Builder[T],
+      reader: Reader[T]
+  ): Resource[F, KClient[F]] = ???
 }
