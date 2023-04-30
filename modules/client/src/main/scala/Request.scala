@@ -49,8 +49,130 @@ trait HttpClient[F[_]] {
   final def send[O](req: HttpRequest[O]): F[O] = req.send(this)
 }
 
+object HttpClient {
+  private abstract class Simple[F[_]](
+      baseUri: String,
+      backend: HttpBackend[F],
+      headers: Seq[(String, String)]
+  ) extends HttpClient[F] {
+    override def get[O: Decoder](
+        url: String,
+        params: (String, String)*
+    ): F[O] =
+      backend.send(
+        s"$baseUri$url",
+        APIVerb.GET,
+        params = params,
+        headers = headers
+      )
+
+    override def post[I: Encoder, O: Decoder](
+        url: String,
+        params: (String, String)*
+    )(body: I): F[O] =
+      backend.send(
+        s"$baseUri$url",
+        APIVerb.POST,
+        body,
+        params = params,
+        headers = headers
+      )
+
+    override def put[I: Encoder, O: Decoder](
+        url: String,
+        params: (String, String)*
+    )(body: I): F[O] =
+      backend.send(
+        s"$baseUri$url",
+        APIVerb.PUT,
+        body,
+        params = params,
+        headers = headers
+      )
+
+    override def patch[I: Encoder, O: Decoder](
+        url: String,
+        patch: PatchType,
+        params: (String, String)*
+    )(body: I): F[O] =
+      backend.send(
+        s"$baseUri$url",
+        APIVerb.PATCH(patch),
+        body,
+        params = params,
+        headers = headers
+      )
+
+    override def delete[I: Encoder, O: Decoder](
+        url: String,
+        params: (String, String)*
+    )(body: Option[I]): F[O] =
+      backend.send(
+        s"$baseUri$url",
+        APIVerb.DELETE,
+        params = params,
+        headers = headers
+      )
+
+  }
+
+  def apply[F[_]](
+      baseUri: String,
+      backend: HttpBackend[F],
+      headers: (String, String)*
+  ): HttpClient[F] = new Simple[F](baseUri, backend, headers) {}
+
+  def streaming[F[_], S[_]](
+      baseUri: String,
+      backend: HttpBackend[F] with StreamingBackend[S],
+      headers: (String, String)*
+  ): HttpClient[F] = new Simple[F](baseUri, backend, headers)
+    with StreamingClient[S] {
+    override def connect[O: Decoder](
+        url: String,
+        params: (String, String)*
+    ): S[O] = backend.connect(url, APIVerb.GET, headers, params)
+  }
+}
+
 trait StreamingClient[F[_]] {
   def connect[O: Decoder](url: String, params: (String, String)*): F[O]
 
   final def listen[O](req: WatchRequest[O]): F[O] = req.listen(this)
+}
+
+sealed trait APIVerb extends Serializable with Product
+
+object APIVerb {
+  final case object GET extends APIVerb
+  final case object POST extends APIVerb
+  final case object PUT extends APIVerb
+  final case object DELETE extends APIVerb
+  final case class PATCH(patchType: PatchType) extends APIVerb
+}
+
+trait HttpBackend[F[_]] {
+  def send[O: Decoder](
+      url: String,
+      verb: APIVerb,
+      headers: Seq[(String, String)],
+      params: Seq[(String, String)]
+  ): F[O]
+
+  def send[I: Encoder, O: Decoder](
+      url: String,
+      verb: APIVerb,
+      body: I,
+      headers: Seq[(String, String)],
+      params: Seq[(String, String)]
+  ): F[O]
+}
+
+trait StreamingBackend[S[_]] {
+  def connect[O: Decoder](
+      url: String,
+      verb: APIVerb,
+      headers: Seq[(String, String)],
+      params: Seq[(String, String)]
+  ): S[O]
 }
