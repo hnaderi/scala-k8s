@@ -17,25 +17,30 @@
 package test
 
 import dev.hnaderi.k8s.client.APIs
+import dev.hnaderi.k8s.client.ZIOBackend
 import dev.hnaderi.k8s.client.ZIOKubernetesClient
 import zio.Scope
 import zio.ZIO
 import zio.ZIOAppArgs
 import zio.ZIOAppDefault
 import zio._
+import zio.http.ZClient
 
 //NOTE run `kubectl proxy` before running this example
 object ZIOExample extends ZIOAppDefault {
-  private val env = ZIOKubernetesClient.make("http://localhost:8001")
 
   private val app =
     for {
-      n <- ZIOKubernetesClient.send(APIs.nodes.list())
-      _ <- ZIO
-        .foreach(n.items.map(_.metadata.flatMap(_.name)))(Console.printLine(_))
+      n <- ZIOKubernetesClient.send(APIs.namespace("default").pods.list)
+      names = n.items.map(_.metadata.flatMap(_.name))
+      _ <- ZIO.foreach(names)(Console.printLine(_))
     } yield ()
 
   override def run: ZIO[Environment with ZIOAppArgs with Scope, Any, Any] =
-    app.provide(env)
+    app.provide(
+      ZClient.default,
+      ZIOBackend.make,
+      ZIOKubernetesClient.make("http://localhost:8001")
+    )
 
 }
