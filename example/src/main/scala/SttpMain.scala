@@ -24,13 +24,11 @@ import sttp.client3._
 import sttp.client3.circe._
 
 object SttpMain extends App {
-  val simpleBackend = HttpURLConnectionBackend()
+  val simpleBackend = sttp.client3.HttpURLConnectionBackend()
 
-  val client = new SttpKubernetesClient[Identity, Json](
-    "http://localhost:8001",
-    simpleBackend
-  )
+  val client =
+    SttpKubernetesClient[Identity, Json]("http://localhost:8001", simpleBackend)
 
-  val nodes = APIs.nodes.list().send(client)
+  val nodes = APIs.namespace("hnaderi").configmaps.list.send(client)
   nodes.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)
 }
