@@ -165,5 +165,5 @@ object Http4sBackend {
       builder: Builder[T],
       reader: Reader[T]
   ): Resource[F, KClient[F]] =
-    http4s.ember.client.EmberClientBuilder.default[F].build.map(fromClient( _))
+    http4s.ember.client.EmberClientBuilder.default[F].build.map(fromClient(_))
 }
