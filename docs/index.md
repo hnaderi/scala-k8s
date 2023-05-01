@@ -20,7 +20,10 @@ The following integrations are currently available:
 
 ```scala
 libraryDependencies ++= Seq(
-  "dev.hnaderi" %% "scala-k8s-http4s" % "@VERSION@", // JVM, JS, Native ; http4s and fs2 integration
+  "dev.hnaderi" %% "scala-k8s-http4s-ember" % "@VERSION@", // JVM, JS, Native ; http4s ember client integration
+  "dev.hnaderi" %% "scala-k8s-http4s-netty" % "@VERSION@", // JVM ; http4s netty client integration
+  "dev.hnaderi" %% "scala-k8s-http4s-blaze" % "@VERSION@", // JVM; http4s blaze client integration
+  "dev.hnaderi" %% "scala-k8s-http4s" % "@VERSION@", // JVM, JS, Native ; http4s core and fs2 integration
   "dev.hnaderi" %% "scala-k8s-zio" % "@VERSION@", // JVM ; ZIO native integration using zio-http and zio-json 
   "dev.hnaderi" %% "scala-k8s-sttp" % "@VERSION@", // JVM, JS, Native ; sttp integration using jawn parser
   "dev.hnaderi" %% "scala-k8s-circe" % "@VERSION@", // JVM, JS ; circe integration
@@ -183,15 +186,11 @@ http4s based client support all APIs.
 import cats.effect._
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client._
+import dev.hnaderi.k8s.client.http4s.EmberKubernetesClient
 import io.circe.Json
 import org.http4s.circe._
-import org.http4s.ember.client.EmberClientBuilder
 
-val buildClient =
-  EmberClientBuilder
-    .default[IO]
-    .build
-    .map(Http4sKubernetesClient[IO, Json]("http://localhost:8001", _))
+val buildClient = EmberKubernetesClient.defaultConfig[IO, Json]
  
 val getNodes = buildClient.use(APIs.nodes.list().send)
 
@@ -228,7 +227,7 @@ import sttp.client3.circe._
 
 val simpleBackend = HttpURLConnectionBackend()
 
-val client = new SttpKubernetesClient[Identity, Json](
+val client = SttpKubernetesClient[Identity, Json](
   "http://localhost:8001",
   simpleBackend
 )
