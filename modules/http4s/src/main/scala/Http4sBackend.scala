@@ -21,7 +21,6 @@ import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.implicits._
 import dev.hnaderi.k8s.utils._
-import dev.hnaderi.k8s.utils._
 import fs2.Stream
 import org.http4s
 import org.http4s._
@@ -156,8 +155,6 @@ final case class Http4sBackend[F[_], T] private (client: Client[F])(implicit
 }
 
 object Http4sBackend {
-  type KClient[F[_]] = HttpBackend[F] with StreamingBackend[Stream[F, *]]
-
   def fromClient[F[_], T](
       client: Client[F]
   )(implicit
@@ -166,7 +163,7 @@ object Http4sBackend {
       dec: EntityDecoder[F, T],
       builder: Builder[T],
       reader: Reader[T]
-  ): KClient[F] = new Http4sBackend[F, T](client)
+  ): Http4sBackend[F, T] = new Http4sBackend[F, T](client)
 
   def fromUrl[F[_], T](implicit
       F: Async[F],
@@ -174,17 +171,7 @@ object Http4sBackend {
       dec: EntityDecoder[F, T],
       builder: Builder[T],
       reader: Reader[T]
-  ): Resource[F, KClient[F]] =
+  ): Resource[F, Http4sBackend[F, T]] =
     http4s.ember.client.EmberClientBuilder.default[F].build.map(fromClient(_))
 
-  def from[F[_], T](
-      config: Config,
-      context: Option[String] = None
-  )(implicit
-      F: Async[F],
-      enc: EntityEncoder[F, T],
-      dec: EntityDecoder[F, T],
-      builder: Builder[T],
-      reader: Reader[T]
-  ): Resource[F, KClient[F]] = ???
 }
