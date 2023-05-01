@@ -106,7 +106,8 @@ final case class Http4sBackend[F[_], T] private (client: Client[F])(implicit
       url: String,
       verb: APIVerb,
       headers: Seq[(String, String)],
-      params: Seq[(String, String)]
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
   ): Stream[F, O] = {
     import Stream._
     import org.typelevel.jawn.fs2._
@@ -115,7 +116,7 @@ final case class Http4sBackend[F[_], T] private (client: Client[F])(implicit
     implicit val jawnFacade: Facade.SimpleFacade[T] = jawn.jawnFacade[T]
 
     eval(urlFrom(url, params))
-      .map(methodFor(verb)(_, Headers(headers)))
+      .map(methodFor(verb)(_, Headers(headers) ++ cookiesFor(cookies)))
       .flatMap(client.stream(_))
       .flatMap(_.body.chunks.parseJsonStream[T])
       .flatMap { s =>
