@@ -17,9 +17,7 @@
 package dev.hnaderi.k8s.client
 
 import cats.effect.Concurrent
-import cats.effect.kernel.Async
-import cats.effect.kernel.Resource
-import cats.implicits._
+import cats.syntax.all._
 import dev.hnaderi.k8s.utils._
 import fs2.Stream
 import io.k8s.apimachinery.pkg.apis.meta.v1
@@ -170,14 +168,4 @@ object Http4sBackend {
       builder: Builder[T],
       reader: Reader[T]
   ): Http4sBackend[F, T] = new Http4sBackend[F, T](client)
-
-  def fromUrl[F[_], T](implicit
-      F: Async[F],
-      enc: EntityEncoder[F, T],
-      dec: EntityDecoder[F, T],
-      builder: Builder[T],
-      reader: Reader[T]
-  ): Resource[F, Http4sBackend[F, T]] =
-    http4s.ember.client.EmberClientBuilder.default[F].build.map(fromClient(_))
-
 }
