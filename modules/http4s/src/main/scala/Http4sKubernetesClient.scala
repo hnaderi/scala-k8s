@@ -23,10 +23,11 @@ import dev.hnaderi.k8s.utils._
 import fs2.Stream
 import org.http4s._
 import org.http4s.client.Client
-import org.http4s.ember.client.EmberClientBuilder
 
-object Http4sKubernetesClient {
+trait Http4sKubernetesClient {
   type KClient[F[_]] = HttpClient[F] with StreamingClient[Stream[F, *]]
+
+  protected def buildClient[F[_]: Async]: Resource[F, Client[F]]
 
   def fromClient[F[_], T](
       baseUrl: String,
@@ -48,6 +49,5 @@ object Http4sKubernetesClient {
       dec: EntityDecoder[F, T],
       builder: Builder[T],
       reader: Reader[T]
-  ): Resource[F, KClient[F]] =
-    EmberClientBuilder.default[F].build.map(fromClient(baseUrl, _))
+  ): Resource[F, KClient[F]] = buildClient[F].map(fromClient(baseUrl, _))
 }

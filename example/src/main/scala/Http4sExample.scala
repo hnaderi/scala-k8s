@@ -20,19 +20,18 @@ import cats.effect._
 import cats.implicits._
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client._
-import dev.hnaderi.k8s.implicits._
+import dev.hnaderi.k8s.client.http4s.EmberKubernetesClient
 import dev.hnaderi.k8s.client.implicits._
+import dev.hnaderi.k8s.implicits._
 import fs2.Stream._
 import io.circe.Json
 import io.k8s.api.core.v1.ConfigMap
 import io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
 import org.http4s.circe._
 
-//NOTE run `kubectl proxy` before running this example
 object Http4sExample extends IOApp {
 
-  private val client =
-    Http4sKubernetesClient.fromUrl[IO, Json]("http://localhost:8001")
+  private val client = EmberKubernetesClient.defaultConfig[IO, Json]
 
   def watchNodes(cl: StreamingClient[fs2.Stream[IO, *]]) =
     CoreV1.nodes
@@ -57,8 +56,9 @@ object Http4sExample extends IOApp {
       )
 
   def operations(cl: HttpClient[IO]) = for {
+    _ <- APIs.namespace("hnaderi").configmaps.list.send(cl).flatMap(IO.println)
     _ <- APIs
-      .namespace("default")
+      .namespace("hnaderi")
       .configmaps
       .create(
         ConfigMap(
@@ -67,14 +67,14 @@ object Http4sExample extends IOApp {
         )
       )
       .send(cl)
-    a <- APIs.namespace("default").configmaps.get("example").send(cl)
+    a <- APIs.namespace("hnaderi").configmaps.get("example").send(cl)
     b <- APIs
-      .namespace("default")
+      .namespace("hnaderi")
       .configmaps
       .replace("example", a.withData(Map("test2" -> "value2")))
       .send(cl)
     _ <- IO.println(b)
-    _ <- APIs.namespace("default").configmaps.delete("example").send(cl)
+    _ <- APIs.namespace("hnaderi").configmaps.delete("example").send(cl)
   } yield ()
 
   def operations2(cl: HttpClient[IO]) = for {

@@ -41,7 +41,11 @@ lazy val root =
       objectsTest,
       clientTest,
       client,
+      javaSSL,
       http4s,
+      http4sEmber,
+      http4sNetty,
+      http4sBlaze,
       zio,
       sttp,
       codecTest,
@@ -96,11 +100,20 @@ lazy val client = module("client") {
       description := "client core for kubernetes",
       k8sUnmanagedTarget := rootDir.value / "modules" / "client" / "src" / "main" / "scala"
     )
-    .jvmSettings(
-      libraryDependencies += "org.bouncycastle" % "bcpkix-jdk18on" % "1.73"
-    )
-    .dependsOn(objects)
+    .dependsOn(objects, manifests)
     .enablePlugins(KubernetesJsonPointerGeneratorPlugin)
+}
+
+lazy val javaSSL = module("java-ssl") {
+  crossProject(JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "java ssl for kubernetes config",
+      libraryDependencies ++= Seq(
+        "org.bouncycastle" % "bcpkix-jdk18on" % "1.73"
+      )
+    )
+    .dependsOn(client)
 }
 
 lazy val http4s = module("http4s") {
@@ -109,11 +122,46 @@ lazy val http4s = module("http4s") {
     .settings(
       description := "http4s based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-ember-client" % "0.23.18",
+        "org.http4s" %%% "http4s-client" % "0.23.18",
         "org.typelevel" %%% "jawn-fs2" % "2.4.0"
       )
     )
     .dependsOn(client, jawn)
+    .jvmConfigure(_.dependsOn(javaSSL.jvm))
+}
+
+lazy val http4sEmber = module("http4s-ember") {
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "http4s ember based client for kubernetes",
+      libraryDependencies ++= Seq(
+        "org.http4s" %%% "http4s-ember-client" % "0.23.18"
+      )
+    )
+    .dependsOn(http4s)
+}
+lazy val http4sNetty = module("http4s-netty") {
+  crossProject(JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "http4s netty based client for kubernetes",
+      libraryDependencies ++= Seq(
+        "org.http4s" %% "http4s-netty-client" % "0.5.6"
+      )
+    )
+    .dependsOn(http4s)
+}
+lazy val http4sBlaze = module("http4s-blaze") {
+  crossProject(JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "http4s blaze based client for kubernetes",
+      libraryDependencies ++= Seq(
+        "org.http4s" %% "http4s-blaze-client" % "0.23.14"
+      )
+    )
+    .dependsOn(http4s)
 }
 
 lazy val sttp = module("sttp") {
@@ -345,7 +393,7 @@ lazy val example = crossProject(JVMPlatform)
       "com.softwaremill.sttp.client3" %%% "circe" % "3.8.15"
     )
   )
-  .dependsOn(http4s, circe, zio, sttp)
+  .dependsOn(http4sNetty, http4sEmber, circe, zio, sttp)
   .enablePlugins(NoPublishPlugin)
 
 def addAlias(name: String)(tasks: String*) =
