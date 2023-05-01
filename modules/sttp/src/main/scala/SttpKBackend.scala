@@ -55,11 +55,11 @@ final class SttpKBackend[F[_], T: Builder: Reader] private (
       .addParams(params: _*)
 
   private def methodFor(verb: APIVerb) = verb match {
-    case APIVerb.GET              => Method.GET
-    case APIVerb.POST             => Method.POST
-    case APIVerb.DELETE           => Method.DELETE
-    case APIVerb.PUT              => Method.PUT
-    case APIVerb.PATCH(patchType) => Method.PATCH
+    case APIVerb.GET      => Method.GET
+    case APIVerb.POST     => Method.POST
+    case APIVerb.DELETE   => Method.DELETE
+    case APIVerb.PUT      => Method.PUT
+    case APIVerb.PATCH(_) => Method.PATCH
   }
 
   override def send[O: Decoder](

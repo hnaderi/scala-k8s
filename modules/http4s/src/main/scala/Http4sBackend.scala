@@ -141,11 +141,11 @@ final case class Http4sBackend[F[_], T] private (client: Client[F])(implicit
   }
 
   private def methodFor(verb: APIVerb) = verb match {
-    case APIVerb.POST             => Method.POST
-    case APIVerb.PATCH(patchType) => Method.PATCH
-    case APIVerb.GET              => Method.GET
-    case APIVerb.DELETE           => Method.DELETE
-    case APIVerb.PUT              => Method.PUT
+    case APIVerb.GET      => Method.GET
+    case APIVerb.POST     => Method.POST
+    case APIVerb.DELETE   => Method.DELETE
+    case APIVerb.PUT      => Method.PUT
+    case APIVerb.PATCH(_) => Method.PATCH
   }
 
   private def contentType(verb: APIVerb) = verb match {
