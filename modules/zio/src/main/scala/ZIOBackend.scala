@@ -78,11 +78,11 @@ final case class ZIOBackend(
     .fold(Headers.empty)(Headers(_))
 
   private def methodFor: APIVerb => Method = {
-    case APIVerb.POST             => Method.POST
-    case APIVerb.PATCH(patchType) => Method.PATCH
-    case APIVerb.GET              => Method.GET
-    case APIVerb.DELETE           => Method.DELETE
-    case APIVerb.PUT              => Method.PUT
+    case APIVerb.GET      => Method.GET
+    case APIVerb.POST     => Method.POST
+    case APIVerb.DELETE   => Method.DELETE
+    case APIVerb.PUT      => Method.PUT
+    case APIVerb.PATCH(_) => Method.PATCH
   }
 
   private def contentType(verb: APIVerb) =

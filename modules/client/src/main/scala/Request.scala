@@ -155,10 +155,10 @@ trait StreamingClient[F[_]] {
 sealed trait APIVerb extends Serializable with Product
 
 object APIVerb {
-  final case object GET extends APIVerb
-  final case object POST extends APIVerb
-  final case object PUT extends APIVerb
-  final case object DELETE extends APIVerb
+  case object GET extends APIVerb
+  case object POST extends APIVerb
+  case object PUT extends APIVerb
+  case object DELETE extends APIVerb
   final case class PATCH(patchType: PatchType) extends APIVerb
 }
 
