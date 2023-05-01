@@ -27,7 +27,26 @@ object AuthenticationParams {
   def params(vs: (String, String)*): AuthenticationParams =
     AuthenticationParams(params = vs)
   def headers(vs: (String, String)*): AuthenticationParams =
-    AuthenticationParams(params = vs)
+    AuthenticationParams(headers = vs)
   def cookies(vs: (String, String)*): AuthenticationParams =
-    AuthenticationParams(params = vs)
+    AuthenticationParams(cookies = vs)
+
+  def basic(username: String, password: String): AuthenticationParams = headers(
+    "Authorization" -> Utils.base64(s"$username:$password")
+  )
+  def bearer(value: String): AuthenticationParams = headers(
+    "Authorization" -> s"Bearer $value"
+  )
+
+  def from(auth: AuthInfo): AuthenticationParams =
+    auth.token
+      .map(bearer(_))
+      .orElse(
+        auth.username
+          .zip(auth.password)
+          .map { case (user, pass) => basic(user, pass) }
+          .headOption
+      )
+      .getOrElse(AuthenticationParams())
+
 }
