@@ -53,7 +53,7 @@ object HttpClient {
   private abstract class Simple[F[_]](
       baseUri: String,
       backend: HttpBackend[F],
-      headers: Seq[(String, String)]
+      auth: AuthenticationParams
   ) extends HttpClient[F] {
     override def get[O: Decoder](
         url: String,
@@ -62,9 +62,9 @@ object HttpClient {
       backend.send(
         s"$baseUri$url",
         APIVerb.GET,
-        params = params,
-        headers = headers,
-        cookies = Nil
+        params = params ++ auth.params,
+        headers = auth.headers,
+        cookies = auth.cookies
       )
 
     override def post[I: Encoder, O: Decoder](
@@ -75,9 +75,9 @@ object HttpClient {
         s"$baseUri$url",
         APIVerb.POST,
         body,
-        params = params,
-        headers = headers,
-        cookies = Nil
+        params = params ++ auth.params,
+        headers = auth.headers,
+        cookies = auth.cookies
       )
 
     override def put[I: Encoder, O: Decoder](
@@ -88,9 +88,9 @@ object HttpClient {
         s"$baseUri$url",
         APIVerb.PUT,
         body,
-        params = params,
-        headers = headers,
-        cookies = Nil
+        params = params ++ auth.params,
+        headers = auth.headers,
+        cookies = auth.cookies
       )
 
     override def patch[I: Encoder, O: Decoder](
@@ -102,9 +102,9 @@ object HttpClient {
         s"$baseUri$url",
         APIVerb.PATCH(patch),
         body,
-        params = params,
-        headers = headers,
-        cookies = Nil
+        params = params ++ auth.params,
+        headers = auth.headers,
+        cookies = auth.cookies
       )
 
     override def delete[I: Encoder, O: Decoder](
@@ -114,9 +114,9 @@ object HttpClient {
       backend.send(
         s"$baseUri$url",
         APIVerb.DELETE,
-        params = params,
-        headers = headers,
-        cookies = Nil
+        params = params ++ auth.params,
+        headers = auth.headers,
+        cookies = auth.cookies
       )
 
   }
@@ -124,19 +124,25 @@ object HttpClient {
   def apply[F[_]](
       baseUri: String,
       backend: HttpBackend[F],
-      headers: (String, String)*
-  ): HttpClient[F] = new Simple[F](baseUri, backend, headers) {}
+      auth: AuthenticationParams = AuthenticationParams()
+  ): HttpClient[F] = new Simple[F](baseUri, backend, auth) {}
 
   def streaming[F[_], S[_]](
       baseUri: String,
       backend: HttpBackend[F] with StreamingBackend[S],
-      headers: (String, String)*
+      auth: AuthenticationParams = AuthenticationParams()
   ): HttpClient[F] with StreamingClient[S] =
-    new Simple[F](baseUri, backend, headers) with StreamingClient[S] {
+    new Simple[F](baseUri, backend, auth) with StreamingClient[S] {
       override def connect[O: Decoder](
           url: String,
           params: (String, String)*
-      ): S[O] = backend.connect(url, APIVerb.GET, headers, params)
+      ): S[O] = backend.connect(
+        url,
+        APIVerb.GET,
+        params = params ++ auth.params,
+        headers = auth.headers,
+        cookies = auth.cookies
+      )
     }
 }
 
@@ -180,6 +186,7 @@ trait StreamingBackend[S[_]] {
       url: String,
       verb: APIVerb,
       headers: Seq[(String, String)],
-      params: Seq[(String, String)]
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
   ): S[O]
 }
