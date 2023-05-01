@@ -360,7 +360,7 @@ lazy val docs = project
       "com.softwaremill.sttp.client3" %%% "circe" % "3.8.15"
     )
   )
-  .dependsOn(http4s.jvm, sttp.jvm, circe.jvm, manifests.jvm)
+  .dependsOn(http4sEmber.jvm, sttp.jvm, circe.jvm, manifests.jvm)
 
 lazy val unidocs = project
   .in(file("unidocs"))
