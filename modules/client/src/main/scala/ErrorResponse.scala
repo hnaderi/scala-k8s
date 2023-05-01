@@ -17,10 +17,21 @@
 package dev.hnaderi.k8s
 package client
 
-sealed abstract class ErrorResponse(msg: String) extends Exception(msg)
-object ErrorResponse {
-  case object NotFound extends ErrorResponse("Resource not found!")
-  case object Conflict extends ErrorResponse("Conflicting request!")
-  case object BadRequest extends ErrorResponse("Bad request!")
-  case object Unauthorized extends ErrorResponse("Unauthorized request!")
+import io.k8s.apimachinery.pkg.apis.meta.v1.Status
+
+final case class ErrorResponse(error: ErrorStatus, details: Status)
+    extends Exception(
+      s"""Request failed!
+status: $error
+details: $details
+"""
+    )
+sealed trait ErrorStatus extends Serializable with Product
+object ErrorStatus {
+  case object NotFound extends ErrorStatus
+  case object Conflict extends ErrorStatus
+  case object BadRequest extends ErrorStatus
+  case object Unauthorized extends ErrorStatus
+  case object Forbidden extends ErrorStatus
+  case class Other(value: Int) extends ErrorStatus
 }

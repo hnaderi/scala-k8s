@@ -19,6 +19,7 @@ package dev.hnaderi.k8s.client
 import dev.hnaderi.k8s.utils.Decoder
 import dev.hnaderi.k8s.utils.Encoder
 import dev.hnaderi.k8s.zioJson._
+import io.k8s.apimachinery.pkg.apis.meta.v1
 import zio._
 import zio.http._
 import zio.json._
@@ -114,22 +115,26 @@ final case class ZIOBackend(
 
   private def expect[O: Decoder](req: http.Request): Task[O] =
     client.request(req).flatMap { res =>
-      def readBody: Task[O] = res.body.asString.flatMap(body =>
+      def readBody[T: Decoder]: Task[T] = res.body.asString.flatMap(body =>
         ZIO.fromEither(
-          JsonDecoder[O]
+          JsonDecoder[T]
             .decodeJson(body)
             .left
             .map(DecodeError(_))
         )
       )
 
-      res.status match {
-        case s if s.isSuccess         => readBody
-        case http.Status.Conflict     => ZIO.die(ErrorResponse.Conflict)
-        case http.Status.BadRequest   => ZIO.die(ErrorResponse.BadRequest)
-        case http.Status.Unauthorized => ZIO.die(ErrorResponse.Unauthorized)
-        case http.Status.NotFound     => ZIO.die(ErrorResponse.NotFound)
-        case s => ZIO.die(new Exception(s"General error $s"))
+      if (res.status.isSuccess) readBody[O]
+      else {
+        val err = res.status match {
+          case http.Status.Conflict     => ErrorStatus.Conflict
+          case http.Status.BadRequest   => ErrorStatus.BadRequest
+          case http.Status.Unauthorized => ErrorStatus.Unauthorized
+          case http.Status.NotFound     => ErrorStatus.NotFound
+          case s                        => ErrorStatus.Other(s.code)
+        }
+        val status = readBody[v1.Status]
+        status.map(ErrorResponse(err, _)).flatMap(ZIO.die(_))
       }
     }
 }
