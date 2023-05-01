@@ -18,6 +18,7 @@ package dev.hnaderi.k8s.client
 
 import dev.hnaderi.k8s.jawn.jawnFacade
 import dev.hnaderi.k8s.utils._
+import io.k8s.apimachinery.pkg.apis.meta.v1.Status
 import org.typelevel.jawn.Facade
 import org.typelevel.jawn.Parser.parseFromByteArray
 import sttp.client3._
@@ -35,14 +36,26 @@ final class SttpKBackend[F[_], T: Builder: Reader] private (
   private implicit val jawn: Facade.SimpleFacade[T] = jawnFacade[T]
   private val ra: ResponseAs[Either[Throwable, T], Any] =
     ResponseAsByteArray.mapWithMetadata { case (b, resp) =>
-      resp.code match {
-        case s if s.isSuccess        => parseFromByteArray[T](b).toEither
-        case StatusCode.Conflict     => Left(ErrorResponse.Conflict)
-        case StatusCode.Unauthorized => Left(ErrorResponse.Unauthorized)
-        case StatusCode.NotFound     => Left(ErrorResponse.NotFound)
-        case StatusCode.BadRequest   => Left(ErrorResponse.BadRequest)
-        case other => Left(new Exception(s"General error $other"))
-      }
+      val body = parseFromByteArray[T](b).toEither
+      if (resp.code.isSuccess) body
+      else
+        Left(
+          body
+            .flatMap(_.decodeTo[Status].left.map(DecodeError(_)))
+            .map(
+              ErrorResponse(
+                resp.code match {
+                  case StatusCode.Conflict     => ErrorStatus.Conflict
+                  case StatusCode.Unauthorized => ErrorStatus.Unauthorized
+                  case StatusCode.NotFound     => ErrorStatus.NotFound
+                  case StatusCode.BadRequest   => ErrorStatus.BadRequest
+                  case other                   => ErrorStatus.Other(other.code)
+                },
+                _
+              )
+            )
+            .merge
+        )
     }
 
   private def respAs[O: Decoder]: ResponseAs[O, Any] =

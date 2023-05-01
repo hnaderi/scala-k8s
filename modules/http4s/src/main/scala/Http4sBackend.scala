@@ -22,6 +22,7 @@ import cats.effect.kernel.Resource
 import cats.implicits._
 import dev.hnaderi.k8s.utils._
 import fs2.Stream
+import io.k8s.apimachinery.pkg.apis.meta.v1
 import org.http4s
 import org.http4s._
 import org.http4s.client.Client
@@ -85,15 +86,20 @@ final case class Http4sBackend[F[_], T] private (client: Client[F])(implicit
     .fold(Headers.empty)(Headers(_))
 
   private def sendRequest[O: Decoder](req: http4s.Request[F]): F[O] = client
-    .expectOr[T](req)(resp =>
-      F.raiseError(resp.status match {
-        case Status.Conflict     => ErrorResponse.Conflict
-        case Status.NotFound     => ErrorResponse.NotFound
-        case Status.Unauthorized => ErrorResponse.Unauthorized
-        case Status.BadRequest   => ErrorResponse.BadRequest
-        case e                   => new Exception(e.toString)
-      })
-    )
+    .expectOr[T](req) { resp =>
+      val err = resp.status match {
+        case Status.Conflict     => ErrorStatus.Conflict
+        case Status.NotFound     => ErrorStatus.NotFound
+        case Status.Unauthorized => ErrorStatus.Unauthorized
+        case Status.Forbidden    => ErrorStatus.Forbidden
+        case Status.BadRequest   => ErrorStatus.BadRequest
+        case e                   => ErrorStatus.Other(e.code)
+      }
+      resp.as[T].map(_.decodeTo[v1.Status]).flatMap {
+        case Right(status) => F.raiseError(ErrorResponse(err, status))
+        case Left(err)     => F.raiseError(new Exception(err))
+      }
+    }
     .flatMap(t =>
       F.fromEither(
         t.decodeTo[O]
