@@ -56,7 +56,7 @@ object ModelProperty {
     }
   )
 
-  def apply(defs: Definition): (Seq[ModelProperty], Boolean) = {
+  def apply(defs: Definition): Seq[ModelProperty] = {
     val required = defs.required.getOrElse(Nil).toSet
     val properties = defs.properties.getOrElse(Map.empty)
 
@@ -71,11 +71,9 @@ object ModelProperty {
       )
     }
 
-    val props = properties
+    properties
       .map { case (n, p) => modelPropertyFor(n, p) }
       .toSeq
       .sortBy(!_.required)
-    val hasKindOrAPIVersion = props.exists(_.isKindOrAPIVersion)
-    (props.filterNot(_.isKindOrAPIVersion), hasKindOrAPIVersion)
   }
 }
