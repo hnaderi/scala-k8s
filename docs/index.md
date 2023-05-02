@@ -221,16 +221,9 @@ val nodes = ZIOKubernetesClient.send(APIs.nodes.list())
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.SttpKubernetesClient
-import io.circe.Json
-import sttp.client3._
 import sttp.client3.circe._
 
-val simpleBackend = HttpURLConnectionBackend()
-
-val client = SttpKubernetesClient[Identity, Json](
-  "http://localhost:8001",
-  simpleBackend
-)
+val client = SttpKubernetesClient.urlClient.defaultConfig[Json]
 
 val nodes = APIs.nodes.list().send(client)
 nodes.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)

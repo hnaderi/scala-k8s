@@ -16,14 +16,4 @@
 
 package dev.hnaderi.k8s.client
 
-import dev.hnaderi.k8s.utils._
-import sttp.client3._
-import SttpKBackend.SttpF
-
-object SttpKubernetesClient extends SttpPlatform {
-  def fromBackend[F[_], T: Builder: Reader: BodySerializer](
-      baseUrl: String,
-      client: SttpBackend[F, Any]
-  ): HttpClient[SttpF[F, *]] =
-    HttpClient[SttpF[F, *]](baseUrl, SttpKBackend[F, T](client))
-}
+private[client] trait SttpPlatform

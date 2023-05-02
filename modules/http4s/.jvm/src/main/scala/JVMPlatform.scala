@@ -28,7 +28,6 @@ import org.http4s.client.Client
 
 import java.io.File
 import javax.net.ssl.SSLContext
-import java.io.FileNotFoundException
 
 private[client] trait JVMPlatform { self: Http4sKubernetesClient =>
   protected def buildWithSSLContext[F[_]: Async]
