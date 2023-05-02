@@ -45,25 +45,57 @@ private[client] object SSLContexts {
 
   def from(
       cluster: Cluster,
-      auth: AuthInfo,
-      clientKeyPassword: Option[String] = None
+      auth: AuthInfo
   ): SSLContext = {
     val sslContext = SSLContext.getInstance("TLS")
     sslContext.init(
-      keyManagers(auth, clientKeyPassword),
-      trustManagers(cluster),
+      keyManagers(
+        clientCertData = auth.`client-certificate-data`,
+        clientCert = auth.`client-certificate`.map(new File(_)),
+        clientKeyData = auth.`client-key-data`,
+        clientKey = auth.`client-key`.map(new File(_)),
+        clientKeyPass = None // TODO is it in the kubectl?
+      ),
+      trustManagers(
+        caData = cluster.`certificate-authority-data`,
+        caFile = cluster.`certificate-authority`.map(new File(_))
+      ),
       new SecureRandom()
     )
 
     sslContext
   }
 
-  private def trustManagers(config: Cluster) = {
-    val certDataStream = config.`certificate-authority-data`.map(data =>
+  def fromFile(
+      ca: Option[File] = None,
+      clientCert: Option[File] = None,
+      clientKey: Option[File] = None,
+      clientKeyPassword: Option[String] = None
+  ): SSLContext = {
+    val sslContext = SSLContext.getInstance("TLS")
+    sslContext.init(
+      keyManagers(
+        clientCert = clientCert,
+        clientKey = clientKey,
+        clientKeyPass = clientKeyPassword
+      ),
+      trustManagers(
+        caFile = ca
+      ),
+      new SecureRandom()
+    )
+
+    sslContext
+  }
+
+  private def trustManagers(
+      caData: Option[String] = None,
+      caFile: Option[File]
+  ) = {
+    val certDataStream = caData.map(data =>
       new ByteArrayInputStream(Base64.getDecoder.decode(data))
     )
-    val certFileStream =
-      config.`certificate-authority`.map(new FileInputStream(_))
+    val certFileStream = caFile.map(new FileInputStream(_))
 
     certDataStream.orElse(certFileStream).foreach { certStream =>
       val certificateFactory = CertificateFactory.getInstance("X509")
@@ -110,20 +142,23 @@ private[client] object SSLContexts {
   }
 
   private def keyManagers(
-      config: AuthInfo,
-      clientKeyPass: Option[String] = None
+      clientCert: Option[File],
+      clientCertData: Option[String] = None,
+      clientKey: Option[File],
+      clientKeyData: Option[String] = None,
+      clientKeyPass: Option[String]
   ) = {
     // Client certificate
-    val certDataStream = config.`client-certificate-data`.map(data =>
+    val certDataStream = clientCertData.map(data =>
       new ByteArrayInputStream(Base64.getDecoder.decode(data))
     )
-    val certFileStream = config.`client-certificate`.map(new FileInputStream(_))
+    val certFileStream = clientCert.map(new FileInputStream(_))
 
     // Client key
-    val keyDataStream = config.`client-key-data`.map(data =>
+    val keyDataStream = clientKeyData.map(data =>
       new ByteArrayInputStream(Base64.getDecoder.decode(data))
     )
-    val keyFileStream = config.`client-key`.map(new FileInputStream(_))
+    val keyFileStream = clientKey.map(new FileInputStream(_))
 
     for {
       keyStream <- keyDataStream.orElse(keyFileStream)

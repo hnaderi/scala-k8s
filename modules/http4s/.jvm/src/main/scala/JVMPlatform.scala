@@ -18,7 +18,6 @@ package dev.hnaderi.k8s.client
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
-import cats.effect.std.Env
 import cats.syntax.all._
 import dev.hnaderi.k8s.manifest
 import dev.hnaderi.k8s.utils._
@@ -27,13 +26,21 @@ import fs2.io.file.Path
 import org.http4s._
 import org.http4s.client.Client
 
-import java.io.FileNotFoundException
+import java.io.File
 import javax.net.ssl.SSLContext
+import java.io.FileNotFoundException
 
 private[client] trait JVMPlatform { self: Http4sKubernetesClient =>
   protected def buildWithSSLContext[F[_]: Async]
       : SSLContext => Resource[F, Client[F]]
 
+  /** Build kubernetes client from [[Config]] data structure
+    *
+    * @param config
+    *   Config to use
+    * @param context
+    *   If provided, overrides the config's current context
+    */
   def fromConfig[F[_], T](
       config: Config,
       context: Option[String] = None
@@ -70,7 +77,60 @@ private[client] trait JVMPlatform { self: Http4sKubernetesClient =>
 
   }
 
-  def fromPath[F[_], T](
+  /** Build kubernetes client using the certificate files.
+    *
+    * @param server
+    *   Server address
+    * @param ca
+    *   certificate authority file
+    * @param clientCert
+    *   client certificate file
+    * @param clientKey
+    *   client key file
+    * @param clientKeyPassword
+    *   password for client key if any
+    * @param authentication
+    *   Authentication parameters
+    */
+  def from[F[_], T](
+      server: String,
+      ca: Option[File] = None,
+      clientCert: Option[File] = None,
+      clientKey: Option[File] = None,
+      clientKeyPassword: Option[String] = None,
+      authentication: AuthenticationParams = AuthenticationParams.empty
+  )(implicit
+      F: Async[F],
+      enc: EntityEncoder[F, T],
+      dec: EntityDecoder[F, T],
+      builder: Builder[T],
+      reader: Reader[T]
+  ): Resource[F, KClient[F]] = {
+    val sslContext = F.blocking(
+      SSLContexts.fromFile(
+        ca = ca,
+        clientCert = clientCert,
+        clientKey = clientKey,
+        clientKeyPassword = clientKeyPassword
+      )
+    )
+
+    Resource
+      .eval(sslContext)
+      .flatMap(buildWithSSLContext)
+      .map(Http4sBackend.fromClient(_))
+      .map(HttpClient.streaming(server, _, authentication))
+
+  }
+
+  /** Build kubernetes client from kubectl config file
+    *
+    * @param config
+    *   Path to kubeconfig file
+    * @param context
+    *   If provided, overrides the config's current context
+    */
+  def load[F[_], T](
       config: Path,
       context: Option[String] = None
   )(implicit
@@ -85,8 +145,15 @@ private[client] trait JVMPlatform { self: Http4sKubernetesClient =>
     client <- fromConfig(conf, context)
   } yield client
 
-  def fromFile[F[_], T](
-      config: String,
+  /** Build kubernetes client from kubectl config file
+    *
+    * @param config
+    *   Path to kubeconfig file
+    * @param context
+    *   If provided, overrides the config's current context
+    */
+  def loadFile[F[_], T](
+      configFile: String,
       context: Option[String] = None
   )(implicit
       F: Async[F],
@@ -94,41 +161,60 @@ private[client] trait JVMPlatform { self: Http4sKubernetesClient =>
       dec: EntityDecoder[F, T],
       builder: Builder[T],
       reader: Reader[T]
-  ): Resource[F, KClient[F]] = fromPath(Path(config), context)
+  ): Resource[F, KClient[F]] = load(Path(configFile), context)
 
+  /** Build kubernetes client kubectl config file found from default locations.
+    * It tries:
+    *   - `KUBECONFIG` from env
+    *   - ~/.kube/config
+    *   - pod's service account in /var/run/secrets/kubernetes.io/serviceaccount
+    */
   def defaultConfig[F[_], T](implicit
       F: Async[F],
-      env: Env[F],
-      files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
       reader: Reader[T]
   ): Resource[F, KClient[F]] = {
-    val homeConfig = System.getProperty("user.home") match {
-      case null  => Path("~") / ".kube" / "config"
-      case value => Path(value) / ".kube" / "config"
-    }
-    val envConfig = env.get("KUBECONFIG").map(_.map(Path(_)))
 
-    val fromEnv: F[Option[Path]] = envConfig.flatMap {
-      case None        => F.pure(None)
-      case Some(value) => files.exists(value).ifF(Some(value), None)
+    Resource.eval(homeConfig[F]).flatMap {
+      case Some(value) => load(value)
+      case None        => podConfig[F, T]
     }
+  }
 
-    val findFile = envConfig.flatMap {
-      case Some(value) => value.pure
-      case None =>
-        files
-          .exists(homeConfig)
-          .ifM(
-            homeConfig.pure,
-            F.raiseError(
-              new FileNotFoundException("Cannot find kubeconfig file!")
-            )
-          )
-    }
+  private def homeConfig[F[_]](implicit F: Async[F]) =
+    F.delay {
+      val homeConfig = System.getProperty("user.home") match {
+        case null  => Path("~") / ".kube" / "config"
+        case value => Path(value) / ".kube" / "config"
+      }
+      val envConfig = sys.env.get("KUBECONFIG").map(Path(_))
 
-    Resource.eval(findFile).flatMap(fromPath(_))
+      envConfig.getOrElse(homeConfig)
+    }.flatMap(p => Files[F].exists(p).ifF(Some(p), None))
+
+  private def podConfig[F[_], T](implicit
+      F: Async[F],
+      enc: EntityEncoder[F, T],
+      dec: EntityDecoder[F, T],
+      builder: Builder[T],
+      reader: Reader[T]
+  ): Resource[F, KClient[F]] = {
+    val base = Path("/var/run/secrets/kubernetes.io/serviceaccount")
+    val apiserver = "https://kubernetes.default.svc"
+    val token = base / "token"
+    val caCert = base / "ca.crt"
+    val tokenAuth = Resource
+      .eval(Files[F].readUtf8(token).compile.string)
+      .map(AuthenticationParams.bearer(_))
+
+    tokenAuth.flatMap(auth =>
+      from(
+        server = apiserver,
+        ca = caCert.toNioPath.toFile.some,
+        authentication = auth
+      )
+    )
   }
 }

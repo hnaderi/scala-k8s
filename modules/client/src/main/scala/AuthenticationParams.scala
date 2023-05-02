@@ -49,4 +49,5 @@ object AuthenticationParams {
       )
       .getOrElse(AuthenticationParams())
 
+  val empty: AuthenticationParams = AuthenticationParams()
 }
