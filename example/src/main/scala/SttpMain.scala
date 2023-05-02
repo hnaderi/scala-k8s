@@ -19,16 +19,12 @@ package test
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.SttpKubernetesClient
-import io.circe.Json
-import sttp.client3._
 import sttp.client3.circe._
 
 object SttpMain extends App {
-  val simpleBackend = sttp.client3.HttpURLConnectionBackend()
+  val client = SttpKubernetesClient.urlClient.defaultConfig
+  // val client = SttpKubernetesClient.httpClientSync().defaultConfig
 
-  val client =
-    SttpKubernetesClient[Identity, Json]("http://localhost:8001", simpleBackend)
-
-  val nodes = APIs.namespace("hnaderi").configmaps.list.send(client)
-  nodes.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)
+  val response = APIs.namespace("hnaderi").configmaps.list.send(client)
+  response.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)
 }

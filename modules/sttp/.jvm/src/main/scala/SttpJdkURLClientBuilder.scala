@@ -16,14 +16,17 @@
 
 package dev.hnaderi.k8s.client
 
-import dev.hnaderi.k8s.utils._
 import sttp.client3._
-import SttpKBackend.SttpF
 
-object SttpKubernetesClient extends SttpPlatform {
-  def fromBackend[F[_], T: Builder: Reader: BodySerializer](
-      baseUrl: String,
-      client: SttpBackend[F, Any]
-  ): HttpClient[SttpF[F, *]] =
-    HttpClient[SttpF[F, *]](baseUrl, SttpKBackend[F, T](client))
+import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLContext
+
+object SttpJdkURLClientBuilder extends SttpJVM[Identity] {
+  override protected def buildWithSSLContext
+      : SSLContext => SttpBackend[Identity, Any] = ssl =>
+    HttpURLConnectionBackend(customizeConnection = {
+      case c: HttpsURLConnection =>
+        c.setSSLSocketFactory(ssl.getSocketFactory())
+      case _ => ()
+    })
 }

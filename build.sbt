@@ -174,6 +174,7 @@ lazy val sttp = module("sttp") {
       )
     )
     .dependsOn(client, jawn)
+    .jvmConfigure(_.dependsOn(javaSSL.jvm))
 }
 
 lazy val zio = module("zio") {

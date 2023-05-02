@@ -16,14 +16,24 @@
 
 package dev.hnaderi.k8s.client
 
-import dev.hnaderi.k8s.utils._
 import sttp.client3._
-import SttpKBackend.SttpF
 
-object SttpKubernetesClient extends SttpPlatform {
-  def fromBackend[F[_], T: Builder: Reader: BodySerializer](
-      baseUrl: String,
-      client: SttpBackend[F, Any]
-  ): HttpClient[SttpF[F, *]] =
-    HttpClient[SttpF[F, *]](baseUrl, SttpKBackend[F, T](client))
+import java.net.http.{HttpClient => JClient}
+import java.time.{Duration => JDuration}
+import javax.net.ssl.SSLContext
+import scala.concurrent.duration._
+
+class SttpJdkHttpSyncClientBuilder(timeout: FiniteDuration = 3.seconds)
+    extends SttpJVM[Identity] {
+  override protected def buildWithSSLContext
+      : SSLContext => SttpBackend[Identity, Any] = ssl => {
+    val client = JClient
+      .newBuilder()
+      .followRedirects(JClient.Redirect.NEVER)
+      .connectTimeout(JDuration.ofMillis(timeout.toMillis))
+      .sslContext(ssl)
+      .build()
+
+    HttpClientSyncBackend.usingClient(client)
+  }
 }
