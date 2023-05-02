@@ -17,7 +17,7 @@
           imports = [ typelevel-nix.typelevelShell ];
           name = "scala-k8s-shell";
           typelevelShell = {
-            jdk.package = pkgs.jdk8;
+            jdk.package = pkgs.temurin-bin-11;
             nodejs.enable = true;
             native.enable = true;
           };
