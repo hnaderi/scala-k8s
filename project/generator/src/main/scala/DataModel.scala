@@ -35,25 +35,30 @@ object DataModel {
   def apply(name: String, pkg: String, defs: Definition): DataModel = {
     defs.`type` match {
       case Some("object") =>
-        val (props, hasKindOrAPIVersion) = ModelProperty(defs)
+        val props = ModelProperty(defs)
+        val hasKindOrAPIVersion = props.exists(_.isKindOrAPIVersion)
 
         defs.`x-kubernetes-group-version-kind` match {
-          case Some(kind :: Nil) if hasKindOrAPIVersion && props.nonEmpty =>
-            new Resource(
-              name = name,
-              pkg = pkg,
-              description = defs.description,
-              props,
-              kind
-            )
           case Some(kinds) if hasKindOrAPIVersion && props.nonEmpty =>
-            new MetaResource(
-              name = name,
-              pkg = pkg,
-              description = defs.description,
-              props,
-              kinds
-            )
+            val cleanedProps = props.filterNot(_.isKindOrAPIVersion)
+            kinds match {
+              case kind :: Nil =>
+                new Resource(
+                  name = name,
+                  pkg = pkg,
+                  description = defs.description,
+                  cleanedProps,
+                  kind
+                )
+              case allKinds =>
+                new MetaResource(
+                  name = name,
+                  pkg = pkg,
+                  description = defs.description,
+                  cleanedProps,
+                  allKinds
+                )
+            }
           case _ if props.nonEmpty =>
             new SubResource(
               name = name,

@@ -57,7 +57,6 @@ ${Utils.generateDescription(obj.description)}"""
       className: String,
       props: Seq[ModelProperty]
   ): String = props
-    .filterNot(_.isKindOrAPIVersion)
     .map(builderMethod(className, _))
     .mkString("\n")
 
@@ -65,7 +64,7 @@ ${Utils.generateDescription(obj.description)}"""
     import t._
     s"""${t.header("dev.hnaderi.k8s._", "dev.hnaderi.k8s.utils._")}
 final case class $name(
-  ${printProps(properties.filterNot(_.isKindOrAPIVersion))}
+  ${printProps(properties)}
 ) extends KObject {
   protected val _resourceKind = ResourceKind("${kind.group}", "${kind.kind}", "${kind.version}")
 
