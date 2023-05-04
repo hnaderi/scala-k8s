@@ -59,7 +59,8 @@ lazy val root =
       scalacheck,
       docs,
       unidocs,
-      example
+      exampleJVM,
+      exampleCrossPlatform
     )
     .settings(
       name := "scala-k8s"
@@ -75,6 +76,13 @@ def module(mname: String): CrossProject => CrossProject =
     .settings(
       name := s"scala-k8s-$mname"
     )
+
+def example(mname: String): CrossProject => CrossProject =
+  _.in(file(s"examples/$mname"))
+    .settings(
+      name := s"scala-k8s-example-$mname"
+    )
+    .enablePlugins(NoPublishPlugin)
 
 lazy val objects = module("objects") {
   crossProject(JVMPlatform, JSPlatform, NativePlatform)
@@ -373,6 +381,9 @@ lazy val unidocs = project
       objects.jvm,
       client.jvm,
       http4s.jvm,
+      http4sEmber.jvm,
+      http4sNetty.jvm,
+      http4sBlaze.jvm,
       zio.jvm,
       sttp.jvm,
       circe.jvm,
@@ -386,16 +397,39 @@ lazy val unidocs = project
     )
   )
 
-lazy val example = crossProject(JVMPlatform)
-  .crossType(CrossType.Pure)
-  .settings(
-    libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-circe" % "0.23.18",
-      "com.softwaremill.sttp.client3" %%% "circe" % "3.8.15"
+lazy val exampleJVM = example("jvm") {
+  crossProject(JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      libraryDependencies ++= Seq(
+        "org.http4s" %%% "http4s-circe" % "0.23.18",
+        "com.softwaremill.sttp.client3" %%% "circe" % "3.8.15"
+      )
     )
-  )
-  .dependsOn(http4sNetty, http4sEmber, circe, zio, sttp)
-  .enablePlugins(NoPublishPlugin)
+    .dependsOn(http4sNetty, http4sEmber, circe, zio, sttp)
+}
+
+lazy val exampleCrossPlatform = example("cross-platform") {
+  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      libraryDependencies ++= Seq(
+        "org.http4s" %%% "http4s-circe" % "0.23.18"
+      )
+    )
+    .jsSettings(
+      scalaJSUseMainModuleInitializer := true,
+      scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+      Compile / npmDependencies ++= Seq("js-yaml" -> "4.1.0")
+      // scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) }
+    )
+    .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
+    .nativeSettings(
+      libraryDependencies += "com.armanbilge" %%% "epollcat" % "0.1.4",
+      envVars ++= Map("S2N_DONT_MLOCK" -> "1")
+    )
+    .dependsOn(http4sEmber, circe)
+}
 
 def addAlias(name: String)(tasks: String*) =
   addCommandAlias(name, tasks.mkString(" ;"))
