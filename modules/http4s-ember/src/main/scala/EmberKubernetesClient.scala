@@ -22,9 +22,7 @@ import cats.effect.kernel.Resource
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
 
-object EmberKubernetesClient
-    extends Http4sKubernetesClient
-    with PlatformCompanion {
+object EmberKubernetesClient extends PlatformCompanion {
 
   override protected def buildClient[F[_]: Async]: Resource[F, Client[F]] =
     EmberClientBuilder.default[F].build

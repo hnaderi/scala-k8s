@@ -24,7 +24,8 @@ import org.http4s.ember.client.EmberClientBuilder
 
 import javax.net.ssl.SSLContext
 
-trait PlatformCompanion extends JVMPlatform { self: Http4sKubernetesClient =>
+private[client] trait PlatformCompanion extends JVMPlatform {
+  self: Http4sKubernetesClient =>
   override protected def buildWithSSLContext[F[_]: Async]
       : SSLContext => Resource[F, Client[F]] = ctx =>
     EmberClientBuilder

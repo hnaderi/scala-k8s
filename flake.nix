@@ -19,7 +19,10 @@
           typelevelShell = {
             jdk.package = pkgs.temurin-bin-11;
             nodejs.enable = true;
-            native.enable = true;
+            native = {
+              enable = true;
+              libraries = with pkgs; [ s2n libyaml ];
+            };
           };
         };
       });
