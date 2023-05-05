@@ -19,15 +19,15 @@ package dev.hnaderi.k8s.client
 import cats.effect.Concurrent
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
-import dev.hnaderi.k8s.utils._
-import fs2.Stream
-import org.http4s._
-import org.http4s.client.Client
-import fs2.io.file.Files
-import fs2.io.file.Path
+import cats.effect.std.Env
 import cats.syntax.all._
 import dev.hnaderi.k8s.manifest
-import cats.effect.std.Env
+import dev.hnaderi.k8s.utils._
+import fs2.Stream
+import fs2.io.file.Files
+import fs2.io.file.Path
+import org.http4s._
+import org.http4s.client.Client
 
 trait Http4sKubernetesClient {
   final type KClient[F[_]] = HttpClient[F] with StreamingClient[Stream[F, *]]

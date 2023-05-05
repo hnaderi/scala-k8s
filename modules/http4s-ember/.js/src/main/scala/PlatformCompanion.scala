@@ -16,19 +16,19 @@
 
 package dev.hnaderi.k8s.client
 
-import fs2.io.net.tls.TLSContext
-import fs2.io.net.tls.SecureContext
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.syntax.all._
 import dev.hnaderi.k8s.utils._
-import org.http4s._
-import org.http4s.ember.client.EmberClientBuilder
-import fs2.io.file.Files
-import fs2.io.file.Path
-import scodec.bits.ByteVector
 import fs2.Chunk
 import fs2.Stream
+import fs2.io.file.Files
+import fs2.io.file.Path
+import fs2.io.net.tls.SecureContext
+import fs2.io.net.tls.TLSContext
+import org.http4s._
+import org.http4s.ember.client.EmberClientBuilder
+import scodec.bits.ByteVector
 
 private[client] trait PlatformCompanion extends Http4sKubernetesClient {
 

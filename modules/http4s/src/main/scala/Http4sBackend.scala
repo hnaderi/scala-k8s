@@ -22,12 +22,12 @@ import dev.hnaderi.k8s.utils._
 import fs2.Stream
 import io.k8s.apimachinery.pkg.apis.meta.v1
 import org.http4s._
-import org.http4s.{Request => HRequest}
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
-import org.http4s.headers.`Content-Type`
 import org.http4s.headers.Cookie
+import org.http4s.headers.`Content-Type`
 import org.http4s.syntax.literals._
+import org.http4s.{Request => HRequest}
 
 final class Http4sBackend[F[_], T] private (client: Client[F])(implicit
     F: Concurrent[F],
