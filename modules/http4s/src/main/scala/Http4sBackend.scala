@@ -21,17 +21,18 @@ import cats.syntax.all._
 import dev.hnaderi.k8s.utils._
 import fs2.Stream
 import io.k8s.apimachinery.pkg.apis.meta.v1
-import org.http4s
 import org.http4s._
+import org.http4s.{Request => HRequest}
 import org.http4s.client.Client
 import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.headers.`Content-Type`
+import org.http4s.headers.Cookie
 import org.http4s.syntax.literals._
 
-final case class Http4sBackend[F[_], T] private (client: Client[F])(implicit
+final class Http4sBackend[F[_], T] private (client: Client[F])(implicit
     F: Concurrent[F],
-    enc: http4s.EntityEncoder[F, T],
-    dec: http4s.EntityDecoder[F, T],
+    enc: EntityEncoder[F, T],
+    dec: EntityDecoder[F, T],
     builder: Builder[T],
     reader: Reader[T]
 ) extends HttpBackend[F]
@@ -74,16 +75,16 @@ final case class Http4sBackend[F[_], T] private (client: Client[F])(implicit
       }
       .flatMap(sendRequest(_))
 
-  type Req = http4s.Request[F]
+  type Req = HRequest[F]
 
   private def cookiesFor(cookies: Seq[(String, String)]) = cookies
     .map { case (k, v) => RequestCookie(k, v) }
     .toList
     .toNel
-    .map(http4s.headers.Cookie(_))
+    .map(Cookie(_))
     .fold(Headers.empty)(Headers(_))
 
-  private def sendRequest[O: Decoder](req: http4s.Request[F]): F[O] = client
+  private def sendRequest[O: Decoder](req: HRequest[F]): F[O] = client
     .expectOr[T](req) { resp =>
       val err = resp.status match {
         case Status.Conflict     => ErrorStatus.Conflict

@@ -20,13 +20,10 @@ import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.SttpKubernetesClient
 import sttp.client3.circe._
-import io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.CustomResourceDefinitionNames
 
 object SttpMain extends App {
   val client = SttpKubernetesClient.urlClient.defaultConfig
   // val client = SttpKubernetesClient.httpClientSync().defaultConfig
-
-  // CustomResourceDefinitionNames
 
   val response = APIs.namespace("hnaderi").configmaps.list.send(client)
   response.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)

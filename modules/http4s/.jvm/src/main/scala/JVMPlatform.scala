@@ -19,14 +19,11 @@ package dev.hnaderi.k8s.client
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.syntax.all._
-import dev.hnaderi.k8s.manifest
 import dev.hnaderi.k8s.utils._
-import fs2.io.file.Files
 import fs2.io.file.Path
 import org.http4s._
 import org.http4s.client.Client
 
-import java.io.File
 import javax.net.ssl.SSLContext
 
 private[client] trait JVMPlatform extends Http4sKubernetesClient {

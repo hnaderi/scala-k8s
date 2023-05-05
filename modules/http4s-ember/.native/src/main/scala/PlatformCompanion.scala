@@ -46,11 +46,11 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
 
   private def client[F[_]: Async](
       caData: Option[String] = None,
-      caFile: Option[String] = None,
+      caFile: Option[String],
       clientCert: Option[String] = None,
-      clientCertFile: Option[String] = None,
+      clientCertFile: Option[String],
       clientKey: Option[String] = None,
-      clientKeyFile: Option[String] = None
+      clientKeyFile: Option[String]
   ): Resource[F, Client[F]] = for {
     ca <- dataOrFile(caData, caFile)
     cert <- dataOrFile(clientCert, clientCertFile)
