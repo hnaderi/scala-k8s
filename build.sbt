@@ -46,6 +46,7 @@ lazy val root =
       http4sEmber,
       http4sNetty,
       http4sBlaze,
+      http4sJDK,
       zio,
       sttp,
       codecTest,
@@ -167,6 +168,18 @@ lazy val http4sBlaze = module("http4s-blaze") {
       description := "http4s blaze based client for kubernetes",
       libraryDependencies ++= Seq(
         "org.http4s" %% "http4s-blaze-client" % "0.23.14"
+      )
+    )
+    .dependsOn(http4s)
+}
+
+lazy val http4sJDK = module("http4s-jdk") {
+  crossProject(JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description := "http4s jdk-client based client for kubernetes",
+      libraryDependencies ++= Seq(
+        "org.http4s" %% "http4s-jdk-http-client" % "0.9.0"
       )
     )
     .dependsOn(http4s)
@@ -384,6 +397,7 @@ lazy val unidocs = project
       http4sEmber.jvm,
       http4sNetty.jvm,
       http4sBlaze.jvm,
+      http4sJDK.jvm,
       zio.jvm,
       sttp.jvm,
       circe.jvm,

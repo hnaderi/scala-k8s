@@ -17,6 +17,7 @@
 package test
 
 import cats.effect._
+import cats.effect.std.UUIDGen
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client._
 import dev.hnaderi.k8s.client.http4s.EmberKubernetesClient
@@ -25,7 +26,6 @@ import io.circe.Json
 import io.k8s.api.core.v1.ConfigMap
 import io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
 import org.http4s.circe._
-import cats.effect.std.UUIDGen
 
 object EmberExample extends IOApp {
 
