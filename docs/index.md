@@ -23,6 +23,7 @@ libraryDependencies ++= Seq(
   "dev.hnaderi" %% "scala-k8s-http4s-ember" % "@VERSION@", // JVM, JS, Native ; http4s ember client integration
   "dev.hnaderi" %% "scala-k8s-http4s-netty" % "@VERSION@", // JVM ; http4s netty client integration
   "dev.hnaderi" %% "scala-k8s-http4s-blaze" % "@VERSION@", // JVM; http4s blaze client integration
+  "dev.hnaderi" %% "scala-k8s-http4s-jdk" % "@VERSION@", // JVM; http4s jdk-client integration
   "dev.hnaderi" %% "scala-k8s-http4s" % "@VERSION@", // JVM, JS, Native ; http4s core and fs2 integration
   "dev.hnaderi" %% "scala-k8s-zio" % "@VERSION@", // JVM ; ZIO native integration using zio-http and zio-json 
   "dev.hnaderi" %% "scala-k8s-sttp" % "@VERSION@", // JVM, JS, Native ; sttp integration using jawn parser
