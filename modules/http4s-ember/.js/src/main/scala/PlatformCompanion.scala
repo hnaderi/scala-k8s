@@ -34,11 +34,11 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
 
   private def ssl[F[_]: Async](
       caData: Option[String] = None,
-      caFile: Option[String] = None,
+      caFile: Option[String],
       clientCert: Option[String] = None,
-      clientCertFile: Option[String] = None,
+      clientCertFile: Option[String],
       clientKey: Option[String] = None,
-      clientKeyFile: Option[String] = None,
+      clientKeyFile: Option[String],
       clientKeyPass: Option[String] = None
   ): Resource[F, TLSContext[F]] = Resource.eval(
     for {
