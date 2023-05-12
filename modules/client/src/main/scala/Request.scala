@@ -137,7 +137,7 @@ object HttpClient {
           url: String,
           params: (String, String)*
       ): S[O] = backend.connect(
-        url,
+        s"$baseUri$url",
         APIVerb.GET,
         params = params ++ auth.params,
         headers = auth.headers,
