@@ -19,6 +19,7 @@ package dev.hnaderi.k8s.client
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.syntax.all._
+import dev.hnaderi.k8s.client.http4s.EmberKubernetesClient
 import dev.hnaderi.k8s.utils._
 import fs2.Chunk
 import fs2.Stream
@@ -27,12 +28,12 @@ import fs2.io.file.Path
 import fs2.io.net.tls.SecureContext
 import fs2.io.net.tls.TLSContext
 import org.http4s._
-import org.http4s.ember.client.EmberClientBuilder
 import scodec.bits.ByteVector
 
 private[client] trait PlatformCompanion extends Http4sKubernetesClient {
+  self: EmberKubernetesClient =>
 
-  private def ssl[F[_]: Async](
+  private def ssl[F[_]: Async: Files](
       caData: Option[String] = None,
       caFile: Option[String],
       clientCert: Option[String] = None,
@@ -58,7 +59,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
       )
   )
 
-  private def dataOrFile[F[_]: Async](
+  private def dataOrFile[F[_]: Async: Files](
       data: Option[String],
       file: Option[String]
   ): F[Option[Chunk[Byte]]] = {
@@ -78,6 +79,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
       context: Option[String] = None
   )(implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -105,7 +107,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
           clientCertFile = auth.`client-certificate`,
           clientKey = auth.`client-key-data`,
           clientKeyFile = auth.`client-key`
-        ).flatMap(EmberClientBuilder.default[F].withTLSContext(_).build)
+        ).flatMap(buildSecureClient(_))
           .map(Http4sBackend.fromClient(_))
           .map(HttpClient.streaming(server, _, AuthenticationParams.from(auth)))
     }
@@ -121,6 +123,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
       authentication: AuthenticationParams = AuthenticationParams.empty
   )(implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -130,7 +133,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
     clientCertFile = clientCert.map(_.toString),
     clientKeyFile = clientKey.map(_.toString),
     clientKeyPass = clientKeyPassword
-  ).flatMap(EmberClientBuilder.default[F].withTLSContext(_).build)
+  ).flatMap(buildSecureClient(_))
     .map(Http4sBackend.fromClient(_))
     .map(HttpClient.streaming(server, _, authentication))
 

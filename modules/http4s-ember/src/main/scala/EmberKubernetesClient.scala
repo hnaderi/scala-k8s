@@ -19,12 +19,27 @@ package http4s
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
+import fs2.io.net.Network
+import fs2.io.net.tls.TLSContext
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
 
-object EmberKubernetesClient extends PlatformCompanion {
+object EmberKubernetesClient extends EmberKubernetesClient
 
-  override protected def buildClient[F[_]: Async]: Resource[F, Client[F]] =
+trait EmberKubernetesClient extends PlatformCompanion {
+
+  override protected def buildClient[F[_]: Async]: Resource[F, Client[F]] = {
+    implicit val net: Network[F] = Network.forAsync[F]
+
     EmberClientBuilder.default[F].build
+  }
+
+  protected def buildSecureClient[F[_]: Async](
+      ctx: TLSContext[F]
+  ): Resource[F, Client[F]] = {
+    implicit val net: Network[F] = Network.forAsync[F]
+
+    EmberClientBuilder.default[F].withTLSContext(ctx).build
+  }
 
 }

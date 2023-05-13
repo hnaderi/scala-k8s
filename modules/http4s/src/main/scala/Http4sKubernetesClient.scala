@@ -68,6 +68,7 @@ trait Http4sKubernetesClient {
       context: Option[String] = None
   )(implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -98,6 +99,7 @@ trait Http4sKubernetesClient {
       authentication: AuthenticationParams = AuthenticationParams.empty
   )(implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -116,12 +118,13 @@ trait Http4sKubernetesClient {
       context: Option[String] = None
   )(implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
       reader: Reader[T]
   ): Resource[F, KClient[F]] = for {
-    str <- Resource.eval(Files[F].readUtf8(config).compile.string)
+    str <- Resource.eval(Files.readUtf8(config).compile.string)
     conf <- Resource.eval(F.fromEither(manifest.parse[Config](str)))
     client <- fromConfig(conf, context)
   } yield client
@@ -138,6 +141,7 @@ trait Http4sKubernetesClient {
       context: Option[String] = None
   )(implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -152,6 +156,7 @@ trait Http4sKubernetesClient {
     */
   final def defaultConfig[F[_], T](implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -164,7 +169,7 @@ trait Http4sKubernetesClient {
     }
   }
 
-  private def homeConfig[F[_]](implicit F: Async[F]) =
+  private def homeConfig[F[_]](implicit F: Async[F], Files: Files[F]) =
     Env
       .make[F]
       .get("KUBECONFIG")
@@ -173,13 +178,14 @@ trait Http4sKubernetesClient {
           F.delay(System.getProperty("user.home") match {
             case null  => Path("~") / ".kube" / "config"
             case value => Path(value) / ".kube" / "config"
-          })
+          }).flatTap(p => F.blocking(println(p)))
         case Some(value) => Path(value).pure
       }
-      .flatMap(p => Files[F].exists(p).ifF(Some(p), None))
+      .flatMap(p => Files.exists(p).ifF(Some(p), None))
 
   private def podConfig[F[_], T](implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -190,7 +196,7 @@ trait Http4sKubernetesClient {
     val token = base / "token"
     val caCert = base / "ca.crt"
     val tokenAuth = Resource
-      .eval(Files[F].readUtf8(token).compile.string)
+      .eval(Files.readUtf8(token).compile.string)
       .map(AuthenticationParams.bearer(_))
 
     tokenAuth.flatMap(auth =>

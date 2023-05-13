@@ -20,6 +20,7 @@ import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.syntax.all._
 import dev.hnaderi.k8s.utils._
+import fs2.io.file.Files
 import fs2.io.file.Path
 import org.http4s._
 import org.http4s.client.Client
@@ -42,6 +43,7 @@ private[client] trait JVMPlatform extends Http4sKubernetesClient {
       context: Option[String] = None
   )(implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -97,6 +99,7 @@ private[client] trait JVMPlatform extends Http4sKubernetesClient {
       authentication: AuthenticationParams = AuthenticationParams.empty
   )(implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],

@@ -19,6 +19,7 @@ package dev.hnaderi.k8s.client
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.syntax.all._
+import dev.hnaderi.k8s.client.http4s.EmberKubernetesClient
 import dev.hnaderi.k8s.utils._
 import fs2.Stream
 import fs2.io.file.Files
@@ -28,11 +29,11 @@ import fs2.io.net.tls.S2nConfig
 import fs2.io.net.tls.TLSContext
 import org.http4s._
 import org.http4s.client.Client
-import org.http4s.ember.client.EmberClientBuilder
 import scodec.bits.ByteVector
 
 private[client] trait PlatformCompanion extends Http4sKubernetesClient {
-  private def dataOrFile[F[_]: Async](
+  self: EmberKubernetesClient =>
+  private def dataOrFile[F[_]: Async: Files](
       data: Option[String],
       file: Option[String]
   ): Resource[F, Option[ByteVector]] =
@@ -44,7 +45,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
         .getOrElse(Option.empty.pure)
     )
 
-  private def client[F[_]: Async](
+  private def client[F[_]: Async: Files](
       caData: Option[String] = None,
       caFile: Option[String],
       clientCert: Option[String] = None,
@@ -63,7 +64,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
       .withPemsToTrustStore(ca.map(_.decodeAsciiLenient).toList)
       .build[F]
     tls = TLSContext.Builder.forAsync[F].fromS2nConfig(config)
-    client <- EmberClientBuilder.default[F].withTLSContext(tls).build
+    client <- buildSecureClient(tls)
   } yield client
 
   final override def fromConfig[F[_], T](
@@ -71,6 +72,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
       context: Option[String] = None
   )(implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -114,6 +116,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
       authentication: AuthenticationParams = AuthenticationParams.empty
   )(implicit
       F: Async[F],
+      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
