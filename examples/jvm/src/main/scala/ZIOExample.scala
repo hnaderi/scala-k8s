@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package test
+package example
 
 import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.ZIOBackend

@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-package test
+//> using dep "dev.hnaderi::scala-k8s-http4s-ember:0.11.1"
+//> using dep "dev.hnaderi::scala-k8s-circe:0.11.1"
+//> using dep "org.http4s::http4s-circe:0.23.19"
+
+package example
 
 import cats.effect._
 import cats.effect.std.UUIDGen
@@ -32,10 +36,10 @@ object EmberExample extends IOApp {
   private val client = EmberKubernetesClient.defaultConfig[IO, Json]
 
   def operations(cl: HttpClient[IO]) = for {
-    _ <- APIs.namespace("hnaderi").configmaps.list.send(cl).flatMap(IO.println)
+    _ <- APIs.namespace("default").configmaps.list.send(cl).flatMap(IO.println)
     name <- UUIDGen[IO].randomUUID.map(_.toString)
     _ <- APIs
-      .namespace("hnaderi")
+      .namespace("default")
       .configmaps
       .create(
         ConfigMap(
@@ -44,14 +48,14 @@ object EmberExample extends IOApp {
         )
       )
       .send(cl)
-    a <- APIs.namespace("hnaderi").configmaps.get(name).send(cl)
+    a <- APIs.namespace("default").configmaps.get(name).send(cl)
     b <- APIs
-      .namespace("hnaderi")
+      .namespace("default")
       .configmaps
       .replace(name, a.withData(Map("test2" -> "value2")))
       .send(cl)
     _ <- IO.println(b)
-    _ <- APIs.namespace("hnaderi").configmaps.delete(name).send(cl)
+    _ <- APIs.namespace("default").configmaps.delete(name).send(cl)
   } yield ()
 
   override def run(args: List[String]): IO[ExitCode] = client

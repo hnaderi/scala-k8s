@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package test
+package example
 
 import cats.effect._
 import cats.implicits._
@@ -33,7 +33,7 @@ object Http4sExample extends IOApp {
 
   private val client = EmberKubernetesClient.defaultConfig[IO, Json]
 
-  def watchNodes(cl: StreamingClient[fs2.Stream[IO, *]]) =
+  def watchNodes(cl: EmberKubernetesClient.KClient[IO]) =
     CoreV1.nodes
       .list()
       .listen(cl)
@@ -56,9 +56,9 @@ object Http4sExample extends IOApp {
       )
 
   def operations(cl: HttpClient[IO]) = for {
-    _ <- APIs.namespace("hnaderi").configmaps.list.send(cl).flatMap(IO.println)
+    _ <- APIs.namespace("default").configmaps.list.send(cl).flatMap(IO.println)
     _ <- APIs
-      .namespace("hnaderi")
+      .namespace("default")
       .configmaps
       .create(
         ConfigMap(
@@ -67,14 +67,14 @@ object Http4sExample extends IOApp {
         )
       )
       .send(cl)
-    a <- APIs.namespace("hnaderi").configmaps.get("example").send(cl)
+    a <- APIs.namespace("default").configmaps.get("example").send(cl)
     b <- APIs
-      .namespace("hnaderi")
+      .namespace("default")
       .configmaps
       .replace("example", a.withData(Map("test2" -> "value2")))
       .send(cl)
     _ <- IO.println(b)
-    _ <- APIs.namespace("hnaderi").configmaps.delete("example").send(cl)
+    _ <- APIs.namespace("default").configmaps.delete("example").send(cl)
   } yield ()
 
   def operations2(cl: HttpClient[IO]) = for {

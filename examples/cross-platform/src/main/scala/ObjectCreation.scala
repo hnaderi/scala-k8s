@@ -14,21 +14,30 @@
  * limitations under the License.
  */
 
-//> using dep "dev.hnaderi::scala-k8s-sttp:0.11.1"
-//> using dep "dev.hnaderi::scala-k8s-circe:0.11.1"
-//> using dep "com.softwaremill.sttp.client3::circe:3.8.15"
+//> using dep "dev.hnaderi::scala-k8s-manifests:0.11.1"
 
 package example
 
-import dev.hnaderi.k8s.circe._
-import dev.hnaderi.k8s.client.APIs
-import dev.hnaderi.k8s.client.SttpKubernetesClient
-import sttp.client3.circe._
+import dev.hnaderi.k8s.manifest._
+import dev.hnaderi.k8s.implicits._
+import io.k8s.api.core.v1.ConfigMap
+import io.k8s.api.core.v1.Secret
+import io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
 
-object SttpMain extends App {
-  val client = SttpKubernetesClient.urlClient.defaultConfig
-  // val client = SttpKubernetesClient.httpClientSync().defaultConfig
+object ObjectCreation extends App {
+  val configMap = ConfigMap(
+    metadata = ObjectMeta(name = "example"),
+    data = Map("test" -> "value")
+  )
 
-  val response = APIs.namespace("default").configmaps.list.send(client)
-  response.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)
+  val secret = Secret(
+    metadata = ObjectMeta(name = "example"),
+    data = Map("test" -> "value")
+  )
+
+  val objs = Seq(configMap, secret)
+
+  val manifest = objs.asManifest
+
+  println(manifest)
 }
