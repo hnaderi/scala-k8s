@@ -221,10 +221,10 @@ val nodes = ZIOKubernetesClient.send(APIs.nodes.list())
 ```scala mdoc:compile-only
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client.APIs
-import dev.hnaderi.k8s.client.SttpKubernetesClient
+import dev.hnaderi.k8s.client.SttpJdkURLClientBuilder
 import sttp.client3.circe._
 
-val client = SttpKubernetesClient.urlClient.defaultConfig[Json]
+val client = SttpJdkURLClientBuilder.defaultConfig[Json]
 
 val nodes = APIs.nodes.list().send(client)
 nodes.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)
