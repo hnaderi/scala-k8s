@@ -21,6 +21,7 @@ import cats.implicits._
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client._
 import dev.hnaderi.k8s.client.http4s.EmberKubernetesClient
+import dev.hnaderi.k8s.client.http4s.KClient
 import dev.hnaderi.k8s.client.implicits._
 import dev.hnaderi.k8s.implicits._
 import fs2.Stream._
@@ -31,9 +32,9 @@ import org.http4s.circe._
 
 object Http4sExample extends IOApp {
 
-  private val client = EmberKubernetesClient.defaultConfig[IO, Json]
+  private val client = EmberKubernetesClient[IO].defaultConfig[Json]
 
-  def watchNodes(cl: EmberKubernetesClient.KClient[IO]) =
+  def watchNodes(cl: KClient[IO]) =
     CoreV1.nodes
       .list()
       .listen(cl)

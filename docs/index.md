@@ -191,7 +191,7 @@ import dev.hnaderi.k8s.client.http4s.EmberKubernetesClient
 import io.circe.Json
 import org.http4s.circe._
 
-val buildClient = EmberKubernetesClient.defaultConfig[IO, Json]
+val buildClient = EmberKubernetesClient[IO].defaultConfig[Json]
  
 val getNodes = buildClient.use(APIs.nodes.list().send)
 

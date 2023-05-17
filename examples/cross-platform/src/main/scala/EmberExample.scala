@@ -33,7 +33,7 @@ import org.http4s.circe._
 
 object EmberExample extends IOApp {
 
-  private val client = EmberKubernetesClient.defaultConfig[IO, Json]
+  private val client = EmberKubernetesClient[IO].defaultConfig[Json]
 
   def operations(cl: HttpClient[IO]) = for {
     _ <- APIs.namespace("default").configmaps.list.send(cl).flatMap(IO.println)

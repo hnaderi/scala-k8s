@@ -19,18 +19,30 @@ package http4s
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
+import cats.effect.std.Env
+import fs2.io.file.Files
 import org.http4s.client.Client
 import org.http4s.netty.client.NettyClientBuilder
 
 import javax.net.ssl.SSLContext
 
-object NettyKubernetesClient extends Http4sKubernetesClient with JVMPlatform {
+final class NettyKubernetesClient[F[_]: Async: Files: Env] private (
+    builder: NettyClientBuilder[F]
+) extends JVMPlatform[F] {
 
-  override protected def buildClient[F[_]: Async]: Resource[F, Client[F]] =
-    NettyClientBuilder[F].resource
+  override protected def buildClient: Resource[F, Client[F]] =
+    builder.resource
 
-  override protected def buildWithSSLContext[F[_]: Async]
+  override protected def buildWithSSLContext
       : SSLContext => Resource[F, Client[F]] =
-    NettyClientBuilder[F].withSSLContext(_).resource
+    builder.withSSLContext(_).resource
 
+}
+
+object NettyKubernetesClient {
+  def apply[F[_]: Async: Files: Env]: NettyKubernetesClient[F] =
+    new NettyKubernetesClient(NettyClientBuilder[F])
+  def apply[F[_]: Async: Files: Env](
+      builder: NettyClientBuilder[F]
+  ): NettyKubernetesClient[F] = new NettyKubernetesClient(builder)
 }
