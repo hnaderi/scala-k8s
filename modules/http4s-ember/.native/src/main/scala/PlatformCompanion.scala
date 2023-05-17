@@ -15,11 +15,11 @@
  */
 
 package dev.hnaderi.k8s.client
+package http4s
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.syntax.all._
-import dev.hnaderi.k8s.client.http4s.EmberKubernetesClient
 import dev.hnaderi.k8s.utils._
 import fs2.Stream
 import fs2.io.file.Files
@@ -30,10 +30,13 @@ import fs2.io.net.tls.TLSContext
 import org.http4s._
 import org.http4s.client.Client
 import scodec.bits.ByteVector
+import cats.effect.std.Env
 
-private[client] trait PlatformCompanion extends Http4sKubernetesClient {
-  self: EmberKubernetesClient =>
-  private def dataOrFile[F[_]: Async: Files](
+private[http4s] abstract class PlatformCompanion[F[_]: Async: Files: Env]
+    extends Http4sKubernetesClient[F] {
+  self: EmberKubernetesClient[F] =>
+
+  private def dataOrFile(
       data: Option[String],
       file: Option[String]
   ): Resource[F, Option[ByteVector]] =
@@ -45,7 +48,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
         .getOrElse(Option.empty.pure)
     )
 
-  private def client[F[_]: Async: Files](
+  private def client(
       caData: Option[String] = None,
       caFile: Option[String],
       clientCert: Option[String] = None,
@@ -67,12 +70,10 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
     client <- buildSecureClient(tls)
   } yield client
 
-  final override def fromConfig[F[_], T](
+  final override def fromConfig[T](
       config: Config,
       context: Option[String] = None
   )(implicit
-      F: Async[F],
-      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -93,7 +94,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
           ).raiseError
         )
       case Some((cluster, server, auth)) =>
-        client[F](
+        client(
           caFile = cluster.`certificate-authority`,
           caData = cluster.`certificate-authority-data`,
           clientCert = auth.`client-certificate-data`,
@@ -107,7 +108,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
 
   }
 
-  final override def from[F[_], T](
+  final override def from[T](
       server: String,
       ca: Option[Path] = None,
       clientCert: Option[Path] = None,
@@ -115,8 +116,6 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
       clientKeyPassword: Option[String] = None,
       authentication: AuthenticationParams = AuthenticationParams.empty
   )(implicit
-      F: Async[F],
-      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],

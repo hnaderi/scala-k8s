@@ -19,18 +19,30 @@ package http4s
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
+import cats.effect.std.Env
+import fs2.io.file.Files
 import org.http4s.blaze.client.BlazeClientBuilder
 import org.http4s.client.Client
 
 import javax.net.ssl.SSLContext
 
-object BlazeKubernetesClient extends Http4sKubernetesClient with JVMPlatform {
+final class BlazeKubernetesClient[F[_]: Async: Files: Env] private (
+    builder: BlazeClientBuilder[F]
+) extends JVMPlatform[F] {
 
-  override protected def buildClient[F[_]: Async]: Resource[F, Client[F]] =
-    BlazeClientBuilder[F].resource
+  override protected def buildClient: Resource[F, Client[F]] =
+    builder.resource
 
-  override protected def buildWithSSLContext[F[_]: Async]
+  override protected def buildWithSSLContext
       : SSLContext => Resource[F, Client[F]] =
-    BlazeClientBuilder[F].withSslContext(_).resource
+    builder.withSslContext(_).resource
 
+}
+
+object BlazeKubernetesClient {
+  def apply[F[_]: Async: Files: Env]: BlazeKubernetesClient[F] =
+    new BlazeKubernetesClient(BlazeClientBuilder[F])
+  def apply[F[_]: Async: Files: Env](
+      builder: BlazeClientBuilder[F]
+  ): BlazeKubernetesClient[F] = new BlazeKubernetesClient(builder)
 }

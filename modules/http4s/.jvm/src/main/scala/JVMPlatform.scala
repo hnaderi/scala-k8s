@@ -15,9 +15,11 @@
  */
 
 package dev.hnaderi.k8s.client
+package http4s
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
+import cats.effect.std.Env
 import cats.syntax.all._
 import dev.hnaderi.k8s.utils._
 import fs2.io.file.Files
@@ -27,9 +29,12 @@ import org.http4s.client.Client
 
 import javax.net.ssl.SSLContext
 
-private[client] trait JVMPlatform extends Http4sKubernetesClient {
-  protected def buildWithSSLContext[F[_]: Async]
-      : SSLContext => Resource[F, Client[F]]
+private[http4s] abstract class JVMPlatform[F[_]](implicit
+    F: Async[F],
+    Files: Files[F],
+    Env: Env[F]
+) extends Http4sKubernetesClient[F] {
+  protected def buildWithSSLContext: SSLContext => Resource[F, Client[F]]
 
   /** Build kubernetes client from [[Config]] data structure
     *
@@ -38,12 +43,10 @@ private[client] trait JVMPlatform extends Http4sKubernetesClient {
     * @param context
     *   If provided, overrides the config's current context
     */
-  final override def fromConfig[F[_], T](
+  final override def fromConfig[T](
       config: Config,
       context: Option[String] = None
   )(implicit
-      F: Async[F],
-      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -90,7 +93,7 @@ private[client] trait JVMPlatform extends Http4sKubernetesClient {
     * @param authentication
     *   Authentication parameters
     */
-  final override def from[F[_], T](
+  final override def from[T](
       server: String,
       ca: Option[Path] = None,
       clientCert: Option[Path] = None,
@@ -98,8 +101,6 @@ private[client] trait JVMPlatform extends Http4sKubernetesClient {
       clientKeyPassword: Option[String] = None,
       authentication: AuthenticationParams = AuthenticationParams.empty
   )(implicit
-      F: Async[F],
-      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],

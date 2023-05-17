@@ -23,23 +23,28 @@ import fs2.io.net.Network
 import fs2.io.net.tls.TLSContext
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
+import fs2.io.file.Files
+import cats.effect.std.Env
 
-object EmberKubernetesClient extends EmberKubernetesClient
+final class EmberKubernetesClient[F[_]: Async: Network: Files: Env] private (
+    builder: EmberClientBuilder[F]
+) extends PlatformCompanion[F] {
 
-trait EmberKubernetesClient extends PlatformCompanion {
-
-  override protected def buildClient[F[_]: Async]: Resource[F, Client[F]] = {
-    implicit val net: Network[F] = Network.forAsync[F]
-
+  override protected def buildClient: Resource[F, Client[F]] =
     EmberClientBuilder.default[F].build
-  }
 
-  protected def buildSecureClient[F[_]: Async](
+  protected def buildSecureClient(
       ctx: TLSContext[F]
-  ): Resource[F, Client[F]] = {
-    implicit val net: Network[F] = Network.forAsync[F]
+  ): Resource[F, Client[F]] = builder.withTLSContext(ctx).build
 
-    EmberClientBuilder.default[F].withTLSContext(ctx).build
-  }
+}
 
+object EmberKubernetesClient {
+  def apply[F[_]: Async: Network: Files: Env]: EmberKubernetesClient[F] =
+    new EmberKubernetesClient[F](EmberClientBuilder.default[F])
+
+  def apply[F[_]: Async: Network: Files: Env](
+      builder: EmberClientBuilder[F]
+  ): EmberKubernetesClient[F] =
+    new EmberKubernetesClient[F](builder)
 }

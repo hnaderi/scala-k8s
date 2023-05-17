@@ -15,11 +15,11 @@
  */
 
 package dev.hnaderi.k8s.client
+package http4s
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.syntax.all._
-import dev.hnaderi.k8s.client.http4s.EmberKubernetesClient
 import dev.hnaderi.k8s.utils._
 import fs2.Chunk
 import fs2.Stream
@@ -29,11 +29,13 @@ import fs2.io.net.tls.SecureContext
 import fs2.io.net.tls.TLSContext
 import org.http4s._
 import scodec.bits.ByteVector
+import cats.effect.std.Env
 
-private[client] trait PlatformCompanion extends Http4sKubernetesClient {
-  self: EmberKubernetesClient =>
+private[http4s] abstract class PlatformCompanion[F[_]: Async: Files: Env]
+    extends Http4sKubernetesClient[F] {
+  self: EmberKubernetesClient[F] =>
 
-  private def ssl[F[_]: Async: Files](
+  private def ssl(
       caData: Option[String] = None,
       caFile: Option[String],
       clientCert: Option[String] = None,
@@ -41,25 +43,26 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
       clientKey: Option[String] = None,
       clientKeyFile: Option[String],
       clientKeyPass: Option[String] = None
-  ): Resource[F, TLSContext[F]] = Resource.eval(
-    for {
-      ca <- dataOrFile(caData, caFile)
-      cert <- dataOrFile(clientCert, clientCertFile)
-      key <- dataOrFile(clientKey, clientKeyFile)
-    } yield TLSContext.Builder
-      .forAsync[F]
-      .fromSecureContext(
-        SecureContext(
-          ca = ca.map(v => Seq(Left(v))),
-          cert = cert.map(v => Seq(Left(v))),
-          key = key.map(ck =>
-            Seq(SecureContext.Key(Left(ck), passphrase = clientKeyPass))
+  ): Resource[F, TLSContext[F]] =
+    Resource.eval(
+      for {
+        ca <- dataOrFile(caData, caFile)
+        cert <- dataOrFile(clientCert, clientCertFile)
+        key <- dataOrFile(clientKey, clientKeyFile)
+      } yield TLSContext.Builder
+        .forAsync[F]
+        .fromSecureContext(
+          SecureContext(
+            ca = ca.map(v => Seq(Left(v))),
+            cert = cert.map(v => Seq(Left(v))),
+            key = key.map(ck =>
+              Seq(SecureContext.Key(Left(ck), passphrase = clientKeyPass))
+            )
           )
         )
-      )
-  )
+    )
 
-  private def dataOrFile[F[_]: Async: Files](
+  private def dataOrFile(
       data: Option[String],
       file: Option[String]
   ): F[Option[Chunk[Byte]]] = {
@@ -74,12 +77,10 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
       .map(base64Data(_))
   }
 
-  final override def fromConfig[F[_], T](
+  final override def fromConfig[T](
       config: Config,
       context: Option[String] = None
   )(implicit
-      F: Async[F],
-      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
@@ -114,7 +115,7 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
 
   }
 
-  final override def from[F[_], T](
+  final override def from[T](
       server: String,
       ca: Option[Path] = None,
       clientCert: Option[Path] = None,
@@ -122,8 +123,6 @@ private[client] trait PlatformCompanion extends Http4sKubernetesClient {
       clientKeyPassword: Option[String] = None,
       authentication: AuthenticationParams = AuthenticationParams.empty
   )(implicit
-      F: Async[F],
-      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],

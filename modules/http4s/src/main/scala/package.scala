@@ -15,22 +15,9 @@
  */
 
 package dev.hnaderi.k8s.client
-package http4s
 
-import cats.effect.kernel.Async
-import cats.effect.kernel.Resource
-import fs2.io.net.tls.TLSContext
-import org.http4s.client.Client
-import cats.effect.std.Env
+import fs2.Stream
 
-import javax.net.ssl.SSLContext
-import fs2.io.file.Files
-
-private[http4s] abstract class PlatformCompanion[F[_]: Async: Files: Env]
-    extends JVMPlatform[F] {
-  self: EmberKubernetesClient[F] =>
-
-  override protected def buildWithSSLContext
-      : SSLContext => Resource[F, Client[F]] = ctx =>
-    buildSecureClient(TLSContext.Builder.forAsync[F].fromSSLContext(ctx))
+package object http4s {
+  type KClient[F[_]] = HttpClient[F] with StreamingClient[Stream[F, *]]
 }

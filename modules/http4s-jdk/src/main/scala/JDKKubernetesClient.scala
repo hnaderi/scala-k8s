@@ -25,17 +25,19 @@ import org.http4s.jdkhttpclient.JdkHttpClient
 
 import java.net.http
 import javax.net.ssl.SSLContext
+import cats.effect.std.Env
+import fs2.io.file.Files
 
-object JDKKubernetesClient extends Http4sKubernetesClient with JVMPlatform {
+final class JDKKubernetesClient[F[_]: Async: Files: Env]
+    extends JVMPlatform[F] {
 
-  override protected def buildClient[F[_]: Async]: Resource[F, Client[F]] =
+  override protected def buildClient: Resource[F, Client[F]] =
     Resource.eval(JdkHttpClient.simple[F])
 
-  override protected def buildWithSSLContext[F[_]](implicit
-      F: Async[F]
-  ): SSLContext => Resource[F, Client[F]] = ssl =>
-    Resource.eval(F.executor.flatMap { exec =>
-      F.delay {
+  override protected def buildWithSSLContext
+      : SSLContext => Resource[F, Client[F]] = ssl =>
+    Resource.eval(Async[F].executor.flatMap { exec =>
+      Async[F].delay {
         val builder = http.HttpClient.newBuilder()
         // workaround for https://github.com/http4s/http4s-jdk-http-client/issues/200
         if (Runtime.version().feature() == 11) {

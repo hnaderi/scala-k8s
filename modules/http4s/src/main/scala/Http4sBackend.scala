@@ -15,6 +15,7 @@
  */
 
 package dev.hnaderi.k8s.client
+package http4s
 
 import cats.effect.Concurrent
 import cats.syntax.all._
