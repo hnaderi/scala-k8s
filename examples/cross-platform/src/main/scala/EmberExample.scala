@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-//> using dep "dev.hnaderi::scala-k8s-http4s-ember:0.11.1"
-//> using dep "dev.hnaderi::scala-k8s-circe:0.11.1"
-//> using dep "org.http4s::http4s-circe:0.23.19"
-
 package example
 
 import cats.effect._

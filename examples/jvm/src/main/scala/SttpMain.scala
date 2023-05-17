@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-//> using dep "dev.hnaderi::scala-k8s-sttp:0.11.1"
-//> using dep "dev.hnaderi::scala-k8s-circe:0.11.1"
-//> using dep "com.softwaremill.sttp.client3::circe:3.8.15"
-
 package example
 
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client.APIs
-import dev.hnaderi.k8s.client.SttpKubernetesClient
 import sttp.client3.circe._
+import dev.hnaderi.k8s.client.SttpJdkURLClientBuilder
 
 object SttpMain extends App {
-  val client = SttpKubernetesClient.urlClient.defaultConfig
-  // val client = SttpKubernetesClient.httpClientSync().defaultConfig
+  val client = SttpJdkURLClientBuilder.defaultConfig
 
   val response = APIs.namespace("default").configmaps.list.send(client)
   response.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)

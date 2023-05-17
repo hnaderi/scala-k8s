@@ -23,20 +23,29 @@ import java.time.{Duration => JDuration}
 import javax.net.ssl.SSLContext
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
-class SttpJdkHttpFutureClientBuilder(timeout: FiniteDuration = 60.seconds)(
-    implicit ec: ExecutionContext = ExecutionContext.global
+/** Uses java.net.http.HttpClient asynchronously using Futures. It requires JDK
+  * 11+
+  *
+  * @param builder
+  *   Client builder
+  * @param ec
+  *   ExecutionContext to run on
+  */
+final case class SttpJdkHttpFutureClientBuilder(
+    builder: JClient.Builder = JClient
+      .newBuilder()
+      .connectTimeout(JDuration.ofMillis(60000))
+)(implicit
+    ec: ExecutionContext = ExecutionContext.global
 ) extends SttpJVM[Future] {
 
   override protected def buildWithSSLContext
       : SSLContext => SttpBackend[Future, Any] = ssl => {
-    val client = JClient
-      .newBuilder()
+    val client = builder
       .followRedirects(JClient.Redirect.NEVER)
-      .connectTimeout(JDuration.ofMillis(timeout.toMillis))
-      .sslContext(ssl)
       .executor(ec.execute(_))
+      .sslContext(ssl)
       .build()
 
     HttpClientFutureBackend.usingClient(client)

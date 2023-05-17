@@ -21,16 +21,22 @@ import sttp.client3._
 import java.net.http.{HttpClient => JClient}
 import java.time.{Duration => JDuration}
 import javax.net.ssl.SSLContext
-import scala.concurrent.duration._
 
-class SttpJdkHttpSyncClientBuilder(timeout: FiniteDuration = 3.seconds)
-    extends SttpJVM[Identity] {
+/** Client using java.net.http.HttpClient in a blocking fashion. It requires JDK
+  * 11+
+  *
+  * @param builder
+  *   Client builder
+  */
+final case class SttpJdkHttpSyncClientBuilder(
+    builder: JClient.Builder = JClient
+      .newBuilder()
+      .connectTimeout(JDuration.ofMillis(60000))
+) extends SttpJVM[Identity] {
   override protected def buildWithSSLContext
       : SSLContext => SttpBackend[Identity, Any] = ssl => {
-    val client = JClient
-      .newBuilder()
+    val client = builder
       .followRedirects(JClient.Redirect.NEVER)
-      .connectTimeout(JDuration.ofMillis(timeout.toMillis))
       .sslContext(ssl)
       .build()
 
