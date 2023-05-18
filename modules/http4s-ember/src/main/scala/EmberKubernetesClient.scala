@@ -19,12 +19,12 @@ package http4s
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
+import cats.effect.std.Env
+import fs2.io.file.Files
 import fs2.io.net.Network
 import fs2.io.net.tls.TLSContext
 import org.http4s.client.Client
 import org.http4s.ember.client.EmberClientBuilder
-import fs2.io.file.Files
-import cats.effect.std.Env
 
 final class EmberKubernetesClient[F[_]: Async: Network: Files: Env] private (
     builder: EmberClientBuilder[F]
