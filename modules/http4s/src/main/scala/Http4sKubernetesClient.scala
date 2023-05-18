@@ -146,8 +146,6 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     *   - pod's service account in /var/run/secrets/kubernetes.io/serviceaccount
     */
   final def defaultConfig[T](implicit
-      F: Async[F],
-      Files: Files[F],
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],

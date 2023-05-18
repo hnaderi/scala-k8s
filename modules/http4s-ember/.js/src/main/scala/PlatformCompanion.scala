@@ -19,6 +19,7 @@ package http4s
 
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
+import cats.effect.std.Env
 import cats.syntax.all._
 import dev.hnaderi.k8s.utils._
 import fs2.Chunk
@@ -29,7 +30,6 @@ import fs2.io.net.tls.SecureContext
 import fs2.io.net.tls.TLSContext
 import org.http4s._
 import scodec.bits.ByteVector
-import cats.effect.std.Env
 
 private[http4s] abstract class PlatformCompanion[F[_]: Async: Files: Env]
     extends Http4sKubernetesClient[F] {
