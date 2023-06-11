@@ -12,8 +12,8 @@ ThisBuild / developers := List(
   tlGitHubDev("hnaderi", "Hossein Naderi")
 )
 
-val scala212 = "2.12.17"
-val scala213 = "2.13.10"
+val scala212 = "2.12.18"
+val scala213 = "2.13.11"
 val scala3 = "3.3.0"
 val PrimaryJava = JavaSpec.temurin("11")
 val LTSJava = JavaSpec.temurin("17")
@@ -68,7 +68,7 @@ lazy val root =
     )
 
 lazy val circeVersion = "0.14.5"
-lazy val munitVersion = "1.0.0-M7"
+lazy val munitVersion = "1.0.0-M8"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
