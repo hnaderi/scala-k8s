@@ -1,15 +1,12 @@
 name: update k8s
 
 on:
-  push:
-    branches:
-      - "main"
   workflow_dispatch:
   schedule:
     - cron:  '0 0 * * *'
 
 jobs:
-  docker:
+  update:
     runs-on: ubuntu-latest
     steps:
       -
@@ -17,7 +14,6 @@ jobs:
         uses: actions/checkout@v3
       -
         name: Get latest kubernetes version
-        id: get_k8s_version
         run: |
           NEW_K8S_VERSION=$(
             curl --silent -L https://api.github.com/repos/kubernetes/kubernetes/releases |
@@ -26,7 +22,7 @@ jobs:
             sed "s/v//" | sort --version-sort | tail -n 1
           )
           [[ -z "$NEW_K8S_VERSION" ]] && { echo "Failed to get latest kubernetes version" ; exit 1; }
-          echo "NEW_VERSION=$NEW_K8S_VERSION" >> "$GITHUB_OUTPUT"
+          echo "NEW_VERSION=$NEW_K8S_VERSION" >> "$GITHUB_ENV"
 
           OLD_K8S_VERSION=$(
             grep -i -w -E "kubernetesVersion.*[0-9].*" build.sbt |
@@ -34,13 +30,18 @@ jobs:
           )
           [[ -z "$OLD_K8S_VERSION" ]] && { echo "Failed to get the kubernetes version of current build" ; exit 1; }
 
-          echo "OLD_VERSION=$OLD_K8S_VERSION" >> "$GITHUB_OUTPUT"
+          echo "OLD_VERSION=$OLD_K8S_VERSION" >> "$GITHUB_ENV"
 
-          sed -i -E "s/(kubernetesVersion\s*:=\s*).*\"/\1\"$NEW_K8S_VERSION\"/" build.sbt
-          sed -i "s/$OLD_K8S_VERSION/$NEW_K8S_VERSION/g" README.md
+      -
+        name: Update to the latest kubernetes version
+        run: |
+          sed -i -E "s/(kubernetesVersion\s*:=\s*).*\"/\1\"${{ env.NEW_VERSION }}\"/" build.sbt
+          sed -i "s/${{ env.OLD_VERSION }}/${{ env.NEW_VERSION }}/g" README.md
       -
         name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.UPDATE_TOKEN }}
         with:
           commit-message: Update kubernetes
           committer: GitHub <noreply@github.com>
