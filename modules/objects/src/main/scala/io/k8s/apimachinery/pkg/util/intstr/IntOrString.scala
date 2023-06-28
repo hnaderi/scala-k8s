@@ -23,7 +23,7 @@ import dev.hnaderi.k8s.utils._
   * type. This allows you to have, for example, a JSON field that can accept a
   * name or number.
   */
-trait IntOrString extends Any
+sealed trait IntOrString extends Any
 object IntOrString {
   final case class IntValue(value: Int) extends AnyVal with IntOrString
   final case class StringValue(value: String) extends AnyVal with IntOrString
