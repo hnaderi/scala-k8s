@@ -22,6 +22,7 @@ val supportScalaVersions = Seq(scala212, scala213, scala3)
 
 ThisBuild / tlSonatypeUseLegacyHost := false
 ThisBuild / tlSitePublishBranch := Some("main")
+ThisBuild / tlJdkRelease := Some(11)
 ThisBuild / scalaVersion := scala212
 ThisBuild / crossScalaVersions := supportScalaVersions
 ThisBuild / githubWorkflowJavaVersions := Seq(PrimaryJava, LTSJava)
@@ -359,24 +360,8 @@ lazy val manifests = module("manifests") {
 
 lazy val docs = project
   .in(file("site"))
-  .enablePlugins(TypelevelSitePlugin)
+  .enablePlugins(ScalaK8sWebsite)
   .settings(
-    tlSiteRelatedProjects := Seq(
-      "Kubernetes" -> url("https://github.com/kubernetes/kubernetes"),
-      "sbt k8s" -> url("https://github.com/hnaderi/sbt-k8s"),
-      TypelevelProject.Http4s,
-      TypelevelProject.Fs2,
-      TypelevelProject.Scalacheck,
-      "ZIO" -> url("https://github.com/zio/zio"),
-      "ZIO-http" -> url("https://github.com/zio/zio-http"),
-      "ZIO-json" -> url("https://github.com/zio/zio-json"),
-      "sttp" -> url("https://sttp.softwaremill.com"),
-      "Circe" -> url("https://github.com/circe/circe"),
-      "Spray json" -> url("https://github.com/spray/spray-json"),
-      "Play json" -> url("https://github.com/playframework/play-json"),
-      "Json4s" -> url("https://github.com/json4s/json4s"),
-      "Jawn" -> url("https://github.com/typelevel/jawn")
-    ),
     libraryDependencies ++= Seq(
       "org.http4s" %%% "http4s-circe" % "0.23.21",
       "com.softwaremill.sttp.client3" %%% "circe" % "3.8.15"
