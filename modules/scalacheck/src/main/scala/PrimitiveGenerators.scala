@@ -177,8 +177,8 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       patternProperties <- opt(jsp, jsonSchemaMap)
       items <- opt(jsp, genJSONSchemaPropsOrArray)
       additionalItems <- opt(jsp, genJSONSchemaPropsOrBool)
-      maxProperties <- arbitrary[Option[Int]]
-      maxItems <- arbitrary[Option[Int]]
+      maxProperties <- arbitrary[Option[Long]]
+      maxItems <- arbitrary[Option[Long]]
       `x-kubernetes-int-or-string` <- arbitrary[Option[Boolean]]
       `x-kubernetes-embedded-resource` <- arbitrary[Option[Boolean]]
       maximum <- arbitrary[Option[Double]]
@@ -193,10 +193,10 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       `x-kubernetes-preserve-unknown-fields` <- arbitrary[Option[Boolean]]
       additionalProperties <- opt(jsp, genJSONSchemaPropsOrBool)
       default <- arbitrary[Option[JSON]]
-      minItems <- arbitrary[Option[Int]]
+      minItems <- arbitrary[Option[Long]]
       not <- Gen.const(jsp)
       definitions <- opt(jsp, jsonSchemaMap)
-      minLength <- arbitrary[Option[Int]]
+      minLength <- arbitrary[Option[Long]]
       `x-kubernetes-list-map-keys` <- arbitrary[Option[Seq[String]]]
       title <- arbitrary[Option[String]]
       minimum <- arbitrary[Option[Double]]
@@ -206,12 +206,12 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       schema <- arbitrary[Option[String]]
       oneOf <- opt(jsp, jsonSchemas)
       uniqueItems <- arbitrary[Option[Boolean]]
-      minProperties <- arbitrary[Option[Int]]
+      minProperties <- arbitrary[Option[Long]]
       dependencies <- opt(jsp, dependenciesMap)
       externalDocs <- arbitrary[Option[
         io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.ExternalDocumentation
       ]]
-      maxLength <- arbitrary[Option[Int]]
+      maxLength <- arbitrary[Option[Long]]
       allOf <- opt(jsp, jsonSchemas)
     } yield JSONSchemaProps(
       exclusiveMaximum = exclusiveMaximum,

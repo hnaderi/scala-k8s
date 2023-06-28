@@ -61,11 +61,15 @@ object ModelPropertyType {
       format: Option[String] = None
   ): String = tpe.trim match {
     case "string"  => "String"
-    case "integer" => "Int"
     case "boolean" => "Boolean"
+    case "integer" =>
+      format match {
+        case Some("int32") => "Int"
+        case Some("int64") => "Long"
+        case other => throw new Exception(s"Unknown integer format $other")
+      }
     case "number" =>
       format match {
-        case Some("int64")  => "Long"
         case Some("double") => "Double"
         case other => throw new Exception(s"Unknown number format $other")
       }
