@@ -46,7 +46,7 @@ jobs:
           committer: GitHub <noreply@github.com>
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           signoff: false
-          branch: updates/kubernetes
+          branch: update/kubernetes
           delete-branch: true
           title: 'Update kubernetes version'
           body: |
