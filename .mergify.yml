@@ -2,9 +2,17 @@ pull_request_rules:
   - name: Automatic merge for dependency updates
     conditions:
       - "head~=update/"
+
+      - "status-success=Build and Test (ubuntu-latest, 2.13, temurin@11, rootNative)"
+      - "status-success=Build and Test (ubuntu-latest, 2.13, temurin@11, rootJS)"
+      - "status-success=Build and Test (ubuntu-latest, 2.13, temurin@11, rootJVM)"
+      - "status-success=Build and Test (ubuntu-latest, 3, temurin@11, rootNative)"
+      - "status-success=Build and Test (ubuntu-latest, 3, temurin@11, rootJS)"
+      - "status-success=Build and Test (ubuntu-latest, 3, temurin@11, rootJVM)"
+
       - or:
         - "author=hnaderi"
         - "author=scala-steward"
     actions:
       merge:
-        method: merge
+        method: squash
