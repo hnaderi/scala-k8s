@@ -317,6 +317,17 @@ jobs:
           modules-ignore: scala-k8s-client-test_sjs1_2.12 scala-k8s-client-test_sjs1_2.13 scala-k8s-client-test_sjs1_3 scala-k8s-client-test_2.12 scala-k8s-client-test_2.13 scala-k8s-client-test_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 docs_2.12 docs_2.13 docs_3 scala-k8s-example-cross-platform_sjs1_2.12 scala-k8s-example-cross-platform_sjs1_2.13 scala-k8s-example-cross-platform_sjs1_3 scala-k8s-codec-test_2.12 scala-k8s-codec-test_2.13 scala-k8s-codec-test_3 scala-k8s-objects-test_sjs1_2.12 scala-k8s-objects-test_sjs1_2.13 scala-k8s-objects-test_sjs1_3 scala-k8s-codec-test_native0.4_2.12 scala-k8s-codec-test_native0.4_2.13 scala-k8s-codec-test_native0.4_3 scala-k8s-example-jvm_2.12 scala-k8s-example-jvm_2.13 scala-k8s-example-jvm_3 scala-k8s-codec-test_sjs1_2.12 scala-k8s-codec-test_sjs1_2.13 scala-k8s-codec-test_sjs1_3 scala-k8s-example-cross-platform_native0.4_2.12 scala-k8s-example-cross-platform_native0.4_2.13 scala-k8s-example-cross-platform_native0.4_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 scala-k8s-objects-test_2.12 scala-k8s-objects-test_2.13 scala-k8s-objects-test_3 scala-k8s-example-cross-platform_2.12 scala-k8s-example-cross-platform_2.13 scala-k8s-example-cross-platform_3
           configs-ignore: test scala-tool scala-doc-tool test-internal
 
+  post-build:
+    name: post build
+    needs: [build]
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: post build
+        run: echo success!
+
   site:
     name: Generate Site
     strategy:

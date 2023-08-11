@@ -27,6 +27,20 @@ ThisBuild / scalaVersion := scala212
 ThisBuild / crossScalaVersions := supportScalaVersions
 ThisBuild / githubWorkflowJavaVersions := Seq(PrimaryJava, LTSJava)
 ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
+// This job is used as a sign that all build jobs have been successful and is used by mergify
+ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
+  id = "post-build",
+  name = "post build",
+  needs = List("build"),
+  steps = List(
+    WorkflowStep.Run(
+      commands = List("echo success!"),
+      name = Some("post build")
+    )
+  ),
+  scalas = Nil,
+  javas = Nil
+)
 ThisBuild / kubernetesVersion := "1.27.4"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
