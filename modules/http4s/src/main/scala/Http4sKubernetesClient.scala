@@ -27,6 +27,7 @@ import fs2.io.file.Files
 import fs2.io.file.Path
 import org.http4s._
 import org.http4s.client.Client
+import java.io.FileNotFoundException
 
 private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     F: Async[F],
@@ -64,7 +65,8 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     */
   def fromConfig[T](
       config: Config,
-      context: Option[String] = None
+      context: Option[String] = None,
+      cluster: Option[String] = None
   )(implicit
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
@@ -110,7 +112,8 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     */
   final def load[T](
       config: Path,
-      context: Option[String] = None
+      context: Option[String] = None,
+      cluster: Option[String] = None
   )(implicit
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
@@ -119,7 +122,7 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
   ): Resource[F, KClient[F]] = for {
     str <- Resource.eval(Files.readUtf8(config).compile.string)
     conf <- Resource.eval(F.fromEither(manifest.parse[Config](str)))
-    client <- fromConfig(conf, context)
+    client <- fromConfig(conf, context, cluster)
   } yield client
 
   /** Build kubernetes client from kubectl config file
@@ -131,13 +134,14 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     */
   final def loadFile[T](
       configFile: String,
-      context: Option[String] = None
+      context: Option[String] = None,
+      cluster: Option[String] = None
   )(implicit
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
       reader: Reader[T]
-  ): Resource[F, KClient[F]] = load(Path(configFile), context)
+  ): Resource[F, KClient[F]] = load(Path(configFile), context, cluster)
 
   /** Build kubernetes client kubectl config file found from default locations.
     * It tries:
@@ -151,9 +155,30 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
       builder: Builder[T],
       reader: Reader[T]
   ): Resource[F, KClient[F]] =
+    kubeconfig().recoverWith { case _: FileNotFoundException =>
+      podConfig[T]
+    }
+
+  /** Build kubernetes client from kubectl config file found from default
+    * locations. It tries:
+    *   - `KUBECONFIG` from env
+    *   - ~/.kube/config
+    */
+  final def kubeconfig[T](
+      context: Option[String] = None,
+      cluster: Option[String] = None
+  )(implicit
+      enc: EntityEncoder[F, T],
+      dec: EntityDecoder[F, T],
+      builder: Builder[T],
+      reader: Reader[T]
+  ): Resource[F, KClient[F]] =
     Resource.eval(homeConfig).flatMap {
-      case Some(value) => load(value)
-      case None        => podConfig[T]
+      case Some(value) => load(value, context, cluster)
+      case None =>
+        Resource.eval(
+          F.raiseError(new FileNotFoundException("No kubeconfig found!"))
+        )
     }
 
   private def homeConfig =
@@ -169,7 +194,10 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
       }
       .flatMap(p => Files.exists(p).ifF(Some(p), None))
 
-  private def podConfig[T](implicit
+  /** Build kubernetes client from service account credentials inside pod from
+    * /var/run/secrets/kubernetes.io/serviceaccount
+    */
+  final def podConfig[T](implicit
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
       builder: Builder[T],
