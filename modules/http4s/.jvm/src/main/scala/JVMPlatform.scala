@@ -45,7 +45,8 @@ private[http4s] abstract class JVMPlatform[F[_]](implicit
     */
   final override def fromConfig[T](
       config: Config,
-      context: Option[String] = None
+      context: Option[String] = None,
+      cluster: Option[String] = None
   )(implicit
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T],
@@ -55,7 +56,8 @@ private[http4s] abstract class JVMPlatform[F[_]](implicit
     val currentContext = context.getOrElse(config.`current-context`)
     val toConnect = for {
       ctx <- config.contexts.find(_.name == currentContext)
-      cluster <- config.clusters.find(_.name == ctx.context.cluster)
+      clusterName = cluster.getOrElse(ctx.context.cluster)
+      cluster <- config.clusters.find(_.name == clusterName)
       user <- config.users.find(_.name == ctx.context.user)
     } yield (cluster.cluster, cluster.cluster.server, user.user)
 
