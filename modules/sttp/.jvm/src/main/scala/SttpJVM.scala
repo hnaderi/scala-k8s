@@ -27,6 +27,7 @@ import java.nio.file.Paths
 import javax.net.ssl.SSLContext
 
 import SttpKBackend.SttpF
+import java.io.FileNotFoundException
 
 private[client] trait SttpJVM[F[_]] {
   protected def buildWithSSLContext: SSLContext => SttpBackend[F, Any]
@@ -40,12 +41,14 @@ private[client] trait SttpJVM[F[_]] {
     */
   def fromConfig[T: Builder: Reader: BodySerializer](
       config: Config,
-      context: Option[String] = None
+      context: Option[String] = None,
+      cluster: Option[String] = None
   ): HttpClient[SttpF[F, *]] = {
     val currentContext = context.getOrElse(config.`current-context`)
     val toConnect = for {
       ctx <- config.contexts.find(_.name == currentContext)
-      cluster <- config.clusters.find(_.name == ctx.context.cluster)
+      clusterName = cluster.getOrElse(ctx.context.cluster)
+      cluster <- config.clusters.find(_.name == clusterName)
       user <- config.users.find(_.name == ctx.context.user)
     } yield (cluster.cluster, cluster.cluster.server, user.user)
 
@@ -111,12 +114,14 @@ private[client] trait SttpJVM[F[_]] {
     */
   def load[T: Builder: Reader: BodySerializer](
       config: Path,
-      context: Option[String] = None
+      context: Option[String] = None,
+      cluster: Option[String] = None
   ): HttpClient[SttpF[F, *]] = {
     val str = readFile(config)
     manifest.parse[Config](str) match {
-      case Left(error)   => throw error
-      case Right(config) => fromConfig(config, context)
+      case Left(error) => throw error
+      case Right(config) =>
+        fromConfig(config, context = context, cluster = cluster)
     }
   }
 
@@ -144,6 +149,20 @@ private[client] trait SttpJVM[F[_]] {
     case Some(config) => load(config)
   }
 
+  /** Build kubernetes client from kubectl config file found from default
+    * locations. It tries:
+    *   - `KUBECONFIG` from env
+    *   - ~/.kube/config
+    */
+  def kubeconfig[T: Builder: Reader: BodySerializer](
+      context: Option[String] = None,
+      cluster: Option[String] = None
+  ): HttpClient[SttpF[F, *]] = homeConfig match {
+    case None => throw new FileNotFoundException("No kubeconfig found!")
+    case Some(configPath) =>
+      load(configPath, context = context, cluster = cluster)
+  }
+
   import Conversions._
   private def readFile(path: Path): String =
     Files.readAllLines(path).asScala.mkString("\n")
@@ -160,7 +179,10 @@ private[client] trait SttpJVM[F[_]] {
     if (Files.exists(f)) Some(f) else None
   }
 
-  private def podConfig[T: Builder: Reader: BodySerializer] = {
+  /** Build kubernetes client from service account credentials inside pod from
+    * /var/run/secrets/kubernetes.io/serviceaccount
+    */
+  final def podConfig[T: Builder: Reader: BodySerializer] = {
     val base = Paths.get("/var/run/secrets/kubernetes.io/serviceaccount")
     val apiserver = "https://kubernetes.default.svc"
     val token = base.resolve("token")
