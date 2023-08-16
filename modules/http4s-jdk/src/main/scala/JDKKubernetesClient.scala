@@ -20,9 +20,9 @@ package http4s
 import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.effect.std.Env
-import cats.syntax.all._
+import cats.syntax.all.*
 import fs2.io.file.Files
-import org.http4s.client.Client
+import org.http4s.client.{Client, Middleware}
 import org.http4s.jdkhttpclient.JdkHttpClient
 
 import java.net.http
@@ -30,7 +30,8 @@ import java.net.http.HttpClient.Builder
 import javax.net.ssl.SSLContext
 
 final class JDKKubernetesClient[F[_]: Async: Files: Env] private (
-    builder: Builder
+    builder: Builder,
+    middleware: Middleware[F]
 ) extends JVMPlatform[F] {
 
   override protected def buildClient: Resource[F, Client[F]] = from(b => b)
@@ -48,22 +49,30 @@ final class JDKKubernetesClient[F[_]: Async: Files: Env] private (
     )
 
   private def from(customize: Builder => Builder) =
-    Resource.eval(Async[F].executor.flatMap { exec =>
-      Async[F].delay {
-        val client = customize(builder)
-          .executor(exec)
-          .build()
+    Resource
+      .eval(Async[F].executor.flatMap { exec =>
+        Async[F].delay {
+          val client = customize(builder)
+            .executor(exec)
+            .build()
 
-        JdkHttpClient(client)
-      }
-    })
+          JdkHttpClient(client)
+        }
+      })
+      .map(middleware)
 
 }
 
 object JDKKubernetesClient {
   def apply[F[_]: Async: Files: Env]: JDKKubernetesClient[F] =
-    new JDKKubernetesClient[F](http.HttpClient.newBuilder())
+    new JDKKubernetesClient[F](http.HttpClient.newBuilder(), identity)
 
   def apply[F[_]: Async: Files: Env](builder: Builder): JDKKubernetesClient[F] =
-    new JDKKubernetesClient[F](builder)
+    new JDKKubernetesClient[F](builder, identity)
+
+  def apply[F[_]: Async: Files: Env](
+      builder: Builder,
+      middleware: Middleware[F]
+  ): JDKKubernetesClient[F] =
+    new JDKKubernetesClient[F](builder, middleware)
 }

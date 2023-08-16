@@ -22,27 +22,33 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Env
 import fs2.io.file.Files
 import org.http4s.blaze.client.BlazeClientBuilder
-import org.http4s.client.Client
+import org.http4s.client.{Client, Middleware}
 
 import javax.net.ssl.SSLContext
 
 final class BlazeKubernetesClient[F[_]: Async: Files: Env] private (
-    builder: BlazeClientBuilder[F]
+    builder: BlazeClientBuilder[F],
+    middleware: Middleware[F]
 ) extends JVMPlatform[F] {
 
   override protected def buildClient: Resource[F, Client[F]] =
-    builder.resource
+    builder.resource.map(middleware)
 
   override protected def buildWithSSLContext
       : SSLContext => Resource[F, Client[F]] =
-    builder.withSslContext(_).resource
+    builder.withSslContext(_).resource.map(middleware)
 
 }
 
 object BlazeKubernetesClient {
   def apply[F[_]: Async: Files: Env]: BlazeKubernetesClient[F] =
-    new BlazeKubernetesClient(BlazeClientBuilder[F])
+    new BlazeKubernetesClient(BlazeClientBuilder[F], identity)
   def apply[F[_]: Async: Files: Env](
       builder: BlazeClientBuilder[F]
-  ): BlazeKubernetesClient[F] = new BlazeKubernetesClient(builder)
+  ): BlazeKubernetesClient[F] = new BlazeKubernetesClient(builder, identity)
+
+  def apply[F[_]: Async: Files: Env](
+      builder: BlazeClientBuilder[F],
+      middleware: Middleware[F]
+  ): BlazeKubernetesClient[F] = new BlazeKubernetesClient(builder, middleware)
 }
