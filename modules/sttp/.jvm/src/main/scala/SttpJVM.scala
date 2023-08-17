@@ -38,6 +38,8 @@ private[client] trait SttpJVM[F[_]] {
     *   Config to use
     * @param context
     *   If provided, overrides the config's current context
+    * @param cluster
+    *   If provided, overrides the config's current cluster
     */
   def fromConfig[T: Builder: Reader: BodySerializer](
       config: Config,
@@ -111,6 +113,8 @@ private[client] trait SttpJVM[F[_]] {
     *   Path to kubeconfig file
     * @param context
     *   If provided, overrides the config's current context
+    * @param cluster
+    *   If provided, overrides the config's current cluster
     */
   def load[T: Builder: Reader: BodySerializer](
       config: Path,
@@ -131,11 +135,14 @@ private[client] trait SttpJVM[F[_]] {
     *   Path to kubeconfig file
     * @param context
     *   If provided, overrides the config's current context
+    * @param cluster
+    *   If provided, overrides the config's current cluster
     */
   def loadFile[T: Builder: Reader: BodySerializer](
       config: String,
-      context: Option[String] = None
-  ): HttpClient[SttpF[F, *]] = load(Paths.get(config), context)
+      context: Option[String] = None,
+      cluster: Option[String] = None
+  ): HttpClient[SttpF[F, *]] = load(Paths.get(config), context, cluster)
 
   /** Build kubernetes client kubectl config file found from default locations.
     * It tries:
@@ -153,6 +160,11 @@ private[client] trait SttpJVM[F[_]] {
     * locations. It tries:
     *   - `KUBECONFIG` from env
     *   - ~/.kube/config
+    *
+    * @param context
+    *   If provided, overrides the config's current context
+    * @param cluster
+    *   If provided, overrides the config's current cluster
     */
   def kubeconfig[T: Builder: Reader: BodySerializer](
       context: Option[String] = None,

@@ -62,6 +62,8 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     *   Config to use
     * @param context
     *   If provided, overrides the config's current context
+    * @param cluster
+    *   If provided, overrides the config's current cluster
     */
   def fromConfig[T](
       config: Config,
@@ -109,6 +111,8 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     *   Path to kubeconfig file
     * @param context
     *   If provided, overrides the config's current context
+    * @param cluster
+    *   If provided, overrides the config's current cluster
     */
   final def load[T](
       config: Path,
@@ -131,6 +135,8 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     *   Path to kubeconfig file
     * @param context
     *   If provided, overrides the config's current context
+    * @param cluster
+    *   If provided, overrides the config's current cluster
     */
   final def loadFile[T](
       configFile: String,
@@ -163,6 +169,11 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     * locations. It tries:
     *   - `KUBECONFIG` from env
     *   - ~/.kube/config
+    *
+    * @param context
+    *   If provided, overrides the config's current context
+    * @param cluster
+    *   If provided, overrides the config's current cluster
     */
   final def kubeconfig[T](
       context: Option[String] = None,
