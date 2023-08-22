@@ -220,7 +220,7 @@ lazy val zio = module("zio") {
       description := "zio-http based client for kubernetes",
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio-http" % "3.0.0-RC2",
-        "dev.zio" %%% "zio-json" % "0.6.0"
+        "dev.zio" %%% "zio-json" % "0.6.1"
       )
     )
     .dependsOn(client, `zio-json`)
@@ -340,7 +340,7 @@ lazy val `zio-json` = module("zio-json") {
     .settings(
       description := "zio-json codecs for kubernetes data models",
       libraryDependencies ++= Seq(
-        "dev.zio" %%% "zio-json" % "0.6.0"
+        "dev.zio" %%% "zio-json" % "0.6.1"
       )
     )
     .dependsOn(objects)
