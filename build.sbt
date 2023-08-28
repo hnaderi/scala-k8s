@@ -438,7 +438,7 @@ lazy val exampleCrossPlatform = example("cross-platform") {
     )
     .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
     .nativeSettings(
-      libraryDependencies += "com.armanbilge" %%% "epollcat" % "0.1.5",
+      libraryDependencies += "com.armanbilge" %%% "epollcat" % "0.1.6",
       envVars ++= Map("S2N_DONT_MLOCK" -> "1")
     )
     .dependsOn(http4sEmber, circe)
