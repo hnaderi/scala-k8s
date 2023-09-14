@@ -2,7 +2,7 @@ import dev.hnaderi.k8s.generator.KubernetesJsonPointerGeneratorPlugin
 import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
 import sbtcrossproject.CrossProject
 
-ThisBuild / tlBaseVersion := "0.14"
+ThisBuild / tlBaseVersion := "0.15"
 
 ThisBuild / organization := "dev.hnaderi"
 ThisBuild / organizationName := "Hossein Naderi"
@@ -41,7 +41,7 @@ ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
   scalas = Nil,
   javas = Nil
 )
-ThisBuild / kubernetesVersion := "1.28.1"
+ThisBuild / kubernetesVersion := "1.28.2"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
   new NodeJSEnv(NodeJSEnv.Config().withArgs(List("--max-old-space-size=6144")))
