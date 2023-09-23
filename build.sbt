@@ -365,7 +365,7 @@ lazy val manifests = module("manifests") {
     .settings(
       description := "kubernetes manifests utilities",
       libraryDependencies ++= Seq(
-        "dev.hnaderi" %%% "yaml4s-backend" % "0.1.1"
+        "dev.hnaderi" %%% "yaml4s-backend" % "0.2.0"
       )
     )
     .dependsOn(objects)
