@@ -41,7 +41,7 @@ ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
   scalas = Nil,
   javas = Nil
 )
-ThisBuild / kubernetesVersion := "1.28.3"
+ThisBuild / kubernetesVersion := "1.28.4"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
   new NodeJSEnv(NodeJSEnv.Config().withArgs(List("--max-old-space-size=6144")))
@@ -134,7 +134,7 @@ lazy val javaSSL = module("java-ssl") {
     .settings(
       description := "java ssl for kubernetes config",
       libraryDependencies ++= Seq(
-        "org.bouncycastle" % "bcpkix-jdk18on" % "1.76"
+        "org.bouncycastle" % "bcpkix-jdk18on" % "1.77"
       )
     )
     .dependsOn(client)
@@ -146,7 +146,7 @@ lazy val http4s = module("http4s") {
     .settings(
       description := "http4s based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-client" % "0.23.23",
+        "org.http4s" %%% "http4s-client" % "0.23.24",
         "org.typelevel" %%% "jawn-fs2" % "2.4.0"
       )
     )
@@ -160,7 +160,7 @@ lazy val http4sEmber = module("http4s-ember") {
     .settings(
       description := "http4s ember based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-ember-client" % "0.23.23"
+        "org.http4s" %%% "http4s-ember-client" % "0.23.24"
       )
     )
     .dependsOn(http4s)
@@ -377,7 +377,7 @@ lazy val docs = project
   .enablePlugins(ScalaK8sWebsite)
   .settings(
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-circe" % "0.23.23",
+      "org.http4s" %%% "http4s-circe" % "0.23.24",
       "com.softwaremill.sttp.client3" %%% "circe" % "3.9.1"
     )
   )
@@ -415,7 +415,7 @@ lazy val exampleJVM = example("jvm") {
     .crossType(CrossType.Pure)
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-circe" % "0.23.23",
+        "org.http4s" %%% "http4s-circe" % "0.23.24",
         "com.softwaremill.sttp.client3" %%% "circe" % "3.9.1"
       )
     )
@@ -427,7 +427,7 @@ lazy val exampleCrossPlatform = example("cross-platform") {
     .crossType(CrossType.Pure)
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-circe" % "0.23.23"
+        "org.http4s" %%% "http4s-circe" % "0.23.24"
       )
     )
     .jsSettings(
