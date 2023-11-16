@@ -35,7 +35,13 @@ object ScalaK8sWebsite extends AutoPlugin {
         )
         .site
         .mainNavigation(appendLinks =
-          Seq(ThemeNavigationSection("Related projects", relatedProjectLinks))
+          Seq(
+            ThemeNavigationSection(
+              "Related projects",
+              relatedProjectLinks.head,
+              relatedProjectLinks.tail: _*
+            )
+          )
         )
     }
   )
