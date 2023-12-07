@@ -25,10 +25,11 @@ import zio.http._
 import zio.json._
 
 import ZIOBackend._
+import ScopedZIO._
 
 final case class ZIOBackend(
     client: Client
-) extends HttpBackend[Task] {
+) extends HttpBackend[ScopedTask] {
 
   override def send[O: Decoder](
       url: String,
@@ -36,7 +37,7 @@ final case class ZIOBackend(
       headers: Seq[(String, String)],
       params: Seq[(String, String)],
       cookies: Seq[(String, String)]
-  ): Task[O] = for {
+  ): ScopedTask[O] = for {
     u <- urlFor(url, params)
     con <- contentType(verb)
     req = Request(
@@ -57,7 +58,7 @@ final case class ZIOBackend(
       headers: Seq[(String, String)],
       params: Seq[(String, String)],
       cookies: Seq[(String, String)]
-  ): Task[O] = for {
+  ): ScopedTask[O] = for {
     u <- urlFor(url, params)
     con <- contentType(verb)
     req = Request(
@@ -102,7 +103,7 @@ final case class ZIOBackend(
   private def urlFor(
       url: String,
       params: Seq[(String, String)]
-  ): Task[http.URL] = for {
+  ): ScopedTask[http.URL] = for {
     u <- ZIO.fromEither(URL.decode(url))
     qp = params.foldLeft(Map.empty[String, Chunk[String]]) {
       case (qs, (k, v)) =>
@@ -111,11 +112,11 @@ final case class ZIOBackend(
           case Some(value) => qs.updated(k, Chunk(v) ++ value)
         }
     }
-  } yield u.withQueryParams(qp)
+  } yield u.queryParams(qp)
 
-  private def expect[O: Decoder](req: http.Request): Task[O] =
+  private def expect[O: Decoder](req: http.Request): ScopedTask[O] =
     client.request(req).flatMap { res =>
-      def readBody[T: Decoder]: Task[T] = res.body.asString.flatMap(body =>
+      def readBody[T: Decoder]: ScopedTask[T] = res.body.asString.flatMap(body =>
         ZIO.fromEither(
           JsonDecoder[T]
             .decodeJson(body)
@@ -142,7 +143,7 @@ final case class ZIOBackend(
 object ZIOBackend {
   final case class DecodeError(msg: String) extends Exception(msg)
 
-  def make: ZLayer[Client, Nothing, ZIOBackend] = ZLayer {
+  def make: ZLayer[Client, Nothing, ZIOBackend] = Scope.default >>> ZLayer {
     ZIO.service[Client].map(ZIOBackend(_))
   }
 }

@@ -18,14 +18,19 @@ package dev.hnaderi.k8s.client
 
 import zio._
 
+object ScopedZIO {
+  type ScopedTask[+T] = ZIO[Any & Scope, Throwable, T]
+}
+
+import ScopedZIO._
 object ZIOKubernetesClient {
   def send[O](
       req: HttpRequest[O]
-  ): ZIO[HttpClient[Task], Throwable, O] =
-    ZIO.service[HttpClient[Task]].flatMap(req.send)
+  ): ZIO[HttpClient[ScopedTask] with Scope, Throwable, O] =
+    ZIO.service[HttpClient[ScopedTask]].flatMap(req.send)
 
-  def make(url: String): ZLayer[ZIOBackend, Nothing, HttpClient[Task]] =
+  def make(url: String): ZLayer[ZIOBackend, Nothing, HttpClient[ScopedTask]] =
     ZLayer {
-      ZIO.service[HttpBackend[Task]].map(HttpClient(url, _))
+      ZIO.service[HttpBackend[ScopedTask]].map(HttpClient(url, _))
     }
 }
