@@ -38,6 +38,7 @@ object ZIOExample extends ZIOAppDefault {
 
   override def run: ZIO[Environment with ZIOAppArgs with Scope, Any, Any] =
     app.provide(
+      Scope.default,
       ZClient.default,
       ZIOBackend.make,
       ZIOKubernetesClient.make("http://localhost:8001")
