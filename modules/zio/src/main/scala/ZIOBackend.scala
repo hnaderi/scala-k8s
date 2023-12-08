@@ -116,14 +116,15 @@ final case class ZIOBackend(
 
   private def expect[O: Decoder](req: http.Request): ScopedTask[O] =
     client.request(req).flatMap { res =>
-      def readBody[T: Decoder]: ScopedTask[T] = res.body.asString.flatMap(body =>
-        ZIO.fromEither(
-          JsonDecoder[T]
-            .decodeJson(body)
-            .left
-            .map(DecodeError(_))
+      def readBody[T: Decoder]: ScopedTask[T] =
+        res.body.asString.flatMap(body =>
+          ZIO.fromEither(
+            JsonDecoder[T]
+              .decodeJson(body)
+              .left
+              .map(DecodeError(_))
+          )
         )
-      )
 
       if (res.status.isSuccess) readBody[O]
       else {
