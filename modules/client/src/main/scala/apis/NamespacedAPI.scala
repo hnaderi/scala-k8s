@@ -44,7 +44,17 @@ abstract class APIGroupAPI(base: String) {
         resourceVersion: Option[String] = None,
         resourceVersionMatch: Option[String] = None,
         timeout: Option[FiniteDuration] = None
-    ) extends ListingRequest[RES, COL](clusterwideUrl)
+    ) extends ListingRequest[RES, COL](
+          clusterwideUrl,
+          allowWatchBookmarks = allowWatchBookmarks,
+          continue = continue,
+          fieldSelector = fieldSelector,
+          labelSelector = labelSelector,
+          limit = limit,
+          resourceVersion = resourceVersion,
+          resourceVersionMatch = resourceVersionMatch,
+          timeout = timeout
+        )
 
     trait ClusterwideAPIBuilders {
       def list(
