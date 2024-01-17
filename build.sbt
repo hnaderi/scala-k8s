@@ -313,7 +313,7 @@ lazy val `play-json` = module("play-json") {
     .settings(
       description := "play-json codecs for kubernetes data models",
       libraryDependencies ++= Seq(
-        ("org.playframework" %%% "play-json" % "3.0.1")
+        ("org.playframework" %%% "play-json" % "3.0.2")
           .cross(CrossVersion.for3Use2_13)
       )
     )
