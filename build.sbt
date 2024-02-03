@@ -83,7 +83,7 @@ lazy val root =
     )
 
 lazy val circeVersion = "0.14.6"
-lazy val munitVersion = "1.0.0-M10"
+lazy val munitVersion = "1.0.0-M11"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
