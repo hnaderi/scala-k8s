@@ -1,6 +1,6 @@
 lazy val circeVersion = "0.14.2"
 
-ThisBuild / scalaVersion := "2.12.18"
+ThisBuild / scalaVersion := "2.12.19"
 ThisBuild / scalacOptions += "-Ypartial-unification"
 
 lazy val generator = project.settings(
