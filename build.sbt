@@ -206,7 +206,7 @@ lazy val sttp = module("sttp") {
     .settings(
       description := "sttp based client for kubernetes",
       libraryDependencies ++= Seq(
-        "com.softwaremill.sttp.client3" %%% "core" % "3.9.3"
+        "com.softwaremill.sttp.client3" %%% "core" % "3.9.4"
       )
     )
     .dependsOn(client, jawn)
@@ -378,7 +378,7 @@ lazy val docs = project
   .settings(
     libraryDependencies ++= Seq(
       "org.http4s" %%% "http4s-circe" % "0.23.26",
-      "com.softwaremill.sttp.client3" %%% "circe" % "3.9.3"
+      "com.softwaremill.sttp.client3" %%% "circe" % "3.9.4"
     )
   )
   .dependsOn(http4sEmber.jvm, sttp.jvm, circe.jvm, manifests.jvm)
@@ -416,7 +416,7 @@ lazy val exampleJVM = example("jvm") {
     .settings(
       libraryDependencies ++= Seq(
         "org.http4s" %%% "http4s-circe" % "0.23.26",
-        "com.softwaremill.sttp.client3" %%% "circe" % "3.9.3"
+        "com.softwaremill.sttp.client3" %%% "circe" % "3.9.4"
       )
     )
     .dependsOn(http4sNetty, http4sEmber, circe, zio, sttp)
