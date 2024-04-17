@@ -233,7 +233,7 @@ lazy val scalacheck = module("scalacheck") {
       description := "scalacheck generators for kubernetes data models",
       k8sUnmanagedTarget := rootDir.value / "modules" / "scalacheck" / "src" / "main" / "scala",
       libraryDependencies ++= Seq(
-        "org.scalacheck" %%% "scalacheck" % "1.17.0"
+        "org.scalacheck" %%% "scalacheck" % "1.17.1"
       )
     )
     .dependsOn(objects)
