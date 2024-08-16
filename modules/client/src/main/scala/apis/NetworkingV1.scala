@@ -24,5 +24,5 @@ trait NetworkingV1 {
 }
 
 object NetworkingV1
-    extends APIGroupAPI("/apis/networking.k8s.io/v1/")
+    extends APIGroupAPI("/apis/networking.k8s.io/v1")
     with NetworkingV1
