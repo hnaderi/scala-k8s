@@ -68,8 +68,8 @@ private[http4s] abstract class JVMPlatform[F[_]](implicit
             "Cannot find where/how to connect using the provided config!"
           ).raiseError
         )
-      case Some((cluster, server, auth)) =>
-        val sslContext = F.blocking(SSLContexts.from(cluster, auth))
+      case Some((clusterData, server, auth)) =>
+        val sslContext = F.blocking(SSLContexts.from(clusterData, auth))
 
         Resource
           .eval(sslContext)
