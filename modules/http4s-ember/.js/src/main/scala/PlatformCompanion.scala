@@ -102,10 +102,10 @@ private[http4s] abstract class PlatformCompanion[F[_]: Async: Files: Env]
             "Cannot find where/how to connect using the provided config!"
           ).raiseError
         )
-      case Some((cluster, server, auth)) =>
+      case Some((clusterData, server, auth)) =>
         ssl(
-          caFile = cluster.`certificate-authority`,
-          caData = cluster.`certificate-authority-data`,
+          caFile = clusterData.`certificate-authority`,
+          caData = clusterData.`certificate-authority-data`,
           clientCert = auth.`client-certificate-data`,
           clientCertFile = auth.`client-certificate`,
           clientKey = auth.`client-key-data`,

@@ -59,8 +59,8 @@ private[client] trait SttpJVM[F[_]] {
         throw new IllegalArgumentException(
           "Cannot find where/how to connect using the provided config!"
         )
-      case Some((cluster, server, auth)) =>
-        val ssl = SSLContexts.from(cluster, auth)
+      case Some((clusterData, server, auth)) =>
+        val ssl = SSLContexts.from(clusterData, auth)
         HttpClient[SttpF[F, *]](
           server,
           SttpKBackend[F, T](buildWithSSLContext(ssl)),
@@ -124,8 +124,8 @@ private[client] trait SttpJVM[F[_]] {
     val str = readFile(config)
     manifest.parse[Config](str) match {
       case Left(error) => throw error
-      case Right(config) =>
-        fromConfig(config, context = context, cluster = cluster)
+      case Right(configData) =>
+        fromConfig(configData, context = context, cluster = cluster)
     }
   }
 
