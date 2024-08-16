@@ -107,6 +107,29 @@ final class Http4sBackend[F[_], T] private (client: Client[F])(implicit
       )
     )
 
+  private def parseJsonStream: fs2.Pipe[F, Byte, T] = {
+    import dev.hnaderi.k8s.jawn
+    import org.typelevel.jawn._
+    import fs2.{Pull, Chunk}
+
+    implicit val jawnFacade: Facade.SimpleFacade[T] = jawn.jawnFacade[T]
+    def go(
+        parser: AsyncParser[T]
+    )(s: Stream[F, Chunk[Byte]]): Pull[F, T, Unit] = {
+      def handle(attempt: Either[ParseException, collection.Seq[T]]) =
+        attempt.fold(Pull.raiseError[F], js => Pull.output(Chunk.from(js)))
+
+      s.pull.uncons1.flatMap {
+        case Some((a, stream)) =>
+          handle(parser.absorb(a.toByteBuffer)) >> go(parser)(stream)
+        case None =>
+          handle(parser.finish()) >> Pull.done
+      }
+    }
+
+    src => go(AsyncParser[T](AsyncParser.ValueStream))(src.chunks).stream
+  }
+
   override def connect[O: Decoder](
       url: String,
       verb: APIVerb,
@@ -115,15 +138,11 @@ final class Http4sBackend[F[_], T] private (client: Client[F])(implicit
       cookies: Seq[(String, String)]
   ): Stream[F, O] = {
     import Stream._
-    import org.typelevel.jawn.fs2._
-    import dev.hnaderi.k8s.jawn
-    import org.typelevel.jawn.Facade
-    implicit val jawnFacade: Facade.SimpleFacade[T] = jawn.jawnFacade[T]
 
     eval(urlFrom(url, params))
       .map(methodFor(verb)(_, Headers(headers) ++ cookiesFor(cookies)))
       .flatMap(client.stream(_))
-      .flatMap(_.body.chunks.parseJsonStream[T])
+      .flatMap(_.body.through(parseJsonStream))
       .flatMap { s =>
         s.decodeTo[O]
           .fold(err => raiseError[F](new Exception(s"$err\n$s")), emit(_))
