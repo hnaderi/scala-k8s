@@ -146,8 +146,7 @@ lazy val http4s = module("http4s") {
     .settings(
       description := "http4s based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-client" % "0.23.27",
-        "org.typelevel" %%% "jawn-fs2" % "2.4.0"
+        "org.http4s" %%% "http4s-client" % "0.23.27"
       )
     )
     .dependsOn(client, jawn)
