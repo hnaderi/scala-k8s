@@ -14,7 +14,7 @@ ThisBuild / developers := List(
 
 val scala212 = "2.12.20"
 val scala213 = "2.13.15"
-val scala3 = "3.3.3"
+val scala3 = "3.3.4"
 val PrimaryJava = JavaSpec.temurin("11")
 val LTSJava = JavaSpec.temurin("17")
 
