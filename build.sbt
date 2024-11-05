@@ -181,7 +181,7 @@ lazy val http4sBlaze = module("http4s-blaze") {
     .settings(
       description := "http4s blaze based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %% "http4s-blaze-client" % "0.23.16"
+        "org.http4s" %% "http4s-blaze-client" % "0.23.17"
       )
     )
     .dependsOn(http4s)
