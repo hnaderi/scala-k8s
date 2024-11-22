@@ -41,7 +41,7 @@ ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
   scalas = Nil,
   javas = Nil
 )
-ThisBuild / kubernetesVersion := "1.31.2"
+ThisBuild / kubernetesVersion := "1.31.3"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
   new NodeJSEnv(NodeJSEnv.Config().withArgs(List("--max-old-space-size=6144")))
