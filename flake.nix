@@ -21,7 +21,7 @@
             nodejs.enable = true;
             native = {
               enable = true;
-              libraries = with pkgs; [ s2n libyaml ];
+              libraries = with pkgs; [ s2n-tls libyaml ];
             };
           };
         };
