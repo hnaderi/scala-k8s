@@ -20,7 +20,7 @@ val LTSJava = JavaSpec.temurin("17")
 
 val supportScalaVersions = Seq(scala212, scala213, scala3)
 
-ThisBuild / tlSonatypeUseLegacyHost := false
+ThisBuild / sonatypeCredentialHost := xerial.sbt.Sonatype.sonatypeLegacy
 ThisBuild / tlSitePublishBranch := Some("main")
 ThisBuild / tlJdkRelease := Some(11)
 ThisBuild / scalaVersion := scala212
