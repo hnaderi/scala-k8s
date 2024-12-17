@@ -81,8 +81,8 @@ lazy val root =
       name := "scala-k8s"
     )
 
-lazy val circeVersion = "0.14.8"
-lazy val munitVersion = "1.0.0-M11"
+lazy val circeVersion = "0.14.10"
+lazy val munitVersion = "1.0.3"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
@@ -231,7 +231,7 @@ lazy val scalacheck = module("scalacheck") {
       description := "scalacheck generators for kubernetes data models",
       k8sUnmanagedTarget := rootDir.value / "modules" / "scalacheck" / "src" / "main" / "scala",
       libraryDependencies ++= Seq(
-        "org.scalacheck" %%% "scalacheck" % "1.17.1"
+        "org.scalacheck" %%% "scalacheck" % "1.18.1"
       )
     )
     .dependsOn(objects)
@@ -272,7 +272,7 @@ lazy val codecTest = module("codec-test") {
       description := "internal codec tests for scala-k8s objects",
       libraryDependencies ++= Seq(
         "org.scalameta" %%% "munit" % munitVersion,
-        "org.scalameta" %%% "munit-scalacheck" % munitVersion
+        "org.scalameta" %%% "munit-scalacheck" % "1.0.0"
       )
     )
     .dependsOn(scalacheck)
@@ -351,7 +351,7 @@ lazy val jawn = module("jawn") {
     .settings(
       description := "jawn facade for kubernetes data models parsing",
       libraryDependencies ++= Seq(
-        "org.typelevel" %%% "jawn-parser" % "1.5.1"
+        "org.typelevel" %%% "jawn-parser" % "1.6.0"
       )
     )
     .dependsOn(objects)
@@ -363,7 +363,7 @@ lazy val manifests = module("manifests") {
     .settings(
       description := "kubernetes manifests utilities",
       libraryDependencies ++= Seq(
-        "dev.hnaderi" %%% "yaml4s-backend" % "0.2.2"
+        "dev.hnaderi" %%% "yaml4s-backend" % "0.3.0"
       )
     )
     .dependsOn(objects)
