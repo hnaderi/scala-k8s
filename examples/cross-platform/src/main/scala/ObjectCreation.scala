@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-//> using dep "dev.hnaderi::scala-k8s-manifests:0.20.2"
+//> using dep "dev.hnaderi::scala-k8s-manifests:0.20.3"
 
 package example
 
