@@ -140,7 +140,7 @@ val service = Service(
 
 ## Manifest example
 
-Now you can merge all of your kubernetes resource definitions in to one manifest
+Now you can merge all of your kubernetes resource definitions into one manifest
 ```scala mdoc:silent
 val all : Seq[KObject] = Seq(service, config, deployment)
 val manifest = all.asManifest
