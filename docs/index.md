@@ -3,7 +3,7 @@
 ## Usage
 
 This library is currently available for Scala binary versions 2.12, 2.13 and 3.2 on JVM/JS/Native.  
-This library is architecured in a microkernel fashion and all the main kubernetes stuff are implemented/generated in pure scala, and integration modules are provided separately.  
+This library is designed in a microkernel fashion and all the main kubernetes stuff are implemented/generated in pure scala, and integration modules are provided separately.  
 main modules are:
 
 - `objects` raw kubernetes objects, which has no dependency
