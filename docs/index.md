@@ -42,7 +42,7 @@ libraryDependencies ++= Seq(
 first off, we'll import the following
 ```scala mdoc
 import dev.hnaderi.k8s._  // base packages
-import dev.hnaderi.k8s.implicits._  // implicit coversions and helpers
+import dev.hnaderi.k8s.implicits._  // implicit conversions and helpers
 import dev.hnaderi.k8s.manifest._  // manifest syntax
 ``` 
 every other object definition is under kubernetes packages `io.k8s` as specified in the spec, you should rely on 
