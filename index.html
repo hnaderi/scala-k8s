@@ -133,7 +133,7 @@
         
         <h2 id="usage" class="section"><a class="anchor-link left" href="#usage"><i class="icofont-laika link">&#xef71;</i></a>Usage</h2>
         <p>This library is currently available for Scala binary versions 2.12, 2.13 and 3.2 on JVM/JS/Native.<br>
-        This library is architecured in a microkernel fashion and all the main kubernetes stuff are implemented/generated in pure scala, and integration modules are provided separately.<br>
+        This library is designed in a microkernel fashion and all the main kubernetes stuff are implemented/generated in pure scala, and integration modules are provided separately.<br>
         main modules are:</p>
         <ul>
           <li><code>objects</code> raw kubernetes objects, which has no dependency</li>
@@ -165,7 +165,7 @@
         <h1 id="manifest-and-object-generation" class="section"><a class="anchor-link left" href="#manifest-and-object-generation"><i class="icofont-laika link">&#xef71;</i></a>Manifest and object generation</h1>
         <p>first off, we&#39;ll import the following</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">_</span><span>  </span><span class="comment">// base packages
-</span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">implicits</span><span>.</span><span class="identifier">_</span><span>  </span><span class="comment">// implicit coversions and helpers
+</span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">implicits</span><span>.</span><span class="identifier">_</span><span>  </span><span class="comment">// implicit conversions and helpers
 </span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">manifest</span><span>.</span><span class="identifier">_</span><span>  </span><span class="comment">// manifest syntax</span></code></pre>
         <p>every other object definition is under kubernetes packages <code>io.k8s</code> as specified in the spec, you should rely on 
         IDE auto import for those.</p>
@@ -230,7 +230,7 @@
 )</span></code></pre>
         
         <h2 id="manifest-example" class="section"><a class="anchor-link left" href="#manifest-example"><i class="icofont-laika link">&#xef71;</i></a>Manifest example</h2>
-        <p>Now you can merge all of your kubernetes resource definitions in to one manifest</p>
+        <p>Now you can merge all of your kubernetes resource definitions into one manifest</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">all</span><span> : </span><span class="type-name">Seq</span><span>[</span><span class="type-name">KObject</span><span>] = </span><span class="type-name">Seq</span><span>(</span><span class="identifier">service</span><span>, </span><span class="identifier">config</span><span>, </span><span class="identifier">deployment</span><span>)
 </span><span class="keyword">val</span><span> </span><span class="identifier">manifest</span><span> = </span><span class="identifier">all</span><span>.</span><span class="identifier">asManifest</span></code></pre>
         <p>which will output like this</p>
@@ -324,7 +324,7 @@
 </span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">http4s</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="identifier">_</span><span>
 
 </span><span class="keyword">val</span><span> </span><span class="identifier">buildClient</span><span> = </span><span class="type-name">EmberKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">defaultConfig</span><span>[</span><span class="type-name">Json</span><span>]
-</span><span class="comment">// buildClient: Resource[IO, http4s.package.KClient[IO]] = Bind(Bind(Bind(Pure(()),cats.effect.kernel.Resource$$Lambda$10955/0x0000000802f3c040@18693a99),cats.effect.kernel.Resource$$Lambda$10956/0x0000000802f3b040@65ea5d97),cats.effect.kernel.Resource$$Lambda$10957/0x0000000802f3a840@6d17ce01)
+</span><span class="comment">// buildClient: Resource[IO, http4s.package.KClient[IO]] = Bind(Bind(Bind(Pure(()),cats.effect.kernel.Resource$$Lambda$13323/0x00000008034bc040@6a862661),cats.effect.kernel.Resource$$Lambda$13324/0x00000008034bb840@67508be9),cats.effect.kernel.Resource$$Lambda$13325/0x00000008034ba840@51973351)
 </span><span> 
 </span><span class="keyword">val</span><span> </span><span class="identifier">getNodes</span><span> = </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>)
 </span><span class="comment">// getNodes: IO[io.k8s.api.core.v1.NodeList] = IO(...)
@@ -398,7 +398,7 @@
       .</span><span class="identifier">move</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;a&quot;</span><span>), </span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;b&quot;</span><span>))
       .</span><span class="identifier">remove</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">data</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;to-delete&quot;</span><span>))
   )
-</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@7f97bbe0,JsonPatch,None,None,None,None)</span></code></pre>
+</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@2f563a0f,JsonPatch,None,None,None,None)</span></code></pre>
         <p>Server side apply:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch3</span><span> = </span><span class="type-name">APIs</span><span>
   .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
