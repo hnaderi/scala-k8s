@@ -24,7 +24,7 @@ object JSONSchemaPropsOrArray {
   final case class SingleValue(value: JSONSchemaProps)
       extends AnyVal
       with JSONSchemaPropsOrArray
-  final case class MutipleValues(value: Seq[JSONSchemaProps])
+  final case class MultipleValues(value: Seq[JSONSchemaProps])
       extends AnyVal
       with JSONSchemaPropsOrArray
   def apply(value: JSONSchemaProps): SingleValue = SingleValue(value)
@@ -32,14 +32,16 @@ object JSONSchemaPropsOrArray {
       v1: JSONSchemaProps,
       v2: JSONSchemaProps,
       others: JSONSchemaProps*
-  ): MutipleValues = MutipleValues(Seq(v1, v2) ++ others)
-  def apply(values: Seq[JSONSchemaProps]): MutipleValues = MutipleValues(values)
+  ): MultipleValues = MultipleValues(Seq(v1, v2) ++ others)
+  def apply(values: Seq[JSONSchemaProps]): MultipleValues = MultipleValues(
+    values
+  )
 
   implicit val encoder: Encoder[JSONSchemaPropsOrArray] =
     new Encoder[JSONSchemaPropsOrArray] {
       def apply[T: Builder](r: JSONSchemaPropsOrArray): T = r match {
-        case MutipleValues(value) => value.encodeTo
-        case SingleValue(value)   => value.encodeTo
+        case MultipleValues(value) => value.encodeTo
+        case SingleValue(value)    => value.encodeTo
       }
     }
 
@@ -47,6 +49,6 @@ object JSONSchemaPropsOrArray {
     Decoder[JSONSchemaProps]
       .map(SingleValue(_))
       .orElse(
-        Decoder[Seq[JSONSchemaProps]].map(MutipleValues(_))
+        Decoder[Seq[JSONSchemaProps]].map(MultipleValues(_))
       )
 }
