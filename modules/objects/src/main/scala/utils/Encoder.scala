@@ -65,10 +65,10 @@ object Encoder {
       enc: Encoder[A]
   ): Encoder[Map[String, A]] =
     new Encoder[Map[String, A]] {
-      def apply[T](r: Map[String, A])(implicit b: Builder[T]): T = b.obj(r.map {
-        case (k, v) =>
+      def apply[T](r: Map[String, A])(implicit b: Builder[T]): T =
+        b.obj(r.map { case (k, v) =>
           (k, enc(v))
-      })
+        })
     }
 
   def emptyObj[R]: Encoder[R] = new Encoder[R] {
