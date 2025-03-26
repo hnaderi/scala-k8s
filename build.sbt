@@ -13,7 +13,7 @@ ThisBuild / developers := List(
 )
 
 val scala212 = "2.12.20"
-val scala213 = "2.13.15"
+val scala213 = "2.13.16"
 val scala3 = "3.3.3"
 val PrimaryJava = JavaSpec.temurin("11")
 val LTSJava = JavaSpec.temurin("17")
@@ -169,7 +169,7 @@ lazy val http4sNetty = module("http4s-netty") {
     .settings(
       description := "http4s netty based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %% "http4s-netty-client" % "0.5.22"
+        "org.http4s" %% "http4s-netty-client" % "0.5.23"
       )
     )
     .dependsOn(http4s)
