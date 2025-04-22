@@ -173,6 +173,82 @@ All fields have the following helper methods:
 println(config3.asManifest)
 ```
 
+## Custom resources
+
+For defining custom resource, for instance CRDs or non-standard kubernetes resources that aren't part of the kubernetes spec:
+
+1. First you need to model your resources:
+
+```scala mdoc
+case class CustomResourceSpec(
+  someKey: String,
+  // other fields
+)
+
+case class CustomResource(
+  spec: CustomResourceSpec
+  // other fields
+)
+
+```
+
+2. Then you need to define instances for @:api(dev.hnaderi.k8s.utils.Encoder) and @:api(dev.hnaderi.k8s.utils.Decoder), so your data model becomes serializable.
+
+```scala mdoc
+import dev.hnaderi.k8s.utils.*
+// in the companion objects
+object CustomResourceSpec{
+    implicit val decoder: Decoder[CustomResourceSpec] = new Decoder[CustomResourceSpec] {
+      def apply[T : Reader](t: T): Either[String, CustomResourceSpec] = for {
+          obj <- ObjectReader(t)
+          value <- obj.read[String]("someKey")
+          // Other fields
+      } yield CustomResourceSpec(value)
+    }
+
+    implicit val encoder : Encoder[CustomResourceSpec] = new Encoder[CustomResourceSpec] {
+        def apply[T : Builder](o: CustomResourceSpec) : T = {
+          val obj = ObjectWriter[T]()
+          obj
+            .write("someKey", o.someKey)
+            // Other fields
+            .build
+        }
+    }
+}
+
+object CustomResource{
+    implicit val encoder : Encoder[CustomResource] = new Encoder[CustomResource] {
+        def apply[T : Builder](o: CustomResource) : T = {
+          val obj = ObjectWriter[T]()
+          obj
+            .write("kind", "MyCustomResource")
+            .write("apiVersion", "example.com/v1CustomResoure")
+            .write("spec", o.spec)
+            // Other fields
+            .build
+        }
+    }
+
+    implicit val decoder: Decoder[CustomResource] = new Decoder[CustomResource] {
+      def apply[T : Reader](t: T): Either[String, CustomResource] = for {
+          obj <- ObjectReader(t)
+          spec <- obj.read[CustomResourceSpec]("spec")
+          // Other fields
+      } yield CustomResource(spec)
+    }
+}
+```
+
+```scala mdoc:invisible
+case class CustomResourceList()
+object CustomResourceList{
+  implicit val decoder: Decoder[CustomResourceList] = new Decoder[CustomResourceList] {
+    def apply[T : Reader](t: T): Either[String, CustomResourceList] = Left("")
+  }
+}
+```
+
 # Client
 
 Scala k8s provides a kubernetes client built on top of a generic http client, this allows us to use different http clients based on project ecosystem and other considerations.
@@ -315,13 +391,47 @@ val patch5 = APIs
 ```
 
 ## Implementing new requests
-you can also implement your own requests easily, however if you need a request that is widely used and is standard, please open an issue or better, a pull request, so everyone can use it.
+you can also implement your own requests easily (for example CRDs or non-standard resources), however if you need a request that is widely used and is standard, please open an issue or better, a pull request, so everyone can use it.
+
+First you may need to define your custom data models (see [here][Custom Resources])  
+Then, you can define your APIs requests:
+
+### Specific requests
 
 ```scala mdoc
 import dev.hnaderi.k8s.client._
 
-type CustomResource = String
 case class MyCustomRequest(name: String) extends GetRequest[CustomResource](
   s"/apis/my.custom-resource.io/$name"
 )
+```
+
+Some of the other available request types are:  
+@:api(dev.hnaderi.k8s.client.ListingRequest), 
+@:api(dev.hnaderi.k8s.client.GetRequest), 
+@:api(dev.hnaderi.k8s.client.CreateRequest), 
+@:api(dev.hnaderi.k8s.client.ReplaceRequest), 
+@:api(dev.hnaderi.k8s.client.PartialUpdateRequest), 
+@:api(dev.hnaderi.k8s.client.DeleteCollectionRequest), 
+@:api(dev.hnaderi.k8s.client.DeleteRequest), 
+@:api(dev.hnaderi.k8s.client.APIResourceListingRequest), 
+@:api(dev.hnaderi.k8s.client.APIGroupListingRequest)
+
+### API group requests
+
+```scala mdoc
+object MyCustomAPIGroup
+    extends APIGroupAPI("/apis/custom.api.group.type/v1")
+
+object MyCustomResourceAPIs
+    extends MyCustomAPIGroup.ClusterResourceAPI[
+      CustomResource,
+      CustomResourceList
+    ]("customresourcedefinitions")
+```
+
+Usage:
+
+```scala mdoc:silent
+val customRequest = MyCustomResourceAPIs.list()
 ```

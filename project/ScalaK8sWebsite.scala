@@ -1,9 +1,19 @@
-import sbt._
-import org.typelevel.sbt.TypelevelSitePlugin
-import laika.helium.config._
-import laika.ast.Path.Root
-import TypelevelSitePlugin.autoImport._
 import cats.data.NonEmptyList
+import laika.ast.Path.Root
+import laika.config.ApiLinks
+import laika.config.LaikaKeys
+import laika.config.LinkConfig
+import laika.config.SourceLinks
+import laika.config.SyntaxHighlighting
+import laika.format.Markdown
+import laika.helium.config.*
+import laika.sbt.LaikaConfig
+import laika.sbt.LaikaPlugin.autoImport.*
+import org.typelevel.sbt.TypelevelSitePlugin
+import sbt.*
+import sbt.Keys.*
+
+import TypelevelSitePlugin.autoImport.*
 
 object ScalaK8sWebsite extends AutoPlugin {
   override def requires: Plugins = TypelevelSitePlugin
@@ -43,6 +53,15 @@ object ScalaK8sWebsite extends AutoPlugin {
             )
           )
         )
+    },
+    laikaConfig := {
+      val apiDoc = tlSiteApiUrl.value.toSeq
+        .map(_.toString())
+        .map(ApiLinks(_).withPackagePrefix("dev.hnaderi.k8s"))
+
+      LaikaConfig.defaults.withConfigValue(
+        LinkConfig.empty.addApiLinks(apiDoc: _*)
+      )
     }
   )
 
