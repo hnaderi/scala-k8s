@@ -19,11 +19,7 @@ package example
 import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.ZIOBackend
 import dev.hnaderi.k8s.client.ZIOKubernetesClient
-import zio.Scope
-import zio.ZIO
-import zio.ZIOAppArgs
-import zio.ZIOAppDefault
-import zio._
+import zio.*
 import zio.http.ZClient
 
 //NOTE run `kubectl proxy` before running this example
