@@ -113,6 +113,7 @@
     <li class="level2 nav-leaf"><a href="#service-example">Service example</a></li>
     <li class="level2 nav-leaf"><a href="#manifest-example">Manifest example</a></li>
     <li class="level2 nav-leaf"><a href="#helpers">Helpers</a></li>
+    <li class="level2 nav-leaf"><a href="#custom-resources">Custom resources</a></li>
     <li class="level1 nav-node"><a href="#client">Client</a></li>
     <li class="level2 nav-leaf"><a href="#http4s-based-client">Http4s based client</a></li>
     <li class="level2 nav-leaf"><a href="#zio-based-client">ZIO based client</a></li>
@@ -309,6 +310,67 @@
 //   new-key: new value
 //</span></code></pre>
         
+        <h2 id="custom-resources" class="section"><a class="anchor-link left" href="#custom-resources"><i class="icofont-laika link">&#xef71;</i></a>Custom resources</h2>
+        <p>For defining custom resource, for instance CRDs or non-standard kubernetes resources that aren&#39;t part of the kubernetes spec:</p>
+        <ol class="arabic">
+          <li>First you need to model your resources:</li>
+        </ol>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">case</span><span> </span><span class="keyword">class</span><span> </span><span class="type-name">CustomResourceSpec</span><span>(
+  </span><span class="identifier">someKey</span><span>: </span><span class="type-name">String</span><span>,
+  </span><span class="comment">// other fields
+</span><span>)
+
+</span><span class="keyword">case</span><span> </span><span class="keyword">class</span><span> </span><span class="type-name">CustomResource</span><span>(
+  </span><span class="identifier">spec</span><span>: </span><span class="type-name">CustomResourceSpec</span><span>
+  </span><span class="comment">// other fields
+</span><span>)</span></code></pre>
+        <ol class="arabic">
+          <li>Then you need to define instances for <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/utils/Encoder.html">Encoder</a> and <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/utils/Decoder.html">Decoder</a>, so your data model becomes serializable.</li>
+        </ol>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">utils</span><span>.*
+</span><span class="comment">// in the companion objects
+</span><span class="keyword">object</span><span> </span><span class="type-name">CustomResourceSpec</span><span>{
+    </span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">decoder</span><span>: </span><span class="type-name">Decoder</span><span>[</span><span class="type-name">CustomResourceSpec</span><span>] = </span><span class="keyword">new</span><span> </span><span class="type-name">Decoder</span><span>[</span><span class="type-name">CustomResourceSpec</span><span>] {
+      </span><span class="keyword">def</span><span> </span><span class="declaration-name">apply</span><span>[</span><span class="type-name">T</span><span> : </span><span class="type-name">Reader</span><span>](</span><span class="identifier">t</span><span>: </span><span class="type-name">T</span><span>): </span><span class="type-name">Either</span><span>[</span><span class="type-name">String</span><span>, </span><span class="type-name">CustomResourceSpec</span><span>] = </span><span class="keyword">for</span><span> {
+          </span><span class="identifier">obj</span><span> &lt;- </span><span class="type-name">ObjectReader</span><span>(</span><span class="identifier">t</span><span>)
+          </span><span class="identifier">value</span><span> &lt;- </span><span class="identifier">obj</span><span>.</span><span class="identifier">read</span><span>[</span><span class="type-name">String</span><span>](</span><span class="string-literal">&quot;someKey&quot;</span><span>)
+          </span><span class="comment">// Other fields
+</span><span>      } </span><span class="keyword">yield</span><span> </span><span class="type-name">CustomResourceSpec</span><span>(</span><span class="identifier">value</span><span>)
+    }
+
+    </span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">encoder</span><span> : </span><span class="type-name">Encoder</span><span>[</span><span class="type-name">CustomResourceSpec</span><span>] = </span><span class="keyword">new</span><span> </span><span class="type-name">Encoder</span><span>[</span><span class="type-name">CustomResourceSpec</span><span>] {
+        </span><span class="keyword">def</span><span> </span><span class="declaration-name">apply</span><span>[</span><span class="type-name">T</span><span> : </span><span class="type-name">Builder</span><span>](</span><span class="identifier">o</span><span>: </span><span class="type-name">CustomResourceSpec</span><span>) : </span><span class="type-name">T</span><span> = {
+          </span><span class="keyword">val</span><span> </span><span class="identifier">obj</span><span> = </span><span class="type-name">ObjectWriter</span><span>[</span><span class="type-name">T</span><span>]()
+          </span><span class="identifier">obj</span><span>
+            .</span><span class="identifier">write</span><span>(</span><span class="string-literal">&quot;someKey&quot;</span><span>, </span><span class="identifier">o</span><span>.</span><span class="identifier">someKey</span><span>)
+            </span><span class="comment">// Other fields
+</span><span>            .</span><span class="identifier">build</span><span>
+        }
+    }
+}
+
+</span><span class="keyword">object</span><span> </span><span class="type-name">CustomResource</span><span>{
+    </span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">encoder</span><span> : </span><span class="type-name">Encoder</span><span>[</span><span class="type-name">CustomResource</span><span>] = </span><span class="keyword">new</span><span> </span><span class="type-name">Encoder</span><span>[</span><span class="type-name">CustomResource</span><span>] {
+        </span><span class="keyword">def</span><span> </span><span class="declaration-name">apply</span><span>[</span><span class="type-name">T</span><span> : </span><span class="type-name">Builder</span><span>](</span><span class="identifier">o</span><span>: </span><span class="type-name">CustomResource</span><span>) : </span><span class="type-name">T</span><span> = {
+          </span><span class="keyword">val</span><span> </span><span class="identifier">obj</span><span> = </span><span class="type-name">ObjectWriter</span><span>[</span><span class="type-name">T</span><span>]()
+          </span><span class="identifier">obj</span><span>
+            .</span><span class="identifier">write</span><span>(</span><span class="string-literal">&quot;kind&quot;</span><span>, </span><span class="string-literal">&quot;MyCustomResource&quot;</span><span>)
+            .</span><span class="identifier">write</span><span>(</span><span class="string-literal">&quot;apiVersion&quot;</span><span>, </span><span class="string-literal">&quot;example.com/v1CustomResoure&quot;</span><span>)
+            .</span><span class="identifier">write</span><span>(</span><span class="string-literal">&quot;spec&quot;</span><span>, </span><span class="identifier">o</span><span>.</span><span class="identifier">spec</span><span>)
+            </span><span class="comment">// Other fields
+</span><span>            .</span><span class="identifier">build</span><span>
+        }
+    }
+
+    </span><span class="keyword">implicit</span><span> </span><span class="keyword">val</span><span> </span><span class="identifier">decoder</span><span>: </span><span class="type-name">Decoder</span><span>[</span><span class="type-name">CustomResource</span><span>] = </span><span class="keyword">new</span><span> </span><span class="type-name">Decoder</span><span>[</span><span class="type-name">CustomResource</span><span>] {
+      </span><span class="keyword">def</span><span> </span><span class="declaration-name">apply</span><span>[</span><span class="type-name">T</span><span> : </span><span class="type-name">Reader</span><span>](</span><span class="identifier">t</span><span>: </span><span class="type-name">T</span><span>): </span><span class="type-name">Either</span><span>[</span><span class="type-name">String</span><span>, </span><span class="type-name">CustomResource</span><span>] = </span><span class="keyword">for</span><span> {
+          </span><span class="identifier">obj</span><span> &lt;- </span><span class="type-name">ObjectReader</span><span>(</span><span class="identifier">t</span><span>)
+          </span><span class="identifier">spec</span><span> &lt;- </span><span class="identifier">obj</span><span>.</span><span class="identifier">read</span><span>[</span><span class="type-name">CustomResourceSpec</span><span>](</span><span class="string-literal">&quot;spec&quot;</span><span>)
+          </span><span class="comment">// Other fields
+</span><span>      } </span><span class="keyword">yield</span><span> </span><span class="type-name">CustomResource</span><span>(</span><span class="identifier">spec</span><span>)
+    }
+}</span></code></pre>
+        
         <h1 id="client" class="section"><a class="anchor-link left" href="#client"><i class="icofont-laika link">&#xef71;</i></a>Client</h1>
         <p>Scala k8s provides a kubernetes client built on top of a generic http client, this allows us to use different http clients based on project ecosystem and other considerations.
         Being modular and not depending on a specific environment opens the door to extensibility, and also means it does restrict you in any imaginable way and you can choose whatever you want, configure however you want!<br></p>
@@ -324,7 +386,7 @@
 </span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">http4s</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="identifier">_</span><span>
 
 </span><span class="keyword">val</span><span> </span><span class="identifier">buildClient</span><span> = </span><span class="type-name">EmberKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">defaultConfig</span><span>[</span><span class="type-name">Json</span><span>]
-</span><span class="comment">// buildClient: Resource[IO, http4s.package.KClient[IO]] = Bind(Bind(Bind(Pure(()),cats.effect.kernel.Resource$$Lambda$11300/0x0000000802fd6840@3425b504),cats.effect.kernel.Resource$$Lambda$11301/0x0000000802fd6040@126a1655),cats.effect.kernel.Resource$$Lambda$11302/0x0000000802fd5040@6453fd69)
+</span><span class="comment">// buildClient: Resource[IO, http4s.package.KClient[IO]] = Bind(Bind(Bind(Pure(()),cats.effect.kernel.Resource$$Lambda$11392/0x000000080301c040@5240c4f2),cats.effect.kernel.Resource$$Lambda$11393/0x000000080301b840@497d51cc),cats.effect.kernel.Resource$$Lambda$11394/0x000000080301a840@3a806288)
 </span><span> 
 </span><span class="keyword">val</span><span> </span><span class="identifier">getNodes</span><span> = </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>)
 </span><span class="comment">// getNodes: IO[io.k8s.api.core.v1.NodeList] = IO(...)
@@ -398,7 +460,7 @@
       .</span><span class="identifier">move</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;a&quot;</span><span>), </span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;b&quot;</span><span>))
       .</span><span class="identifier">remove</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">data</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;to-delete&quot;</span><span>))
   )
-</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@46f5f33d,JsonPatch,None,None,None,None)</span></code></pre>
+</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@51f51229,JsonPatch,None,None,None,None)</span></code></pre>
         <p>Server side apply:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch3</span><span> = </span><span class="type-name">APIs</span><span>
   .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
@@ -433,13 +495,38 @@
 </span><span class="comment">// patch5: apis.corev1.ConfigMapAPI.GenericPatch[CustomMerge] = GenericPatch(test,default,,Merge,None,None,None,None)</span></code></pre>
         
         <h2 id="implementing-new-requests" class="section"><a class="anchor-link left" href="#implementing-new-requests"><i class="icofont-laika link">&#xef71;</i></a>Implementing new requests</h2>
-        <p>you can also implement your own requests easily, however if you need a request that is widely used and is standard, please open an issue or better, a pull request, so everyone can use it.</p>
+        <p>you can also implement your own requests easily (for example CRDs or non-standard resources), however if you need a request that is widely used and is standard, please open an issue or better, a pull request, so everyone can use it.</p>
+        <p>First you may need to define your custom data models (see <a href="#custom-resources">here</a>)<br>
+        Then, you can define your APIs requests:</p>
+        
+        <h3 id="specific-requests" class="section"><a class="anchor-link left" href="#specific-requests"><i class="icofont-laika link">&#xef71;</i></a>Specific requests</h3>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">_</span><span>
 
-</span><span class="keyword">type</span><span> </span><span class="type-name">CustomResource</span><span> = </span><span class="type-name">String</span><span>
 </span><span class="keyword">case</span><span> </span><span class="keyword">class</span><span> </span><span class="type-name">MyCustomRequest</span><span>(</span><span class="identifier">name</span><span>: </span><span class="type-name">String</span><span>) </span><span class="keyword">extends</span><span> </span><span class="type-name">GetRequest</span><span>[</span><span class="type-name">CustomResource</span><span>](
   </span><span class="string-literal">s&quot;/apis/my.custom-resource.io/</span><span class="substitution">$name</span><span class="string-literal">&quot;</span><span>
 )</span></code></pre>
+        <p>Some of the other available request types are:<br>
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/client/ListingRequest.html">ListingRequest</a>, 
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/client/GetRequest.html">GetRequest</a>, 
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/client/CreateRequest.html">CreateRequest</a>, 
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/client/ReplaceRequest.html">ReplaceRequest</a>, 
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/client/PartialUpdateRequest.html">PartialUpdateRequest</a>, 
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/client/DeleteCollectionRequest.html">DeleteCollectionRequest</a>, 
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/client/DeleteRequest.html">DeleteRequest</a>, 
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/client/APIResourceListingRequest.html">APIResourceListingRequest</a>, 
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.22.0/dev/hnaderi/k8s/client/APIGroupListingRequest.html">APIGroupListingRequest</a></p>
+        
+        <h3 id="api-group-requests" class="section"><a class="anchor-link left" href="#api-group-requests"><i class="icofont-laika link">&#xef71;</i></a>API group requests</h3>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">object</span><span> </span><span class="type-name">MyCustomAPIGroup</span><span>
+    </span><span class="keyword">extends</span><span> </span><span class="type-name">APIGroupAPI</span><span>(</span><span class="string-literal">&quot;/apis/custom.api.group.type/v1&quot;</span><span>)
+
+</span><span class="keyword">object</span><span> </span><span class="type-name">MyCustomResourceAPIs</span><span>
+    </span><span class="keyword">extends</span><span> </span><span class="type-name">MyCustomAPIGroup</span><span>.</span><span class="type-name">ClusterResourceAPI</span><span>[
+      </span><span class="type-name">CustomResource</span><span>,
+      </span><span class="type-name">CustomResourceList</span><span>
+    ](</span><span class="string-literal">&quot;customresourcedefinitions&quot;</span><span>)</span></code></pre>
+        <p>Usage:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">customRequest</span><span> = </span><span class="type-name">MyCustomResourceAPIs</span><span>.</span><span class="identifier">list</span><span>()</span></code></pre>
 
         
 <hr class="footer-rule"/>
