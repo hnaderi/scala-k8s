@@ -28,7 +28,6 @@ import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.headers.Cookie
 import org.http4s.headers.`Content-Type`
 import org.http4s.syntax.literals._
-import org.http4s.{Request => HRequest}
 
 final class Http4sBackend[F[_], T] private (client: Client[F])(implicit
     F: Concurrent[F],
@@ -76,8 +75,6 @@ final class Http4sBackend[F[_], T] private (client: Client[F])(implicit
       }
       .flatMap(sendRequest(_))
 
-  type Req = HRequest[F]
-
   private def cookiesFor(cookies: Seq[(String, String)]) = cookies
     .map { case (k, v) => RequestCookie(k, v) }
     .toList
@@ -85,7 +82,7 @@ final class Http4sBackend[F[_], T] private (client: Client[F])(implicit
     .map(Cookie(_))
     .fold(Headers.empty)(Headers(_))
 
-  private def sendRequest[O: Decoder](req: HRequest[F]): F[O] = client
+  private def sendRequest[O: Decoder](req: Request[F]): F[O] = client
     .expectOr[T](req) { resp =>
       val err = resp.status match {
         case Status.Conflict     => ErrorStatus.Conflict
