@@ -169,7 +169,7 @@ lazy val http4sNetty = module("http4s-netty") {
     .settings(
       description := "http4s netty based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %% "http4s-netty-client" % "0.5.24"
+        "org.http4s" %% "http4s-netty-client" % "0.5.25"
       )
     )
     .dependsOn(http4s)
