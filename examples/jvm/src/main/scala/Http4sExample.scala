@@ -57,7 +57,12 @@ object Http4sExample extends IOApp {
       )
 
   def operations(cl: HttpClient[IO]) = for {
-    _ <- APIs.namespace("default").configmaps.list.send(cl).flatMap(IO.println)
+    _ <- APIs
+      .namespace("default")
+      .configmaps
+      .list()
+      .send(cl)
+      .flatMap(IO.println)
     _ <- APIs
       .namespace("default")
       .configmaps

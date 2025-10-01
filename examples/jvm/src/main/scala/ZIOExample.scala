@@ -27,7 +27,7 @@ object ZIOExample extends ZIOAppDefault {
 
   private val app =
     for {
-      n <- ZIOKubernetesClient.send(APIs.namespace("default").pods.list)
+      n <- ZIOKubernetesClient.send(APIs.namespace("default").pods.list())
       names = n.items.map(_.metadata.flatMap(_.name))
       _ <- ZIO.foreach(names)(Console.printLine(_))
     } yield ()

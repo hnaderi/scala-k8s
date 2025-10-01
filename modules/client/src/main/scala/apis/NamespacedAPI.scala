@@ -89,8 +89,27 @@ abstract class APIGroupAPI(base: String) {
     protected def baseUrlIn(namespace: String) =
       s"$base/namespaces/${namespace}/$resourceName"
 
-    case class ListInNamespace(namespace: String)
-        extends ListingRequest[RES, COL](baseUrlIn(namespace))
+    case class ListInNamespace(
+        namespace: String,
+        allowWatchBookmarks: Option[Boolean] = None,
+        continue: Option[String] = None,
+        fieldSelector: List[String] = Nil,
+        labelSelector: List[String] = Nil,
+        limit: Option[Int] = None,
+        resourceVersion: Option[String] = None,
+        resourceVersionMatch: Option[String] = None,
+        timeout: Option[FiniteDuration] = None
+    ) extends ListingRequest[RES, COL](
+          baseUrlIn(namespace),
+          allowWatchBookmarks = allowWatchBookmarks,
+          continue = continue,
+          fieldSelector = fieldSelector,
+          labelSelector = labelSelector,
+          limit = limit,
+          resourceVersion = resourceVersion,
+          resourceVersionMatch = resourceVersionMatch,
+          timeout = timeout
+        )
     case class Create(
         namespace: String,
         configmap: RES,
@@ -200,7 +219,26 @@ abstract class APIGroupAPI(base: String) {
 
     trait NamespacedAPIBuilders extends NamespacedAPI {
       def get(name: String): Get = Get(namespace, name)
-      val list: ListInNamespace = ListInNamespace(namespace)
+      def list(
+          allowWatchBookmarks: Option[Boolean] = None,
+          continue: Option[String] = None,
+          fieldSelector: List[String] = Nil,
+          labelSelector: List[String] = Nil,
+          limit: Option[Int] = None,
+          resourceVersion: Option[String] = None,
+          resourceVersionMatch: Option[String] = None,
+          timeout: Option[FiniteDuration] = None
+      ): ListInNamespace = ListInNamespace(
+        namespace,
+        allowWatchBookmarks = allowWatchBookmarks,
+        continue = continue,
+        fieldSelector = fieldSelector,
+        labelSelector = labelSelector,
+        limit = limit,
+        resourceVersion = resourceVersion,
+        resourceVersionMatch = resourceVersionMatch,
+        timeout = timeout
+      )
       def delete(
           name: String,
           options: Option[DeleteOptions] = None,

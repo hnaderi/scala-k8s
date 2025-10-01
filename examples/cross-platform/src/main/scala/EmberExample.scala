@@ -32,7 +32,12 @@ object EmberExample extends IOApp {
   private val client = EmberKubernetesClient[IO].defaultConfig[Json]
 
   def operations(cl: HttpClient[IO]) = for {
-    _ <- APIs.namespace("default").configmaps.list.send(cl).flatMap(IO.println)
+    _ <- APIs
+      .namespace("default")
+      .configmaps
+      .list()
+      .send(cl)
+      .flatMap(IO.println)
     name <- UUIDGen[IO].randomUUID.map(_.toString)
     _ <- APIs
       .namespace("default")

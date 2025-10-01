@@ -24,6 +24,6 @@ import dev.hnaderi.k8s.client.SttpJdkURLClientBuilder
 object SttpMain extends App {
   val client = SttpJdkURLClientBuilder.defaultConfig
 
-  val response = APIs.namespace("default").configmaps.list.send(client)
+  val response = APIs.namespace("default").configmaps.list().send(client)
   response.body.items.flatMap(_.metadata).flatMap(_.name).foreach(println)
 }
