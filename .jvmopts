@@ -1,5 +1,5 @@
 -Xms1G
--Xmx7G
+-Xmx15G
 -XX:ReservedCodeCacheSize=512M
 -XX:+TieredCompilation
 -XX:+UseG1GC

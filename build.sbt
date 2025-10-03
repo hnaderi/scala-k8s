@@ -43,7 +43,7 @@ ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
 ThisBuild / kubernetesVersion := "1.34.1"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
-  new NodeJSEnv(NodeJSEnv.Config().withArgs(List("--max-old-space-size=6144")))
+  new NodeJSEnv(NodeJSEnv.Config().withArgs(List("--max-old-space-size=10240")))
 }
 
 enablePlugins(AutomateHeaderPlugin)
