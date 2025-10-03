@@ -145,7 +145,7 @@ lazy val http4s = module("http4s") {
     .settings(
       description := "http4s based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-client" % "0.23.30"
+        "org.http4s" %%% "http4s-client" % "0.23.32"
       )
     )
     .dependsOn(client, jawn)
@@ -158,7 +158,7 @@ lazy val http4sEmber = module("http4s-ember") {
     .settings(
       description := "http4s ember based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-ember-client" % "0.23.30"
+        "org.http4s" %%% "http4s-ember-client" % "0.23.32"
       )
     )
     .dependsOn(http4s)
@@ -375,7 +375,7 @@ lazy val docs = project
   .enablePlugins(ScalaK8sWebsite)
   .settings(
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-circe" % "0.23.30",
+      "org.http4s" %%% "http4s-circe" % "0.23.32",
       "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
     )
   )
@@ -413,7 +413,7 @@ lazy val exampleJVM = example("jvm") {
     .crossType(CrossType.Pure)
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-circe" % "0.23.30",
+        "org.http4s" %%% "http4s-circe" % "0.23.32",
         "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
       )
     )
@@ -425,7 +425,7 @@ lazy val exampleCrossPlatform = example("cross-platform") {
     .crossType(CrossType.Pure)
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-circe" % "0.23.30"
+        "org.http4s" %%% "http4s-circe" % "0.23.32"
       )
     )
     .jsSettings(
