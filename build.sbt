@@ -46,8 +46,6 @@ ThisBuild / jsEnv := {
   new NodeJSEnv(NodeJSEnv.Config().withArgs(List("--max-old-space-size=10240")))
 }
 
-enablePlugins(AutomateHeaderPlugin)
-
 lazy val root =
   tlCrossRootProject
     .aggregate(
