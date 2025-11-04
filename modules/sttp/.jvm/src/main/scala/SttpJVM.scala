@@ -123,7 +123,7 @@ private[client] trait SttpJVM[F[_]] {
   ): HttpClient[SttpF[F, *]] = {
     val str = readFile(config)
     manifest.parse[Config](str) match {
-      case Left(error) => throw error
+      case Left(error)       => throw error
       case Right(configData) =>
         fromConfig(configData, context = context, cluster = cluster)
     }

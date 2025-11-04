@@ -154,8 +154,8 @@ final class Http4sBackend[F[_], T] private (client: Client[F])(implicit
       }: _*)))
 
   private def mediaTypeFor: PatchType => MediaType = {
-    case PatchType.JsonPatch => MediaType.application.`json-patch+json`
-    case PatchType.Merge     => MediaType.application.`merge-patch+json`
+    case PatchType.JsonPatch      => MediaType.application.`json-patch+json`
+    case PatchType.Merge          => MediaType.application.`merge-patch+json`
     case PatchType.StrategicMerge =>
       mediaType"application/strategic-merge-patch+json"
     case PatchType.ServerSide => mediaType"application/apply-patch+yaml"
