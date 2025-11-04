@@ -54,10 +54,10 @@ package object manifest {
         error: Option[Throwable],
         it: Iterator[YAML]
     ): Either[Throwable, List[T]] = error match {
-      case Some(value) => Left(value)
+      case Some(value)        => Left(value)
       case None if it.hasNext =>
         toKObject(it.next()) match {
-          case Left(err) => Left(err)
+          case Left(err)   => Left(err)
           case Right(kobj) =>
             out.append(kobj)
             go(None, it)

@@ -186,7 +186,7 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
   ): Resource[F, KClient[F]] =
     Resource.eval(homeConfig).flatMap {
       case Some(value) => load(value, context, cluster)
-      case None =>
+      case None        =>
         Resource.eval(
           F.raiseError(new FileNotFoundException("No kubeconfig found!"))
         )
