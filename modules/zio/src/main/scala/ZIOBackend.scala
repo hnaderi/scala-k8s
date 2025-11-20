@@ -112,7 +112,7 @@ final case class ZIOBackend(
           case Some(value) => qs.updated(k, Chunk(v) ++ value)
         }
     }
-  } yield u.queryParams(qp)
+  } yield u.setQueryParams(QueryParams(qp))
 
   private def expect[O: Decoder](req: http.Request): ScopedTask[O] =
     client.request(req).flatMap { res =>
