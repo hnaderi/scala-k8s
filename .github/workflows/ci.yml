@@ -106,15 +106,15 @@ jobs:
 
       - name: Make target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: mkdir -p modules/http4s-ember/.jvm/target modules/json4s/.js/target modules/http4s-ember/.js/target modules/http4s/.jvm/target modules/http4s/.js/target modules/circe/.jvm/target modules/scalacheck/.native/target modules/client/.native/target unidocs/target modules/sttp/.native/target modules/client/.js/target modules/json4s/.native/target modules/jawn/.jvm/target modules/http4s-netty/.jvm/target modules/client/.jvm/target modules/manifests/.js/target modules/circe/.js/target modules/objects/.js/target modules/objects/.jvm/target modules/jawn/.js/target modules/spray-json/.jvm/target modules/play-json/.jvm/target modules/zio/.jvm/target modules/manifests/.jvm/target modules/http4s-blaze/.jvm/target modules/sttp/.js/target modules/http4s/.native/target modules/sttp/.jvm/target modules/http4s-jdk/.jvm/target modules/jawn/.native/target modules/circe/.native/target modules/zio-json/.js/target modules/objects/.native/target modules/json4s/.jvm/target modules/scalacheck/.jvm/target modules/zio-json/.jvm/target modules/java-ssl/.jvm/target modules/http4s-ember/.native/target modules/manifests/.native/target modules/scalacheck/.js/target project/target
+        run: mkdir -p modules/http4s-ember/.jvm/target modules/json4s/.js/target modules/http4s-ember/.js/target modules/http4s/.jvm/target modules/http4s/.js/target modules/circe/.jvm/target modules/scalacheck/.native/target modules/client/.native/target unidocs/target modules/sttp/.native/target modules/client/.js/target modules/json4s/.native/target modules/jawn/.jvm/target modules/http4s-netty/.jvm/target modules/client/.jvm/target modules/manifests/.js/target modules/circe/.js/target modules/objects/.js/target modules/objects/.jvm/target modules/jawn/.js/target modules/spray-json/.jvm/target modules/play-json/.jvm/target modules/zio/.jvm/target modules/manifests/.jvm/target modules/http4s-blaze/.jvm/target modules/sttp/.js/target modules/sttp/.jvm/target modules/http4s-jdk/.jvm/target modules/jawn/.native/target modules/circe/.native/target modules/zio-json/.js/target modules/objects/.native/target modules/json4s/.jvm/target modules/scalacheck/.jvm/target modules/zio-json/.jvm/target modules/java-ssl/.jvm/target modules/manifests/.native/target modules/scalacheck/.js/target project/target
 
       - name: Compress target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: tar cf targets.tar modules/http4s-ember/.jvm/target modules/json4s/.js/target modules/http4s-ember/.js/target modules/http4s/.jvm/target modules/http4s/.js/target modules/circe/.jvm/target modules/scalacheck/.native/target modules/client/.native/target unidocs/target modules/sttp/.native/target modules/client/.js/target modules/json4s/.native/target modules/jawn/.jvm/target modules/http4s-netty/.jvm/target modules/client/.jvm/target modules/manifests/.js/target modules/circe/.js/target modules/objects/.js/target modules/objects/.jvm/target modules/jawn/.js/target modules/spray-json/.jvm/target modules/play-json/.jvm/target modules/zio/.jvm/target modules/manifests/.jvm/target modules/http4s-blaze/.jvm/target modules/sttp/.js/target modules/http4s/.native/target modules/sttp/.jvm/target modules/http4s-jdk/.jvm/target modules/jawn/.native/target modules/circe/.native/target modules/zio-json/.js/target modules/objects/.native/target modules/json4s/.jvm/target modules/scalacheck/.jvm/target modules/zio-json/.jvm/target modules/java-ssl/.jvm/target modules/http4s-ember/.native/target modules/manifests/.native/target modules/scalacheck/.js/target project/target
+        run: tar cf targets.tar modules/http4s-ember/.jvm/target modules/json4s/.js/target modules/http4s-ember/.js/target modules/http4s/.jvm/target modules/http4s/.js/target modules/circe/.jvm/target modules/scalacheck/.native/target modules/client/.native/target unidocs/target modules/sttp/.native/target modules/client/.js/target modules/json4s/.native/target modules/jawn/.jvm/target modules/http4s-netty/.jvm/target modules/client/.jvm/target modules/manifests/.js/target modules/circe/.js/target modules/objects/.js/target modules/objects/.jvm/target modules/jawn/.js/target modules/spray-json/.jvm/target modules/play-json/.jvm/target modules/zio/.jvm/target modules/manifests/.jvm/target modules/http4s-blaze/.jvm/target modules/sttp/.js/target modules/sttp/.jvm/target modules/http4s-jdk/.jvm/target modules/jawn/.native/target modules/circe/.native/target modules/zio-json/.js/target modules/objects/.native/target modules/json4s/.jvm/target modules/scalacheck/.jvm/target modules/zio-json/.jvm/target modules/java-ssl/.jvm/target modules/manifests/.native/target modules/scalacheck/.js/target project/target
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-${{ matrix.scala }}-${{ matrix.project }}
           path: targets.tar
@@ -164,7 +164,7 @@ jobs:
         run: sbt +update
 
       - name: Download target directories (2.12, rootJS)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-rootJS
 
@@ -174,7 +174,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (2.12, rootJVM)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-rootJVM
 
@@ -184,7 +184,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (2.12, rootNative)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-rootNative
 
@@ -194,7 +194,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (2.13, rootJS)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.13-rootJS
 
@@ -204,7 +204,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (2.13, rootJVM)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.13-rootJVM
 
@@ -214,7 +214,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (2.13, rootNative)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.13-rootNative
 
@@ -224,7 +224,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (3, rootJS)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-3-rootJS
 
@@ -234,7 +234,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (3, rootJVM)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-3-rootJVM
 
@@ -244,7 +244,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (3, rootNative)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-3-rootNative
 
@@ -323,7 +323,7 @@ jobs:
       - name: Submit Dependencies
         uses: scalacenter/sbt-dependency-submission@v2
         with:
-          modules-ignore: scala-k8s-client-test_sjs1_2.12 scala-k8s-client-test_sjs1_2.13 scala-k8s-client-test_sjs1_3 scala-k8s-client-test_2.12 scala-k8s-client-test_2.13 scala-k8s-client-test_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 docs_2.12 docs_2.13 docs_3 scala-k8s-example-cross-platform_sjs1_2.12 scala-k8s-example-cross-platform_sjs1_2.13 scala-k8s-example-cross-platform_sjs1_3 scala-k8s-codec-test_2.12 scala-k8s-codec-test_2.13 scala-k8s-codec-test_3 scala-k8s-objects-test_sjs1_2.12 scala-k8s-objects-test_sjs1_2.13 scala-k8s-objects-test_sjs1_3 scala-k8s-codec-test_native0.4_2.12 scala-k8s-codec-test_native0.4_2.13 scala-k8s-codec-test_native0.4_3 scala-k8s-example-jvm_2.12 scala-k8s-example-jvm_2.13 scala-k8s-example-jvm_3 scala-k8s-codec-test_sjs1_2.12 scala-k8s-codec-test_sjs1_2.13 scala-k8s-codec-test_sjs1_3 scala-k8s-example-cross-platform_native0.4_2.12 scala-k8s-example-cross-platform_native0.4_2.13 scala-k8s-example-cross-platform_native0.4_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 scala-k8s-objects-test_2.12 scala-k8s-objects-test_2.13 scala-k8s-objects-test_3 scala-k8s-example-cross-platform_2.12 scala-k8s-example-cross-platform_2.13 scala-k8s-example-cross-platform_3
+          modules-ignore: scala-k8s-client-test_sjs1_2.12 scala-k8s-client-test_sjs1_2.13 scala-k8s-client-test_sjs1_3 scala-k8s-client-test_2.12 scala-k8s-client-test_2.13 scala-k8s-client-test_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 docs_2.12 docs_2.13 docs_3 scala-k8s-example-cross-platform_sjs1_2.12 scala-k8s-example-cross-platform_sjs1_2.13 scala-k8s-example-cross-platform_sjs1_3 scala-k8s-codec-test_2.12 scala-k8s-codec-test_2.13 scala-k8s-codec-test_3 scala-k8s-objects-test_sjs1_2.12 scala-k8s-objects-test_sjs1_2.13 scala-k8s-objects-test_sjs1_3 scala-k8s-codec-test_native0.5_2.12 scala-k8s-codec-test_native0.5_2.13 scala-k8s-codec-test_native0.5_3 scala-k8s-example-jvm_2.12 scala-k8s-example-jvm_2.13 scala-k8s-example-jvm_3 scala-k8s-codec-test_sjs1_2.12 scala-k8s-codec-test_sjs1_2.13 scala-k8s-codec-test_sjs1_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 scala-k8s-objects-test_2.12 scala-k8s-objects-test_2.13 scala-k8s-objects-test_3 scala-k8s-example-cross-platform_2.12 scala-k8s-example-cross-platform_2.13 scala-k8s-example-cross-platform_3
           configs-ignore: test scala-tool scala-doc-tool test-internal
 
   validate-steward:

@@ -2,7 +2,7 @@ import dev.hnaderi.k8s.generator.KubernetesJsonPointerGeneratorPlugin
 import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
 import sbtcrossproject.CrossProject
 
-ThisBuild / tlBaseVersion := "0.25"
+ThisBuild / tlBaseVersion := "0.26"
 
 ThisBuild / organization := "dev.hnaderi"
 ThisBuild / organizationName := "Hossein Naderi"
@@ -13,7 +13,7 @@ ThisBuild / developers := List(
 )
 
 val scala212 = "2.12.20"
-val scala213 = "2.13.16"
+val scala213 = "2.13.18"
 val scala3 = "3.3.7"
 val PrimaryJava = JavaSpec.temurin("11")
 val LTSJava = JavaSpec.temurin("17")
@@ -79,8 +79,8 @@ lazy val root =
       name := "scala-k8s"
     )
 
-lazy val circeVersion = "0.14.8"
-lazy val munitVersion = "1.0.0-M11"
+lazy val circeVersion = "0.14.15"
+lazy val munitVersion = "1.2.0"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
@@ -138,12 +138,15 @@ lazy val javaSSL = module("java-ssl") {
 }
 
 lazy val http4s = module("http4s") {
-  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  crossProject(
+    JVMPlatform,
+    JSPlatform // ,NativePlatform TODO enable after typelevel adopted
+  )
     .crossType(CrossType.Pure)
     .settings(
       description := "http4s based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-client" % "0.23.30"
+        "org.http4s" %%% "http4s-client" % "0.23.33"
       )
     )
     .dependsOn(client, jawn)
@@ -151,12 +154,15 @@ lazy val http4s = module("http4s") {
 }
 
 lazy val http4sEmber = module("http4s-ember") {
-  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  crossProject(
+    JVMPlatform,
+    JSPlatform // , NativePlatform
+  )
     .crossType(CrossType.Pure)
     .settings(
       description := "http4s ember based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-ember-client" % "0.23.30"
+        "org.http4s" %%% "http4s-ember-client" % "0.23.33"
       )
     )
     .dependsOn(http4s)
@@ -167,7 +173,7 @@ lazy val http4sNetty = module("http4s-netty") {
     .settings(
       description := "http4s netty based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %% "http4s-netty-client" % "0.5.25"
+        "org.http4s" %% "http4s-netty-client" % "0.5.26"
       )
     )
     .dependsOn(http4s)
@@ -202,7 +208,7 @@ lazy val sttp = module("sttp") {
     .settings(
       description := "sttp based client for kubernetes",
       libraryDependencies ++= Seq(
-        "com.softwaremill.sttp.client3" %%% "core" % "3.9.8"
+        "com.softwaremill.sttp.client3" %%% "core" % "3.11.0"
       )
     )
     .dependsOn(client, jawn)
@@ -215,8 +221,8 @@ lazy val zio = module("zio") {
     .settings(
       description := "zio-http based client for kubernetes",
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio-http" % "3.0.0-RC4",
-        "dev.zio" %%% "zio-json" % "0.6.2"
+        "dev.zio" %% "zio-http" % "3.0.1",
+        "dev.zio" %%% "zio-json" % "0.7.45"
       )
     )
     .dependsOn(client, `zio-json`)
@@ -229,7 +235,7 @@ lazy val scalacheck = module("scalacheck") {
       description := "scalacheck generators for kubernetes data models",
       k8sUnmanagedTarget := rootDir.value / "modules" / "scalacheck" / "src" / "main" / "scala",
       libraryDependencies ++= Seq(
-        "org.scalacheck" %%% "scalacheck" % "1.17.1"
+        "org.scalacheck" %%% "scalacheck" % "1.19.0"
       )
     )
     .dependsOn(objects)
@@ -309,7 +315,7 @@ lazy val `play-json` = module("play-json") {
     .settings(
       description := "play-json codecs for kubernetes data models",
       libraryDependencies ++= Seq(
-        ("org.playframework" %%% "play-json" % "3.0.4")
+        ("org.playframework" %%% "play-json" % "3.0.6")
           .cross(CrossVersion.for3Use2_13)
       )
     )
@@ -336,7 +342,7 @@ lazy val `zio-json` = module("zio-json") {
     .settings(
       description := "zio-json codecs for kubernetes data models",
       libraryDependencies ++= Seq(
-        "dev.zio" %%% "zio-json" % "0.6.2"
+        "dev.zio" %%% "zio-json" % "0.7.45"
       )
     )
     .dependsOn(objects)
@@ -349,7 +355,7 @@ lazy val jawn = module("jawn") {
     .settings(
       description := "jawn facade for kubernetes data models parsing",
       libraryDependencies ++= Seq(
-        "org.typelevel" %%% "jawn-parser" % "1.5.1"
+        "org.typelevel" %%% "jawn-parser" % "1.6.0"
       )
     )
     .dependsOn(objects)
@@ -361,7 +367,7 @@ lazy val manifests = module("manifests") {
     .settings(
       description := "kubernetes manifests utilities",
       libraryDependencies ++= Seq(
-        "dev.hnaderi" %%% "yaml4s-backend" % "0.2.2"
+        "dev.hnaderi" %%% "yaml4s-backend" % "0.3.2"
       )
     )
     .dependsOn(objects)
@@ -373,7 +379,7 @@ lazy val docs = project
   .enablePlugins(ScalaK8sWebsite)
   .settings(
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-circe" % "0.23.30",
+      "org.http4s" %%% "http4s-circe" % "0.23.33",
       "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
     )
   )
@@ -411,7 +417,7 @@ lazy val exampleJVM = example("jvm") {
     .crossType(CrossType.Pure)
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-circe" % "0.23.30",
+        "org.http4s" %%% "http4s-circe" % "0.23.33",
         "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
       )
     )
@@ -419,11 +425,14 @@ lazy val exampleJVM = example("jvm") {
 }
 
 lazy val exampleCrossPlatform = example("cross-platform") {
-  crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  crossProject(
+    JVMPlatform,
+    JSPlatform // , NativePlatform
+  )
     .crossType(CrossType.Pure)
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-circe" % "0.23.30"
+        "org.http4s" %%% "http4s-circe" % "0.23.33"
       )
     )
     .jsSettings(
@@ -433,10 +442,10 @@ lazy val exampleCrossPlatform = example("cross-platform") {
       // scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) }
     )
     .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
-    .nativeSettings(
-      libraryDependencies += "com.armanbilge" %%% "epollcat" % "0.1.6",
-      envVars ++= Map("S2N_DONT_MLOCK" -> "1")
-    )
+    // .nativeSettings(
+    //   libraryDependencies += "com.armanbilge" %%% "epollcat" % "0.1.6",
+    //   envVars ++= Map("S2N_DONT_MLOCK" -> "1")
+    // )
     .dependsOn(http4sEmber, circe)
 }
 
