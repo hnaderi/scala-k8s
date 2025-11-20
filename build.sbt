@@ -342,7 +342,7 @@ lazy val `zio-json` = module("zio-json") {
     .settings(
       description := "zio-json codecs for kubernetes data models",
       libraryDependencies ++= Seq(
-        "dev.zio" %%% "zio-json" % "0.7.45"
+        "dev.zio" %%% "zio-json" % "0.7.21"
       )
     )
     .dependsOn(objects)
