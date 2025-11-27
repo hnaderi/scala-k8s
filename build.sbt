@@ -45,6 +45,18 @@ ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
   new NodeJSEnv(NodeJSEnv.Config().withArgs(List("--max-old-space-size=10240")))
 }
+ThisBuild / githubWorkflowBuild ~= {
+  _.map {
+    // Override scalajslink for tests for now, to prevent CI hangs
+    case jslink: WorkflowStep.Sbt if jslink.name == Some("scalaJSLink") =>
+      WorkflowStep.Sbt(
+        List("Test/compile"),
+        name = Some("testCompile"),
+        cond = jslink.cond
+      )
+    case other => other
+  }
+}
 
 lazy val root =
   tlCrossRootProject
