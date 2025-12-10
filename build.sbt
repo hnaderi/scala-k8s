@@ -47,6 +47,12 @@ ThisBuild / jsEnv := {
     NodeJSEnv.Config().withArgs(List(s"--max-old-space-size=${14 * 1024}"))
   )
 }
+ThisBuild / scalaJSLinkerConfig ~= {
+  _.withParallel(false)
+    .withBatchMode(true)
+    .withOptimizer(false)
+    .withCheckIR(true)
+}
 
 lazy val root =
   tlCrossRootProject
