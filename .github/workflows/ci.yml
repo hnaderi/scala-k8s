@@ -85,9 +85,9 @@ jobs:
         if: matrix.java == 'temurin@11' && matrix.os == 'ubuntu-22.04'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' headerCheckAll scalafmtCheckAll 'project /' scalafmtSbtCheck
 
-      - name: testCompile
+      - name: scalaJSLink
         if: matrix.project == 'rootJS'
-        run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' Test/compile
+        run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' Test/scalaJSLinkerResult
 
       - name: nativeLink
         if: matrix.project == 'rootNative'

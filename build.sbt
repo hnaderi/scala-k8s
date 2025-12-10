@@ -43,19 +43,9 @@ ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
 ThisBuild / kubernetesVersion := "1.34.2"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
-  new NodeJSEnv(NodeJSEnv.Config().withArgs(List("--max-old-space-size=10240")))
-}
-ThisBuild / githubWorkflowBuild ~= {
-  _.map {
-    // Override scalajslink for tests for now, to prevent CI hangs
-    case jslink: WorkflowStep.Sbt if jslink.name == Some("scalaJSLink") =>
-      WorkflowStep.Sbt(
-        List("Test/compile"),
-        name = Some("testCompile"),
-        cond = jslink.cond
-      )
-    case other => other
-  }
+  new NodeJSEnv(
+    NodeJSEnv.Config().withArgs(List(s"--max-old-space-size=${14 * 1024}"))
+  )
 }
 
 lazy val root =
