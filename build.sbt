@@ -40,7 +40,7 @@ ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
   scalas = Nil,
   javas = Nil
 )
-ThisBuild / kubernetesVersion := "1.34.2"
+ThisBuild / kubernetesVersion := "1.34.3"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
   new NodeJSEnv(
