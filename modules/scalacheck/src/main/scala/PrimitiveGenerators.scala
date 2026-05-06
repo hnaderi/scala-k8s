@@ -99,6 +99,12 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       Gen.const(io.k8s.api.scheduling.v1alpha1.BasicSchedulingPolicy())
     )
 
+  implicit lazy val arbitrary_io_k8s_api_scheduling_v1alpha2_BasicSchedulingPolicy
+      : Arbitrary[io.k8s.api.scheduling.v1alpha2.BasicSchedulingPolicy] =
+    Arbitrary(
+      Gen.const(io.k8s.api.scheduling.v1alpha2.BasicSchedulingPolicy())
+    )
+
   private def genJSONSchemaPropsOrArray(
       jsp: JSONSchemaProps
   ): Gen[JSONSchemaPropsOrArray] =
