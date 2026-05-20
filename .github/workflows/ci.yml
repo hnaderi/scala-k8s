@@ -323,7 +323,7 @@ jobs:
       - name: Submit Dependencies
         uses: scalacenter/sbt-dependency-submission@v2
         with:
-          modules-ignore: scala-k8s-client-test_sjs1_2.12 scala-k8s-client-test_sjs1_2.13 scala-k8s-client-test_sjs1_3 scala-k8s-client-test_2.12 scala-k8s-client-test_2.13 scala-k8s-client-test_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 docs_2.12 docs_2.13 docs_3 scala-k8s-example-cross-platform_sjs1_2.12 scala-k8s-example-cross-platform_sjs1_2.13 scala-k8s-example-cross-platform_sjs1_3 scala-k8s-codec-test_2.12 scala-k8s-codec-test_2.13 scala-k8s-codec-test_3 scala-k8s-objects-test_sjs1_2.12 scala-k8s-objects-test_sjs1_2.13 scala-k8s-objects-test_sjs1_3 scala-k8s-codec-test_native0.5_2.12 scala-k8s-codec-test_native0.5_2.13 scala-k8s-codec-test_native0.5_3 scala-k8s-example-jvm_2.12 scala-k8s-example-jvm_2.13 scala-k8s-example-jvm_3 scala-k8s-codec-test_sjs1_2.12 scala-k8s-codec-test_sjs1_2.13 scala-k8s-codec-test_sjs1_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 scala-k8s-objects-test_2.12 scala-k8s-objects-test_2.13 scala-k8s-objects-test_3 scala-k8s-example-cross-platform_2.12 scala-k8s-example-cross-platform_2.13 scala-k8s-example-cross-platform_3
+          modules-ignore: scala-k8s-client-test_sjs1_2.12 scala-k8s-client-test_sjs1_2.13 scala-k8s-client-test_sjs1_3 scala-k8s-integration-tests_2.12 scala-k8s-integration-tests_2.13 scala-k8s-integration-tests_3 scala-k8s-client-test_2.12 scala-k8s-client-test_2.13 scala-k8s-client-test_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 docs_2.12 docs_2.13 docs_3 scala-k8s-example-cross-platform_sjs1_2.12 scala-k8s-example-cross-platform_sjs1_2.13 scala-k8s-example-cross-platform_sjs1_3 scala-k8s-codec-test_2.12 scala-k8s-codec-test_2.13 scala-k8s-codec-test_3 scala-k8s-objects-test_sjs1_2.12 scala-k8s-objects-test_sjs1_2.13 scala-k8s-objects-test_sjs1_3 scala-k8s-codec-test_native0.5_2.12 scala-k8s-codec-test_native0.5_2.13 scala-k8s-codec-test_native0.5_3 scala-k8s-example-jvm_2.12 scala-k8s-example-jvm_2.13 scala-k8s-example-jvm_3 scala-k8s-codec-test_sjs1_2.12 scala-k8s-codec-test_sjs1_2.13 scala-k8s-codec-test_sjs1_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 scala-k8s_2.12 scala-k8s_2.13 scala-k8s_3 scala-k8s-objects-test_2.12 scala-k8s-objects-test_2.13 scala-k8s-objects-test_3 scala-k8s-example-cross-platform_2.12 scala-k8s-example-cross-platform_2.13 scala-k8s-example-cross-platform_3
           configs-ignore: test scala-tool scala-doc-tool test-internal
 
   validate-steward:
@@ -353,7 +353,7 @@ jobs:
 
   post-build:
     name: post build
-    needs: [build]
+    needs: [build, integration]
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -361,6 +361,52 @@ jobs:
     steps:
       - name: post build
         run: echo success!
+
+  integration:
+    name: Integration Tests
+    needs: [build]
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        java: [temurin@11]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout current branch (full)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Setup Java (temurin@11)
+        id: setup-java-temurin-11
+        if: matrix.java == 'temurin@11'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 11
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@11' && steps.setup-java-temurin-11.outputs.cache-hit == 'false'
+        run: sbt +update
+
+      - name: Setup Java (temurin@17)
+        id: setup-java-temurin-17
+        if: matrix.java == 'temurin@17'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
+        run: sbt +update
+
+      - name: Run integration tests
+        run: sbt integrationTests/test
 
   site:
     name: Generate Site

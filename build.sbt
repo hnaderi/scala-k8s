@@ -30,7 +30,7 @@ ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
   id = "post-build",
   name = "post build",
-  needs = List("build"),
+  needs = List("build", "integration"),
   steps = List(
     WorkflowStep.Run(
       commands = List("echo success!"),
@@ -40,6 +40,21 @@ ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
   scalas = Nil,
   javas = Nil
 )
+
+ThisBuild / githubWorkflowAddedJobs += {
+  val setup = (ThisBuild / githubWorkflowJobSetup).value.toList
+  WorkflowJob(
+    id = "integration",
+    name = "Integration Tests",
+    needs = List("build"),
+    steps = setup :+ WorkflowStep.Run(
+      commands = List("sbt integrationTests/test"),
+      name = Some("Run integration tests")
+    ),
+    scalas = Nil,
+    javas = List(PrimaryJava)
+  )
+}
 ThisBuild / kubernetesVersion := "1.36.1"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
@@ -89,6 +104,8 @@ lazy val root =
 
 lazy val circeVersion = "0.14.15"
 lazy val munitVersion = "1.2.0"
+lazy val munitCatsEffectVersion = "2.1.0"
+lazy val testcontainersVersion = "0.44.1"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
@@ -289,6 +306,21 @@ lazy val codecTest = module("codec-test") {
     .dependsOn(scalacheck)
     .enablePlugins(NoPublishPlugin)
 }
+
+lazy val integrationTests = project
+  .in(file("modules/integration-tests"))
+  .enablePlugins(NoPublishPlugin)
+  .settings(
+    name := "scala-k8s-integration-tests",
+    Test / fork := true,
+    libraryDependencies ++= Seq(
+      "org.http4s" %% "http4s-circe" % "0.23.33" % Test,
+      "com.dimafeng" %% "testcontainers-scala-core" % testcontainersVersion % Test,
+      "com.dimafeng" %% "testcontainers-scala-k3s" % testcontainersVersion % Test,
+      "org.typelevel" %% "munit-cats-effect" % munitCatsEffectVersion % Test
+    )
+  )
+  .dependsOn(http4sEmber.jvm, circe.jvm)
 
 lazy val circe = module("circe") {
   crossProject(JVMPlatform, JSPlatform, NativePlatform)
