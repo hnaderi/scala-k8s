@@ -364,7 +364,6 @@ jobs:
 
   integration:
     name: Integration Tests
-    needs: [build]
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -406,7 +405,7 @@ jobs:
         run: sbt +update
 
       - name: Run integration tests
-        run: sbt integrationTests/test
+        run: sbt '++ ${{ matrix.scala }}' integrationTests/test
 
   site:
     name: Generate Site

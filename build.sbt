@@ -46,9 +46,8 @@ ThisBuild / githubWorkflowAddedJobs += {
   WorkflowJob(
     id = "integration",
     name = "Integration Tests",
-    needs = List("build"),
-    steps = setup :+ WorkflowStep.Run(
-      commands = List("sbt integrationTests/test"),
+    steps = setup :+ WorkflowStep.Sbt(
+      commands = List("integrationTests/test"),
       name = Some("Run integration tests")
     ),
     scalas = Nil,
