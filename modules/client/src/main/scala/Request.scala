@@ -26,6 +26,9 @@ trait HttpRequest[O] extends Request {
 trait WatchRequest[O] extends Request {
   def listen[F[_]](http: StreamingClient[F]): F[O]
 }
+trait ExecRequest extends Request {
+  def exec[F[_]](client: ExecClient[F]): F[ExecInput] => F[ExecEvent]
+}
 
 trait HttpClient[F[_]] {
   def get[O: Decoder](url: String, params: (String, String)*): F[O]
@@ -47,6 +50,21 @@ trait HttpClient[F[_]] {
   ): F[O]
 
   final def send[O](req: HttpRequest[O]): F[O] = req.send(this)
+}
+
+trait ExecClient[F[_]] {
+  def exec(url: String, params: (String, String)*): F[ExecInput] => F[ExecEvent]
+  final def pipe(req: ExecRequest): F[ExecInput] => F[ExecEvent] =
+    req.exec(this)
+}
+
+trait ExecBackend[S[_]] {
+  def execConnect(
+      url: String,
+      headers: Seq[(String, String)],
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
+  ): S[ExecInput] => S[ExecEvent]
 }
 
 object HttpClient {
@@ -143,6 +161,36 @@ object HttpClient {
         headers = auth.headers,
         cookies = auth.cookies
       )
+    }
+
+  def withExec[F[_], S[_]](
+      baseUri: String,
+      backend: HttpBackend[F] with StreamingBackend[S] with ExecBackend[S],
+      auth: AuthenticationParams = AuthenticationParams()
+  ): HttpClient[F] with StreamingClient[S] with ExecClient[S] =
+    new Simple[F](baseUri, backend, auth)
+      with StreamingClient[S]
+      with ExecClient[S] {
+      override def connect[O: Decoder](
+          url: String,
+          params: (String, String)*
+      ): S[O] = backend.connect(
+        s"$baseUri$url",
+        APIVerb.GET,
+        params = params ++ auth.params,
+        headers = auth.headers,
+        cookies = auth.cookies
+      )
+      override def exec(
+          url: String,
+          params: (String, String)*
+      ): S[ExecInput] => S[ExecEvent] =
+        backend.execConnect(
+          s"$baseUri$url",
+          headers = auth.headers,
+          params = params ++ auth.params,
+          cookies = auth.cookies
+        )
     }
 }
 

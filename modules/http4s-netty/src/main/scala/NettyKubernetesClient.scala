@@ -22,14 +22,16 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Env
 import fs2.io.file.Files
 import org.http4s.client.{Client, Middleware}
+import org.http4s.client.websocket.WSClient
 import org.http4s.netty.client.NettyClientBuilder
+import org.http4s.netty.client.NettyWSClientBuilder
 
 import javax.net.ssl.SSLContext
 
 final class NettyKubernetesClient[F[_]: Async: Files: Env] private (
     builder: NettyClientBuilder[F],
     middleware: Middleware[F]
-) extends JVMPlatform[F] {
+) extends JVMExecPlatform[F] {
 
   override protected def buildClient: Resource[F, Client[F]] =
     builder.resource.map(middleware)
@@ -37,6 +39,10 @@ final class NettyKubernetesClient[F[_]: Async: Files: Env] private (
   override protected def buildWithSSLContext
       : SSLContext => Resource[F, Client[F]] =
     builder.withSSLContext(_).resource.map(middleware)
+
+  override protected def buildWSClientWithSSLContext
+      : SSLContext => Resource[F, WSClient[F]] =
+    ssl => NettyWSClientBuilder[F].withSSLContext(ssl).resource
 
 }
 

@@ -174,6 +174,11 @@ lazy val http4s = module("http4s") {
       )
     )
     .dependsOn(client, jawn)
+    .jvmSettings(
+      libraryDependencies ++= Seq(
+        "org.typelevel" %% "munit-cats-effect" % munitCatsEffectVersion % Test
+      )
+    )
     .jvmConfigure(_.dependsOn(javaSSL.jvm))
 }
 
@@ -319,7 +324,7 @@ lazy val integrationTests = project
       "org.typelevel" %% "munit-cats-effect" % munitCatsEffectVersion % Test
     )
   )
-  .dependsOn(http4sEmber.jvm, circe.jvm)
+  .dependsOn(http4sEmber.jvm, http4sJDK.jvm, circe.jvm)
 
 lazy val circe = module("circe") {
   crossProject(JVMPlatform, JSPlatform, NativePlatform)
@@ -421,7 +426,7 @@ lazy val docs = project
       "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
     )
   )
-  .dependsOn(http4sEmber.jvm, sttp.jvm, circe.jvm, manifests.jvm)
+  .dependsOn(http4sEmber.jvm, http4sJDK.jvm, sttp.jvm, circe.jvm, manifests.jvm)
 
 lazy val unidocs = project
   .in(file("unidocs"))
@@ -459,7 +464,7 @@ lazy val exampleJVM = example("jvm") {
         "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
       )
     )
-    .dependsOn(http4sNetty, http4sEmber, circe, zio, sttp)
+    .dependsOn(http4sNetty, http4sEmber, http4sJDK, circe, zio, sttp)
 }
 
 lazy val exampleCrossPlatform = example("cross-platform") {

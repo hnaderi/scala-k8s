@@ -22,8 +22,11 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Env
 import cats.syntax.all.*
 import fs2.io.file.Files
+import cats.effect.kernel.Resource
 import org.http4s.client.{Client, Middleware}
+import org.http4s.client.websocket.WSClient
 import org.http4s.jdkhttpclient.JdkHttpClient
+import org.http4s.jdkhttpclient.JdkWSClient
 
 import java.net.http
 import java.net.http.HttpClient.Builder
@@ -32,21 +35,34 @@ import javax.net.ssl.SSLContext
 final class JDKKubernetesClient[F[_]: Async: Files: Env] private (
     builder: Builder,
     middleware: Middleware[F]
-) extends JVMPlatform[F] {
+) extends JVMExecPlatform[F] {
 
   override protected def buildClient: Resource[F, Client[F]] = from(b => b)
 
   override protected def buildWithSSLContext
       : SSLContext => Resource[F, Client[F]] = ssl =>
-    from(_.sslContext(ssl)).preAllocate(
-      Async[F].delay {
-        // workaround for https://github.com/http4s/http4s-jdk-http-client/issues/200
-        if (Runtime.version().feature() == 11) {
-          val params = ssl.getDefaultSSLParameters()
-          params.setProtocols(params.getProtocols().filter(_ != "TLSv1.3"))
+    from(_.sslContext(ssl)).preAllocate(tls13Workaround(ssl))
+
+  override protected def buildWSClientWithSSLContext
+      : SSLContext => Resource[F, WSClient[F]] = ssl =>
+    Resource
+      .eval(
+        Async[F].executor.flatMap { exec =>
+          Async[F].delay(
+            JdkWSClient[F](builder.sslContext(ssl).executor(exec).build())
+          )
         }
+      )
+      .preAllocate(tls13Workaround(ssl))
+
+  private def tls13Workaround(ssl: SSLContext): F[Unit] =
+    // workaround for https://github.com/http4s/http4s-jdk-http-client/issues/200
+    Async[F].delay {
+      if (Runtime.version().feature() == 11) {
+        val params = ssl.getDefaultSSLParameters()
+        params.setProtocols(params.getProtocols().filter(_ != "TLSv1.3"))
       }
-    )
+    }
 
   private def from(customize: Builder => Builder) =
     Resource

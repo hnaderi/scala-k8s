@@ -16,9 +16,11 @@
 
 package dev.hnaderi.k8s.client
 
-import fs2.Stream
+import io.k8s.apimachinery.pkg.apis.meta.v1.Status
 
-package object http4s {
-  type KClient[F[_]] = HttpClient[F] with StreamingClient[Stream[F, *]]
-  type KExecClient[F[_]] = KClient[F] with ExecClient[Stream[F, *]]
+sealed trait ExecEvent
+object ExecEvent {
+  final case class Stdout(data: Array[Byte]) extends ExecEvent
+  final case class Stderr(data: Array[Byte]) extends ExecEvent
+  final case class Error(status: Status) extends ExecEvent
 }

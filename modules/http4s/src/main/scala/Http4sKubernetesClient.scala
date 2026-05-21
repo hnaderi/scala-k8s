@@ -192,7 +192,7 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
         )
     }
 
-  private def homeConfig =
+  protected def homeConfig =
     Env
       .get("KUBECONFIG")
       .flatMap {

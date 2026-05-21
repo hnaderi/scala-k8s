@@ -390,6 +390,81 @@ val patch5 = APIs
   )
 ```
 
+## Pod exec
+
+The `http4s-jdk` and `http4s-netty` backends support executing commands inside pods over WebSockets using the Kubernetes exec API.
+
+```scala
+libraryDependencies += "dev.hnaderi" %% "scala-k8s-http4s-jdk" % "@VERSION@"
+```
+
+```scala mdoc:compile-only
+import cats.effect._
+import dev.hnaderi.k8s.circe._
+import dev.hnaderi.k8s.client._
+import dev.hnaderi.k8s.client.http4s._
+import fs2.Stream
+import io.circe.Json
+import org.http4s.circe._
+
+// JDKKubernetesClient also supports defaultConfigWithExec, kubeconfigWithExec,
+// fromConfigWithExec, fromWithExec, podConfigWithExec
+val execApp: IO[Unit] =
+  JDKKubernetesClient[IO].defaultConfigWithExec[Json].use { client =>
+    val pipe = client.pipe(
+      APIs
+        .namespace("default")
+        .pods
+        .exec("my-pod", Seq("sh", "-c", "echo hello"))
+    )
+
+    pipe(Stream.empty)
+      .evalMap {
+        case ExecEvent.Stdout(data) =>
+          IO.println(s"stdout: ${new String(data, "UTF-8").trim}")
+        case ExecEvent.Stderr(data) =>
+          IO.println(s"stderr: ${new String(data, "UTF-8").trim}")
+        case ExecEvent.Error(status) =>
+          IO.println(s"exit status: ${status.status.getOrElse("unknown")}")
+      }
+      .compile
+      .drain
+  }
+```
+
+To pass stdin, stream `ExecInput.Stdin` values into the pipe:
+
+```scala mdoc:compile-only
+import cats.effect._
+import dev.hnaderi.k8s.circe._
+import dev.hnaderi.k8s.client._
+import dev.hnaderi.k8s.client.http4s._
+import fs2.Stream
+import io.circe.Json
+import org.http4s.circe._
+
+val stdinApp: IO[Unit] =
+  JDKKubernetesClient[IO].defaultConfigWithExec[Json].use { client =>
+    val pipe = client.pipe(
+      APIs
+        .namespace("default")
+        .pods
+        .exec("my-pod", Seq("cat"), stdinEnabled = true)
+    )
+
+    val input: Stream[IO, ExecInput] =
+      Stream.emit(ExecInput.Stdin("hello\n".getBytes("UTF-8")))
+
+    pipe(input)
+      .collect { case ExecEvent.Stdout(data) => new String(data, "UTF-8") }
+      .evalMap(IO.println)
+      .compile
+      .drain
+  }
+```
+
+The exec stream terminates automatically when the process exits (channel-3 status frame).
+
 ## Implementing new requests
 you can also implement your own requests easily (for example CRDs or non-standard resources), however if you need a request that is widely used and is standard, please open an issue or better, a pull request, so everyone can use it.
 

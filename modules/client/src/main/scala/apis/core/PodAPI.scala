@@ -23,8 +23,47 @@ import io.k8s.api.core.v1.PodList
 object PodAPI
     extends CoreV1.NamespacedResourceAPI[Pod, PodList](
       "pods"
-    )
+    ) {
+  case class Exec(
+      namespace: String,
+      name: String,
+      command: Seq[String],
+      container: Option[String] = None,
+      tty: Boolean = false,
+      stdinEnabled: Boolean = false,
+      stdoutEnabled: Boolean = true,
+      stderrEnabled: Boolean = true
+  ) extends PodExecRequest(
+        PodAPI.urlFor(namespace, name) + "/exec",
+        command = command,
+        container = container,
+        tty = tty,
+        stdinEnabled = stdinEnabled,
+        stdoutEnabled = stdoutEnabled,
+        stderrEnabled = stderrEnabled
+      )
+}
 
-final case class PodAPI(namespace: String) extends PodAPI.NamespacedAPIBuilders
+final case class PodAPI(namespace: String)
+    extends PodAPI.NamespacedAPIBuilders {
+  def exec(
+      name: String,
+      command: Seq[String],
+      container: Option[String] = None,
+      tty: Boolean = false,
+      stdinEnabled: Boolean = false,
+      stdoutEnabled: Boolean = true,
+      stderrEnabled: Boolean = true
+  ): PodAPI.Exec = PodAPI.Exec(
+    namespace,
+    name,
+    command,
+    container = container,
+    tty = tty,
+    stdinEnabled = stdinEnabled,
+    stdoutEnabled = stdoutEnabled,
+    stderrEnabled = stderrEnabled
+  )
+}
 
 object ClusterPodAPI extends PodAPI.ClusterwideAPIBuilders

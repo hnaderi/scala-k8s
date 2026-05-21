@@ -29,7 +29,7 @@ import org.http4s.headers.Cookie
 import org.http4s.headers.`Content-Type`
 import org.http4s.syntax.literals._
 
-final class Http4sBackend[F[_], T] private (client: Client[F])(implicit
+class Http4sBackend[F[_], T] private[http4s] (client: Client[F])(implicit
     F: Concurrent[F],
     enc: EntityEncoder[F, T],
     dec: EntityDecoder[F, T],

@@ -174,6 +174,29 @@ abstract class DeleteRequest[OUT: Decoder](
   ): F[OUT] = http.delete(url, params: _*)(body)
 }
 
+abstract class PodExecRequest(
+    url: String,
+    command: Seq[String],
+    container: Option[String] = None,
+    tty: Boolean = false,
+    stdinEnabled: Boolean = false,
+    stdoutEnabled: Boolean = true,
+    stderrEnabled: Boolean = true
+) extends ExecRequest {
+  private def params: Seq[(String, String)] =
+    command.map("command" -> _) ++
+      container.map("container" -> _) ++
+      Seq(
+        "stdout" -> stdoutEnabled.toString,
+        "stderr" -> stderrEnabled.toString,
+        "stdin" -> stdinEnabled.toString,
+        "tty" -> tty.toString
+      )
+
+  override def exec[F[_]](client: ExecClient[F]): F[ExecInput] => F[ExecEvent] =
+    client.exec(url, params: _*)
+}
+
 abstract class APIResourceListingRequest(url: String)
     extends HttpRequest[APIResourceList] {
   override def send[F[_]](

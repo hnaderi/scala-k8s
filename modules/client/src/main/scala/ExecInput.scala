@@ -16,9 +16,8 @@
 
 package dev.hnaderi.k8s.client
 
-import fs2.Stream
-
-package object http4s {
-  type KClient[F[_]] = HttpClient[F] with StreamingClient[Stream[F, *]]
-  type KExecClient[F[_]] = KClient[F] with ExecClient[Stream[F, *]]
+sealed trait ExecInput
+object ExecInput {
+  final case class Stdin(data: Array[Byte]) extends ExecInput
+  final case class Resize(cols: Int, rows: Int) extends ExecInput
 }
