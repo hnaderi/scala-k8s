@@ -104,9 +104,10 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
   test("channel 1 emits Stdout") {
     val data = "hello world".getBytes("UTF-8")
     for {
-      (ws, _, _) <- mockWSClient(
+      mock <- mockWSClient(
         List(WSFrame.Binary(ByteVector(1.toByte) ++ ByteVector(data)))
       )
+      (ws, _, _) = mock
       events <- run(ws)
     } yield {
       assertEquals(events.length, 1)
@@ -120,9 +121,10 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
   test("channel 2 emits Stderr") {
     val data = "something failed".getBytes("UTF-8")
     for {
-      (ws, _, _) <- mockWSClient(
+      mock <- mockWSClient(
         List(WSFrame.Binary(ByteVector(2.toByte) ++ ByteVector(data)))
       )
+      (ws, _, _) = mock
       events <- run(ws)
     } yield {
       assertEquals(events.length, 1)
@@ -137,9 +139,10 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
     // {"status":"Success","code":0} — only the fields Status.decoder reads
     val json = """{"status":"Success","code":0}""".getBytes("UTF-8")
     for {
-      (ws, _, _) <- mockWSClient(
+      mock <- mockWSClient(
         List(WSFrame.Binary(ByteVector(3.toByte) ++ ByteVector(json)))
       )
+      (ws, _, _) = mock
       events <- run(ws)
     } yield assertEquals(
       events,
@@ -150,9 +153,10 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
   test("channel 3 with malformed JSON emits nothing") {
     val garbage = "not json at all".getBytes("UTF-8")
     for {
-      (ws, _, _) <- mockWSClient(
+      mock <- mockWSClient(
         List(WSFrame.Binary(ByteVector(3.toByte) ++ ByteVector(garbage)))
       )
+      (ws, _, _) = mock
       events <- run(ws)
     } yield assertEquals(events, Nil)
   }
@@ -160,16 +164,18 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
   test("unknown channel emits nothing") {
     val data = "ignored".getBytes("UTF-8")
     for {
-      (ws, _, _) <- mockWSClient(
+      mock <- mockWSClient(
         List(WSFrame.Binary(ByteVector(9.toByte) ++ ByteVector(data)))
       )
+      (ws, _, _) = mock
       events <- run(ws)
     } yield assertEquals(events, Nil)
   }
 
   test("empty binary frame produces no event") {
     for {
-      (ws, _, _) <- mockWSClient(List(WSFrame.Binary(ByteVector.empty)))
+      mock <- mockWSClient(List(WSFrame.Binary(ByteVector.empty)))
+      (ws, _, _) = mock
       events <- run(ws)
     } yield assertEquals(events, Nil)
   }
@@ -178,12 +184,13 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
     val out = "out".getBytes("UTF-8")
     val err = "err".getBytes("UTF-8")
     for {
-      (ws, _, _) <- mockWSClient(
+      mock <- mockWSClient(
         List(
           WSFrame.Binary(ByteVector(1.toByte) ++ ByteVector(out)),
           WSFrame.Binary(ByteVector(2.toByte) ++ ByteVector(err))
         )
       )
+      (ws, _, _) = mock
       events <- run(ws)
     } yield {
       assertEquals(events.length, 2)
@@ -203,7 +210,8 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
   test("Stdin encodes to channel-0 binary frame") {
     val data = "hello".getBytes("UTF-8")
     for {
-      (ws, _, getSent) <- mockWSClient(Nil, sendCount = 1)
+      mock <- mockWSClient(Nil, sendCount = 1)
+      (ws, _, getSent) = mock
       _ <- run(ws, input = Stream.emit(ExecInput.Stdin(data)))
       sent <- getSent
     } yield {
@@ -217,7 +225,8 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
   test("Resize encodes to channel-4 JSON frame") {
     val expected = """{"Width":80,"Height":24}""".getBytes("UTF-8")
     for {
-      (ws, _, getSent) <- mockWSClient(Nil, sendCount = 1)
+      mock <- mockWSClient(Nil, sendCount = 1)
+      (ws, _, getSent) = mock
       _ <- run(ws, input = Stream.emit(ExecInput.Resize(80, 24)))
       sent <- getSent
     } yield {
@@ -232,7 +241,8 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
 
   test("https scheme is rewritten to wss") {
     for {
-      (ws, getReq, _) <- mockWSClient(Nil)
+      mock <- mockWSClient(Nil)
+      (ws, getReq, _) = mock
       _ <- run(
         ws,
         url =
@@ -244,7 +254,8 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
 
   test("http scheme is rewritten to ws") {
     for {
-      (ws, getReq, _) <- mockWSClient(Nil)
+      mock <- mockWSClient(Nil)
+      (ws, getReq, _) = mock
       _ <- run(
         ws,
         url = "http://localhost:8001/api/v1/namespaces/default/pods/p/exec"
@@ -257,7 +268,8 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
 
   test("params appear in the WS request query string") {
     for {
-      (ws, getReq, _) <- mockWSClient(Nil)
+      mock <- mockWSClient(Nil)
+      (ws, getReq, _) = mock
       _ <- backend(ws)
         .execConnect(
           "ws://host/exec",
@@ -281,7 +293,8 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
 
   test("Sec-WebSocket-Protocol header is set to v4.channel.k8s.io") {
     for {
-      (ws, getReq, _) <- mockWSClient(Nil)
+      mock <- mockWSClient(Nil)
+      (ws, getReq, _) = mock
       _ <- run(ws)
       req <- getReq
     } yield {
@@ -298,7 +311,8 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
 
   test("non-empty cookies produce a Cookie header") {
     for {
-      (ws, getReq, _) <- mockWSClient(Nil)
+      mock <- mockWSClient(Nil)
+      (ws, getReq, _) = mock
       _ <- backend(ws)
         .execConnect(
           "ws://host/exec",
@@ -323,7 +337,8 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
 
   test("empty cookies produce no Cookie header") {
     for {
-      (ws, getReq, _) <- mockWSClient(Nil)
+      mock <- mockWSClient(Nil)
+      (ws, getReq, _) = mock
       _ <- run(ws)
       req <- getReq
     } yield {
