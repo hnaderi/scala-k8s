@@ -18,7 +18,6 @@ package dev.hnaderi.k8s.client
 package http4s
 
 import cats.effect.kernel.Async
-import cats.effect.kernel.Resource
 import cats.effect.std.Env
 import cats.syntax.all.*
 import fs2.io.file.Files

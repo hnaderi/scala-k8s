@@ -36,6 +36,37 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
 ) {
   protected def buildClient: Resource[F, Client[F]]
 
+  // ---- shared helpers used by both regular and exec subclasses ----
+
+  protected final def readConfigFile(path: Path): Resource[F, Config] = for {
+    str <- Resource.eval(Files.readUtf8(path).compile.string)
+    conf <- Resource.eval(F.fromEither(manifest.parse[Config](str)))
+  } yield conf
+
+  protected final def kubeconfigPath: F[Option[Path]] =
+    Env
+      .get("KUBECONFIG")
+      .flatMap {
+        case None =>
+          F.delay(System.getProperty("user.home") match {
+            case null  => Path("~") / ".kube" / "config"
+            case value => Path(value) / ".kube" / "config"
+          })
+        case Some(value) => Path(value).pure
+      }
+      .flatMap(p => Files.exists(p).ifF(Some(p), None))
+
+  private val serviceAccountBase =
+    Path("/var/run/secrets/kubernetes.io/serviceaccount")
+  protected final val podApiServer: String = "https://kubernetes.default.svc"
+  protected final val podCaCert: Path = serviceAccountBase / "ca.crt"
+  protected final def podServiceAccountAuth: Resource[F, AuthenticationParams] =
+    Resource
+      .eval(Files.readUtf8(serviceAccountBase / "token").compile.string)
+      .map(AuthenticationParams.bearer(_))
+
+  // ---- public API ----
+
   final def fromClient[T](
       baseUrl: String,
       client: Client[F]
@@ -123,11 +154,8 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
       dec: EntityDecoder[F, T],
       builder: Builder[T],
       reader: Reader[T]
-  ): Resource[F, KClient[F]] = for {
-    str <- Resource.eval(Files.readUtf8(config).compile.string)
-    conf <- Resource.eval(F.fromEither(manifest.parse[Config](str)))
-    client <- fromConfig(conf, context, cluster)
-  } yield client
+  ): Resource[F, KClient[F]] =
+    readConfigFile(config).flatMap(fromConfig(_, context, cluster))
 
   /** Build kubernetes client from kubectl config file
     *
@@ -184,26 +212,13 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
       builder: Builder[T],
       reader: Reader[T]
   ): Resource[F, KClient[F]] =
-    Resource.eval(homeConfig).flatMap {
+    Resource.eval(kubeconfigPath).flatMap {
       case Some(value) => load(value, context, cluster)
       case None        =>
         Resource.eval(
           F.raiseError(new FileNotFoundException("No kubeconfig found!"))
         )
     }
-
-  protected def homeConfig =
-    Env
-      .get("KUBECONFIG")
-      .flatMap {
-        case None =>
-          F.delay(System.getProperty("user.home") match {
-            case null  => Path("~") / ".kube" / "config"
-            case value => Path(value) / ".kube" / "config"
-          })
-        case Some(value) => Path(value).pure
-      }
-      .flatMap(p => Files.exists(p).ifF(Some(p), None))
 
   /** Build kubernetes client from service account credentials inside pod from
     * /var/run/secrets/kubernetes.io/serviceaccount
@@ -213,21 +228,8 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
       dec: EntityDecoder[F, T],
       builder: Builder[T],
       reader: Reader[T]
-  ): Resource[F, KClient[F]] = {
-    val base = Path("/var/run/secrets/kubernetes.io/serviceaccount")
-    val apiserver = "https://kubernetes.default.svc"
-    val token = base / "token"
-    val caCert = base / "ca.crt"
-    val tokenAuth = Resource
-      .eval(Files.readUtf8(token).compile.string)
-      .map(AuthenticationParams.bearer(_))
-
-    tokenAuth.flatMap(auth =>
-      from(
-        server = apiserver,
-        ca = caCert.some,
-        authentication = auth
-      )
+  ): Resource[F, KClient[F]] =
+    podServiceAccountAuth.flatMap(auth =>
+      from(server = podApiServer, ca = podCaCert.some, authentication = auth)
     )
-  }
 }
