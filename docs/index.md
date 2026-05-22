@@ -277,7 +277,7 @@ val getConfigMaps =
   buildClient.use(client=>
     APIs
       .namespace("kube-system")
-      .configmaps
+      .configMaps
       .get("kube-proxy")
       .send(client)
   )
@@ -315,7 +315,7 @@ import dev.hnaderi.k8s.client.APIs
 
 val sysConfig = APIs
   .namespace("kube-system")
-  .configmaps
+  .configMaps
 
 val defaultConfig = sysConfig.copy(namespace = "default")
 ```
@@ -326,7 +326,7 @@ For doing simple strategical merge patches:
 ```scala mdoc:to-string
 val patch1 = APIs
   .namespace("default")
-  .configmaps
+  .configMaps
   .patch(
     "test",
     ConfigMap(metadata = ObjectMeta(labels = Map("new" -> "label")))
@@ -341,7 +341,7 @@ import dev.hnaderi.k8s.client.implicits._
 
 val patch2 = APIs
   .namespace("default")
-  .configmaps
+  .configMaps
   .jsonPatch("test")(
     JsonPatch[ConfigMap].builder
       .add(_.metadata.labels.at("new"), "label")
@@ -355,7 +355,7 @@ Server side apply:
 ```scala mdoc:to-string
 val patch3 = APIs
   .namespace("default")
-  .configmaps
+  .configMaps
   .serverSideApply("test", ConfigMap(), fieldManager = "my-operator")
 ```
 
@@ -364,7 +364,7 @@ Or [json merge patches](https://www.rfc-editor.org/rfc/rfc7386):
 ```scala mdoc:to-string
 val patch4 = APIs
   .namespace("default")
-  .configmaps
+  .configMaps
   .patch(
     "test",
     ConfigMap(metadata = ObjectMeta(labels = Map("new" -> "label"))),
@@ -382,7 +382,7 @@ val customMergeObject : CustomMerge = ""
 
 val patch5 = APIs
   .namespace("default")
-  .configmaps
+  .configMaps
   .patchGeneric(
     "test",
     customMergeObject,

@@ -59,13 +59,13 @@ object Http4sExample extends IOApp {
   def operations(cl: HttpClient[IO]) = for {
     _ <- APIs
       .namespace("default")
-      .configmaps
+      .configMaps
       .list()
       .send(cl)
       .flatMap(IO.println)
     _ <- APIs
       .namespace("default")
-      .configmaps
+      .configMaps
       .create(
         ConfigMap(
           metadata = ObjectMeta(name = "example"),
@@ -73,20 +73,20 @@ object Http4sExample extends IOApp {
         )
       )
       .send(cl)
-    a <- APIs.namespace("default").configmaps.get("example").send(cl)
+    a <- APIs.namespace("default").configMaps.get("example").send(cl)
     b <- APIs
       .namespace("default")
-      .configmaps
+      .configMaps
       .replace("example", a.withData(Map("test2" -> "value2")))
       .send(cl)
     _ <- IO.println(b)
-    _ <- APIs.namespace("default").configmaps.delete("example").send(cl)
+    _ <- APIs.namespace("default").configMaps.delete("example").send(cl)
   } yield ()
 
   def operations2(cl: HttpClient[IO]) = for {
     _ <- APIs
       .namespace("default")
-      .configmaps
+      .configMaps
       .patch(
         "test",
         ConfigMap(metadata = ObjectMeta(labels = Map("new" -> "label")))
@@ -95,7 +95,7 @@ object Http4sExample extends IOApp {
 
     _ <- APIs
       .namespace("default")
-      .configmaps
+      .configMaps
       .jsonPatch("test")(
         JsonPatch[ConfigMap].builder
           .add(_.metadata.labels.at("new"), "label")
@@ -108,7 +108,7 @@ object Http4sExample extends IOApp {
   def debug(cl: HttpClient[IO]) =
     APIs
       .namespace("kube-system")
-      .configmaps
+      .configMaps
       .get("kube-proxy")
       .send(cl)
       .flatMap(IO.println)

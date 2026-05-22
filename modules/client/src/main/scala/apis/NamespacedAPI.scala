@@ -18,6 +18,7 @@ package dev.hnaderi.k8s.client
 
 import dev.hnaderi.k8s.utils.Decoder
 import dev.hnaderi.k8s.utils.Encoder
+import io.k8s.api.autoscaling.v1.Scale
 
 import scala.concurrent.duration.FiniteDuration
 import io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions
@@ -738,6 +739,88 @@ abstract class APIGroupAPI(base: String) {
       fieldValidation = fieldValidation
     )
 
+  }
+
+  abstract class ScalableNamespacedResourceAPI[
+      RES: Decoder: Encoder,
+      COL: Decoder
+  ](resourceName: String)
+      extends NamespacedResourceAPI[RES, COL](resourceName) {
+
+    case class GetScale(namespace: String, name: String)
+        extends GetRequest[Scale](urlFor(namespace, name) + "/scale")
+
+    case class ReplaceScale(
+        namespace: String,
+        name: String,
+        body: Scale,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ) extends ReplaceRequest[Scale](
+          urlFor(namespace, name) + "/scale",
+          body,
+          dryRun = dryRun,
+          fieldManager = fieldManager,
+          fieldValidation = fieldValidation
+        )
+
+    trait ScalableNamespacedAPIBuilders extends NamespacedAPIBuilders {
+      def getScale(name: String): GetScale = GetScale(namespace, name)
+      def replaceScale(
+          name: String,
+          body: Scale,
+          dryRun: Option[String] = None,
+          fieldManager: Option[String] = None,
+          fieldValidation: Option[String] = None
+      ): ReplaceScale = ReplaceScale(
+        namespace,
+        name,
+        body,
+        dryRun = dryRun,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation
+      )
+    }
+  }
+
+  abstract class ScalableClusterResourceAPI[
+      RES: Decoder: Encoder,
+      COL: Decoder
+  ](resourceName: String)
+      extends ClusterResourceAPI[RES, COL](resourceName) {
+
+    case class GetScale(name: String)
+        extends GetRequest[Scale](urlFor(name) + "/scale")
+
+    case class ReplaceScale(
+        name: String,
+        body: Scale,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ) extends ReplaceRequest[Scale](
+          urlFor(name) + "/scale",
+          body,
+          dryRun = dryRun,
+          fieldManager = fieldManager,
+          fieldValidation = fieldValidation
+        )
+
+    def getScale(name: String): GetScale = GetScale(name)
+    def replaceScale(
+        name: String,
+        body: Scale,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ): ReplaceScale = ReplaceScale(
+      name,
+      body,
+      dryRun = dryRun,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation
+    )
   }
 
 }

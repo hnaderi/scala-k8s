@@ -32,16 +32,16 @@ class ConfigMapsSuite extends K3sSuite {
       data = Map("key" -> "value")
     )
     for {
-      created <- APIs.namespace(ns).configmaps.create(cm).send(client)
+      created <- APIs.namespace(ns).configMaps.create(cm).send(client)
       _ = assertEquals(created.metadata.flatMap(_.name), Some(cmName))
-      fetched <- APIs.namespace(ns).configmaps.get(cmName).send(client)
+      fetched <- APIs.namespace(ns).configMaps.get(cmName).send(client)
       _ = assertEquals(fetched.data, Some(Map("key" -> "value")))
-      _ <- APIs.namespace(ns).configmaps.delete(cmName).send(client)
+      _ <- APIs.namespace(ns).configMaps.delete(cmName).send(client)
     } yield ()
   }
 
   k3sClient.test("list ConfigMaps in default namespace") { client =>
-    APIs.namespace(ns).configmaps.list().send(client).map { result =>
+    APIs.namespace(ns).configMaps.list().send(client).map { result =>
       assert(result.items != null)
     }
   }

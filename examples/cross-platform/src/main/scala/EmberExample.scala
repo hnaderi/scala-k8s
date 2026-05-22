@@ -34,14 +34,14 @@ object EmberExample extends IOApp {
   def operations(cl: HttpClient[IO]) = for {
     _ <- APIs
       .namespace("default")
-      .configmaps
+      .configMaps
       .list()
       .send(cl)
       .flatMap(IO.println)
     name <- UUIDGen[IO].randomUUID.map(_.toString)
     _ <- APIs
       .namespace("default")
-      .configmaps
+      .configMaps
       .create(
         ConfigMap(
           metadata = ObjectMeta(name = name),
@@ -49,14 +49,14 @@ object EmberExample extends IOApp {
         )
       )
       .send(cl)
-    a <- APIs.namespace("default").configmaps.get(name).send(cl)
+    a <- APIs.namespace("default").configMaps.get(name).send(cl)
     b <- APIs
       .namespace("default")
-      .configmaps
+      .configMaps
       .replace(name, a.withData(Map("test2" -> "value2")))
       .send(cl)
     _ <- IO.println(b)
-    _ <- APIs.namespace("default").configmaps.delete(name).send(cl)
+    _ <- APIs.namespace("default").configMaps.delete(name).send(cl)
   } yield ()
 
   override def run(args: List[String]): IO[ExitCode] = client

@@ -1,5 +1,6 @@
 import dev.hnaderi.k8s.generator.KubernetesJsonPointerGeneratorPlugin
 import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
+import dev.hnaderi.k8s.generator.KubernetesAPIGeneratorPlugin
 import sbtcrossproject.CrossProject
 
 ThisBuild / tlBaseVersion := "0.29"
@@ -143,10 +144,32 @@ lazy val client = module("client") {
     .crossType(CrossType.Pure)
     .settings(
       description := "client core for kubernetes",
-      k8sUnmanagedTarget := rootDir.value / "modules" / "client" / "src" / "main" / "scala"
+      k8sAPISkipKinds := Set(
+        // Hand-maintained with exec/attach/log/eviction sub-resources
+        "io.k8s.api.core.v1.Pod",
+        // Namespace is handled at the APIs level via NamespaceAPI.scala
+        "io.k8s.api.core.v1.Namespace",
+        // Hand-maintained with approval sub-resource
+        "io.k8s.api.certificates.v1.CertificateSigningRequest",
+        // Hand-maintained using legacy api_extensions package naming
+        "io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.CustomResourceDefinition"
+      ),
+      k8sAPITraitSkipKinds := Set(
+        // Namespace accessor is provided by APIs.scala, not the generated CoreV1 trait
+        "io.k8s.api.core.v1.Namespace"
+      ),
+      k8sAPISkipGroups := Set(
+        // Hand-maintained trait uses APIExtensionsV1 name (not ApiextensionsV1)
+        ("apiextensions.k8s.io", "v1"),
+        // Hand-maintained trait uses CertificatesV1 name importing from legacy package
+        ("certificates.k8s.io", "v1")
+      )
     )
     .dependsOn(objects, manifests)
-    .enablePlugins(KubernetesJsonPointerGeneratorPlugin)
+    .enablePlugins(
+      KubernetesJsonPointerGeneratorPlugin,
+      KubernetesAPIGeneratorPlugin
+    )
 }
 
 lazy val javaSSL = module("java-ssl") {
