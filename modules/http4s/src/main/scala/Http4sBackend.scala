@@ -41,6 +41,31 @@ class Http4sBackend[F[_], T] private[http4s] (client: Client[F])(implicit
   private val dsl = new Http4sClientDsl[F] {}
   import dsl._
 
+  override def connectRaw(
+      url: String,
+      verb: APIVerb,
+      headers: Seq[(String, String)],
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
+  ): Stream[F, Byte] =
+    Stream
+      .eval(urlFrom(url, params))
+      .map(methodFor(verb)(_, Headers(headers) ++ cookiesFor(cookies)))
+      .flatMap(client.stream(_))
+      .flatMap(_.body)
+
+  override def connectLines(
+      url: String,
+      verb: APIVerb,
+      headers: Seq[(String, String)],
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
+  ): Stream[F, String] =
+    connectRaw(url, verb, headers, params, cookies)
+      .through(fs2.text.utf8.decode)
+      .through(fs2.text.lines)
+      .filter(_.nonEmpty)
+
   override def send[O: Decoder](
       url: String,
       verb: APIVerb,

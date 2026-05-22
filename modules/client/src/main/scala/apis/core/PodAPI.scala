@@ -24,6 +24,29 @@ object PodAPI
     extends CoreV1.NamespacedResourceAPI[Pod, PodList](
       "pods"
     ) {
+  case class Logs(
+      namespace: String,
+      name: String,
+      container: Option[String] = None,
+      follow: Boolean = false,
+      previous: Boolean = false,
+      sinceSeconds: Option[Long] = None,
+      sinceTime: Option[String] = None,
+      timestamps: Boolean = false,
+      tailLines: Option[Long] = None,
+      limitBytes: Option[Long] = None
+  ) extends PodLogsRequest(
+        PodAPI.urlFor(namespace, name) + "/log",
+        container = container,
+        follow = follow,
+        previous = previous,
+        sinceSeconds = sinceSeconds,
+        sinceTime = sinceTime,
+        timestamps = timestamps,
+        tailLines = tailLines,
+        limitBytes = limitBytes
+      )
+
   case class Exec(
       namespace: String,
       name: String,
@@ -46,6 +69,29 @@ object PodAPI
 
 final case class PodAPI(namespace: String)
     extends PodAPI.NamespacedAPIBuilders {
+  def logs(
+      name: String,
+      container: Option[String] = None,
+      follow: Boolean = false,
+      previous: Boolean = false,
+      sinceSeconds: Option[Long] = None,
+      sinceTime: Option[String] = None,
+      timestamps: Boolean = false,
+      tailLines: Option[Long] = None,
+      limitBytes: Option[Long] = None
+  ): PodAPI.Logs = PodAPI.Logs(
+    namespace,
+    name,
+    container = container,
+    follow = follow,
+    previous = previous,
+    sinceSeconds = sinceSeconds,
+    sinceTime = sinceTime,
+    timestamps = timestamps,
+    tailLines = tailLines,
+    limitBytes = limitBytes
+  )
+
   def exec(
       name: String,
       command: Seq[String],

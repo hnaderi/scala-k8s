@@ -23,11 +23,21 @@ sealed trait Request
 trait HttpRequest[O] extends Request {
   def send[F[_]](http: HttpClient[F]): F[O]
 }
+
 trait WatchRequest[O] extends Request {
   def listen[F[_]](http: StreamingClient[F]): F[O]
 }
+
 trait ExecRequest extends Request {
   def exec[F[_]](client: ExecClient[F]): F[ExecInput] => F[ExecEvent]
+}
+
+trait LinesRequest extends Request {
+  def lines[F[_]](client: StreamingClient[F]): F[String]
+}
+
+trait RawRequest extends Request {
+  def raw[F[_]](client: StreamingClient[F]): F[Byte]
 }
 
 trait HttpClient[F[_]] {
@@ -56,15 +66,6 @@ trait ExecClient[F[_]] {
   def exec(url: String, params: (String, String)*): F[ExecInput] => F[ExecEvent]
   final def pipe(req: ExecRequest): F[ExecInput] => F[ExecEvent] =
     req.exec(this)
-}
-
-trait ExecBackend[S[_]] {
-  def execConnect(
-      url: String,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
-  ): S[ExecInput] => S[ExecEvent]
 }
 
 object HttpClient {
@@ -139,6 +140,41 @@ object HttpClient {
 
   }
 
+  private abstract class WithStreaming[F[_], S[_]](
+      baseUri: String,
+      backend: HttpBackend[F] with StreamingBackend[S],
+      auth: AuthenticationParams
+  ) extends Simple[F](baseUri, backend, auth)
+      with StreamingClient[S] {
+    override def connect[O: Decoder](
+        url: String,
+        params: (String, String)*
+    ): S[O] =
+      backend.connect(
+        s"$baseUri$url",
+        APIVerb.GET,
+        params = params ++ auth.params,
+        headers = auth.headers,
+        cookies = auth.cookies
+      )
+    override def lines(url: String, params: (String, String)*): S[String] =
+      backend.connectLines(
+        s"$baseUri$url",
+        APIVerb.GET,
+        params = params ++ auth.params,
+        headers = auth.headers,
+        cookies = auth.cookies
+      )
+    override def raw(url: String, params: (String, String)*): S[Byte] =
+      backend.connectRaw(
+        s"$baseUri$url",
+        APIVerb.GET,
+        params = params ++ auth.params,
+        headers = auth.headers,
+        cookies = auth.cookies
+      )
+  }
+
   def apply[F[_]](
       baseUri: String,
       backend: HttpBackend[F],
@@ -150,37 +186,14 @@ object HttpClient {
       backend: HttpBackend[F] with StreamingBackend[S],
       auth: AuthenticationParams = AuthenticationParams()
   ): HttpClient[F] with StreamingClient[S] =
-    new Simple[F](baseUri, backend, auth) with StreamingClient[S] {
-      override def connect[O: Decoder](
-          url: String,
-          params: (String, String)*
-      ): S[O] = backend.connect(
-        s"$baseUri$url",
-        APIVerb.GET,
-        params = params ++ auth.params,
-        headers = auth.headers,
-        cookies = auth.cookies
-      )
-    }
+    new WithStreaming[F, S](baseUri, backend, auth) {}
 
   def withExec[F[_], S[_]](
       baseUri: String,
       backend: HttpBackend[F] with StreamingBackend[S] with ExecBackend[S],
       auth: AuthenticationParams = AuthenticationParams()
   ): HttpClient[F] with StreamingClient[S] with ExecClient[S] =
-    new Simple[F](baseUri, backend, auth)
-      with StreamingClient[S]
-      with ExecClient[S] {
-      override def connect[O: Decoder](
-          url: String,
-          params: (String, String)*
-      ): S[O] = backend.connect(
-        s"$baseUri$url",
-        APIVerb.GET,
-        params = params ++ auth.params,
-        headers = auth.headers,
-        cookies = auth.cookies
-      )
+    new WithStreaming[F, S](baseUri, backend, auth) with ExecClient[S] {
       override def exec(
           url: String,
           params: (String, String)*
@@ -196,8 +209,12 @@ object HttpClient {
 
 trait StreamingClient[F[_]] {
   def connect[O: Decoder](url: String, params: (String, String)*): F[O]
+  def lines(url: String, params: (String, String)*): F[String]
+  def raw(url: String, params: (String, String)*): F[Byte]
 
   final def listen[O](req: WatchRequest[O]): F[O] = req.listen(this)
+  final def lines(req: LinesRequest): F[String] = req.lines(this)
+  final def raw(req: RawRequest): F[Byte] = req.raw(this)
 }
 
 sealed trait APIVerb extends Serializable with Product
@@ -237,4 +254,27 @@ trait StreamingBackend[S[_]] {
       params: Seq[(String, String)],
       cookies: Seq[(String, String)]
   ): S[O]
+  def connectLines(
+      url: String,
+      verb: APIVerb,
+      headers: Seq[(String, String)],
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
+  ): S[String]
+  def connectRaw(
+      url: String,
+      verb: APIVerb,
+      headers: Seq[(String, String)],
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
+  ): S[Byte]
+}
+
+trait ExecBackend[S[_]] {
+  def execConnect(
+      url: String,
+      headers: Seq[(String, String)],
+      params: Seq[(String, String)],
+      cookies: Seq[(String, String)]
+  ): S[ExecInput] => S[ExecEvent]
 }
