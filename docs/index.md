@@ -1,4 +1,4 @@
-# scala-k8s
+# Getting started
 
 ## Usage
 
