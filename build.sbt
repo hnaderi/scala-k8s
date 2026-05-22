@@ -201,13 +201,14 @@ lazy val javaSSL = module("java-ssl") {
 lazy val http4s = module("http4s") {
   crossProject(
     JVMPlatform,
-    JSPlatform // ,NativePlatform TODO enable after typelevel adopted
+    JSPlatform,
+    NativePlatform
   )
     .crossType(CrossType.Pure)
     .settings(
       description := "http4s based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-client" % "0.23.33"
+        "org.http4s" %%% "http4s-client" % "0.23.34"
       )
     )
     .dependsOn(client, jawn)
@@ -222,13 +223,14 @@ lazy val http4s = module("http4s") {
 lazy val http4sEmber = module("http4s-ember") {
   crossProject(
     JVMPlatform,
-    JSPlatform // , NativePlatform
+    JSPlatform,
+    NativePlatform
   )
     .crossType(CrossType.Pure)
     .settings(
       description := "http4s ember based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-ember-client" % "0.23.33"
+        "org.http4s" %%% "http4s-ember-client" % "0.23.34"
       )
     )
     .dependsOn(http4s)
@@ -355,7 +357,7 @@ lazy val integrationTests = project
     name := "scala-k8s-integration-tests",
     Test / fork := true,
     libraryDependencies ++= Seq(
-      "org.http4s" %% "http4s-circe" % "0.23.33" % Test,
+      "org.http4s" %% "http4s-circe" % "0.23.34" % Test,
       "com.dimafeng" %% "testcontainers-scala-core" % testcontainersVersion % Test,
       "com.dimafeng" %% "testcontainers-scala-k3s" % testcontainersVersion % Test,
       "org.typelevel" %% "munit-cats-effect" % munitCatsEffectVersion % Test
@@ -459,7 +461,7 @@ lazy val docs = project
   .enablePlugins(ScalaK8sWebsite)
   .settings(
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-circe" % "0.23.33",
+      "org.http4s" %%% "http4s-circe" % "0.23.34",
       "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
     )
   )
@@ -497,7 +499,7 @@ lazy val exampleJVM = example("jvm") {
     .crossType(CrossType.Pure)
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-circe" % "0.23.33",
+        "org.http4s" %%% "http4s-circe" % "0.23.34",
         "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
       )
     )
@@ -507,12 +509,13 @@ lazy val exampleJVM = example("jvm") {
 lazy val exampleCrossPlatform = example("cross-platform") {
   crossProject(
     JVMPlatform,
-    JSPlatform // , NativePlatform
+    JSPlatform,
+    NativePlatform
   )
     .crossType(CrossType.Pure)
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-circe" % "0.23.33"
+        "org.http4s" %%% "http4s-circe" % "0.23.34"
       )
     )
     .jsSettings(
@@ -522,10 +525,6 @@ lazy val exampleCrossPlatform = example("cross-platform") {
       // scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) }
     )
     .jsConfigure(_.enablePlugins(ScalaJSBundlerPlugin))
-    // .nativeSettings(
-    //   libraryDependencies += "com.armanbilge" %%% "epollcat" % "0.1.6",
-    //   envVars ++= Map("S2N_DONT_MLOCK" -> "1")
-    // )
     .dependsOn(http4sEmber, circe)
 }
 
