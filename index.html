@@ -387,7 +387,7 @@
 </span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">http4s</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="identifier">_</span><span>
 
 </span><span class="keyword">val</span><span> </span><span class="identifier">buildClient</span><span> = </span><span class="type-name">EmberKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">defaultConfig</span><span>[</span><span class="type-name">Json</span><span>]
-</span><span class="comment">// buildClient: Resource[IO, http4s.package.KClient[IO]] = Bind(Allocate(cats.effect.kernel.Resource$$Lambda$13900/0x00000008037d6840@72979f83),cats.effect.kernel.Resource$$Lambda$13901/0x00000008037d5840@4ece1891)
+</span><span class="comment">// buildClient: Resource[IO, http4s.package.KClient[IO]] = Bind(Allocate(cats.effect.kernel.Resource$$Lambda$13959/0x0000000802559840@7fbd7dfd),cats.effect.kernel.Resource$$Lambda$13960/0x000000080255b840@4f9f471)
 </span><span> 
 </span><span class="keyword">val</span><span> </span><span class="identifier">getNodes</span><span> = </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>)
 </span><span class="comment">// getNodes: IO[io.k8s.api.core.v1.NodeList] = IO(...)
@@ -399,7 +399,7 @@
   </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="identifier">client</span><span>=&gt;
     </span><span class="type-name">APIs</span><span>
       .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;kube-system&quot;</span><span>)
-      .</span><span class="identifier">configmaps</span><span>
+      .</span><span class="identifier">configMaps</span><span>
       .</span><span class="identifier">get</span><span>(</span><span class="string-literal">&quot;kube-proxy&quot;</span><span>)
       .</span><span class="identifier">send</span><span>(</span><span class="identifier">client</span><span>)
   )
@@ -432,7 +432,7 @@
 
 </span><span class="keyword">val</span><span> </span><span class="identifier">sysConfig</span><span> = </span><span class="type-name">APIs</span><span>
   .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;kube-system&quot;</span><span>)
-  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">configMaps</span><span>
 </span><span class="comment">// sysConfig: apis.corev1.ConfigMapAPI = ConfigMapAPI(&quot;kube-system&quot;)
 </span><span>
 </span><span class="keyword">val</span><span> </span><span class="identifier">defaultConfig</span><span> = </span><span class="identifier">sysConfig</span><span>.</span><span class="identifier">copy</span><span>(</span><span class="identifier">namespace</span><span> = </span><span class="string-literal">&quot;default&quot;</span><span>)
@@ -442,7 +442,7 @@
         <p>For doing simple strategical merge patches:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch1</span><span> = </span><span class="type-name">APIs</span><span>
   .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
-  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">configMaps</span><span>
   .</span><span class="identifier">patch</span><span>(
     </span><span class="string-literal">&quot;test&quot;</span><span>,
     </span><span class="type-name">ConfigMap</span><span>(</span><span class="identifier">metadata</span><span> = </span><span class="type-name">ObjectMeta</span><span>(</span><span class="identifier">labels</span><span> = </span><span class="type-name">Map</span><span>(</span><span class="string-literal">&quot;new&quot;</span><span> -&gt; </span><span class="string-literal">&quot;label&quot;</span><span>)))
@@ -454,24 +454,24 @@
 
 </span><span class="keyword">val</span><span> </span><span class="identifier">patch2</span><span> = </span><span class="type-name">APIs</span><span>
   .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
-  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">configMaps</span><span>
   .</span><span class="identifier">jsonPatch</span><span>(</span><span class="string-literal">&quot;test&quot;</span><span>)(
     </span><span class="type-name">JsonPatch</span><span>[</span><span class="type-name">ConfigMap</span><span>].</span><span class="identifier">builder</span><span>
       .</span><span class="identifier">add</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;new&quot;</span><span>), </span><span class="string-literal">&quot;label&quot;</span><span>)
       .</span><span class="identifier">move</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;a&quot;</span><span>), </span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;b&quot;</span><span>))
       .</span><span class="identifier">remove</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">data</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;to-delete&quot;</span><span>))
   )
-</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@39d7a3e1,JsonPatch,None,None,None,None)</span></code></pre>
+</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@3db4f8a1,JsonPatch,None,None,None,None)</span></code></pre>
         <p>Server side apply:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch3</span><span> = </span><span class="type-name">APIs</span><span>
   .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
-  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">configMaps</span><span>
   .</span><span class="identifier">serverSideApply</span><span>(</span><span class="string-literal">&quot;test&quot;</span><span>, </span><span class="type-name">ConfigMap</span><span>(), </span><span class="identifier">fieldManager</span><span> = </span><span class="string-literal">&quot;my-operator&quot;</span><span>)
 </span><span class="comment">// patch3: apis.corev1.ConfigMapAPI.ServerSideApply = ServerSideApply(test,default,ConfigMap(None,None,None,None),my-operator,None,None,None)</span></code></pre>
         <p>Or <a href="https://www.rfc-editor.org/rfc/rfc7386">json merge patches</a>:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch4</span><span> = </span><span class="type-name">APIs</span><span>
   .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
-  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">configMaps</span><span>
   .</span><span class="identifier">patch</span><span>(
     </span><span class="string-literal">&quot;test&quot;</span><span>,
     </span><span class="type-name">ConfigMap</span><span>(</span><span class="identifier">metadata</span><span> = </span><span class="type-name">ObjectMeta</span><span>(</span><span class="identifier">labels</span><span> = </span><span class="type-name">Map</span><span>(</span><span class="string-literal">&quot;new&quot;</span><span> -&gt; </span><span class="string-literal">&quot;label&quot;</span><span>))),
@@ -487,7 +487,7 @@
 </span><span>
 </span><span class="keyword">val</span><span> </span><span class="identifier">patch5</span><span> = </span><span class="type-name">APIs</span><span>
   .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
-  .</span><span class="identifier">configmaps</span><span>
+  .</span><span class="identifier">configMaps</span><span>
   .</span><span class="identifier">patchGeneric</span><span>(
     </span><span class="string-literal">&quot;test&quot;</span><span>,
     </span><span class="identifier">customMergeObject</span><span>,
