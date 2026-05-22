@@ -16,19 +16,9 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs
-    extends CoreV1
-    with AppsV1
-    with BatchV1
-    with NetworkingV1
-    with APIExtensionsV1
-    with RbacV1
-    with PolicyV1
-    with AutoscalingV1
-    with AutoscalingV2
-    with StorageV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
-}
+import apis.rbacv1._
 
-object APIs extends APIs
+trait RbacV1Namespaced { self: NamespacedAPI =>
+  final val roles: RoleAPI = RoleAPI(namespace)
+  final val roleBindings: RoleBindingAPI = RoleBindingAPI(namespace)
+}

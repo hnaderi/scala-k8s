@@ -28,6 +28,8 @@ trait CoreV1 {
   final val events = ClusterEventAPI
   final val serviceAccounts = ClusterServiceAccountAPI
   final val resourceQuotas = ClusterResourceQuotaAPI
+  final val persistentVolumes = PersistentVolumeAPI
+  final val persistentVolumeClaims = ClusterPersistentVolumeClaimAPI
 }
 
 object CoreV1 extends APIGroupAPI("/api/v1") with CoreV1

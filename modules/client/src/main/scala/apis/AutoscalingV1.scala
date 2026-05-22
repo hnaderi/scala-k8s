@@ -16,19 +16,12 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs
-    extends CoreV1
-    with AppsV1
-    with BatchV1
-    with NetworkingV1
-    with APIExtensionsV1
-    with RbacV1
-    with PolicyV1
-    with AutoscalingV1
-    with AutoscalingV2
-    with StorageV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
+import apis.autoscalingv1._
+
+trait AutoscalingV1 {
+  final val horizontalPodAutoscalersV1 = ClusterHorizontalPodAutoscalerV1API
 }
 
-object APIs extends APIs
+object AutoscalingV1
+    extends APIGroupAPI("/apis/autoscaling/v1")
+    with AutoscalingV1

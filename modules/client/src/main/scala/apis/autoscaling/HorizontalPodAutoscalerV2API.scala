@@ -15,20 +15,19 @@
  */
 
 package dev.hnaderi.k8s.client
+package apis.autoscalingv2
 
-trait APIs
-    extends CoreV1
-    with AppsV1
-    with BatchV1
-    with NetworkingV1
-    with APIExtensionsV1
-    with RbacV1
-    with PolicyV1
-    with AutoscalingV1
-    with AutoscalingV2
-    with StorageV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
-}
+import io.k8s.api.autoscaling.v2.HorizontalPodAutoscaler
+import io.k8s.api.autoscaling.v2.HorizontalPodAutoscalerList
 
-object APIs extends APIs
+object HorizontalPodAutoscalerV2API
+    extends AutoscalingV2.NamespacedResourceAPI[
+      HorizontalPodAutoscaler,
+      HorizontalPodAutoscalerList
+    ]("horizontalpodautoscalers")
+
+final case class HorizontalPodAutoscalerV2API(namespace: String)
+    extends HorizontalPodAutoscalerV2API.NamespacedAPIBuilders
+
+object ClusterHorizontalPodAutoscalerV2API
+    extends HorizontalPodAutoscalerV2API.ClusterwideAPIBuilders

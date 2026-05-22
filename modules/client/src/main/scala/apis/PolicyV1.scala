@@ -16,19 +16,10 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs
-    extends CoreV1
-    with AppsV1
-    with BatchV1
-    with NetworkingV1
-    with APIExtensionsV1
-    with RbacV1
-    with PolicyV1
-    with AutoscalingV1
-    with AutoscalingV2
-    with StorageV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
+import apis.policyv1._
+
+trait PolicyV1 {
+  final val podDisruptionBudgets = ClusterPodDisruptionBudgetAPI
 }
 
-object APIs extends APIs
+object PolicyV1 extends APIGroupAPI("/apis/policy/v1") with PolicyV1

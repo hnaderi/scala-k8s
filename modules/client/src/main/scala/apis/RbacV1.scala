@@ -16,19 +16,15 @@
 
 package dev.hnaderi.k8s.client
 
-trait APIs
-    extends CoreV1
-    with AppsV1
-    with BatchV1
-    with NetworkingV1
-    with APIExtensionsV1
-    with RbacV1
-    with PolicyV1
-    with AutoscalingV1
-    with AutoscalingV2
-    with StorageV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
+import apis.rbacv1._
+
+trait RbacV1 {
+  final val roles = ClusterRoleListAPI
+  final val roleBindings = ClusterRoleBindingListAPI
+  final val clusterRoles = ClusterRoleAPI
+  final val clusterRoleBindings = ClusterRoleBindingAPI
 }
 
-object APIs extends APIs
+object RbacV1
+    extends APIGroupAPI("/apis/rbac.authorization.k8s.io/v1")
+    with RbacV1

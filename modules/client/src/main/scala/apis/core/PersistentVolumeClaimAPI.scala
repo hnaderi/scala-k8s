@@ -15,20 +15,21 @@
  */
 
 package dev.hnaderi.k8s.client
+package apis.corev1
 
-trait APIs
-    extends CoreV1
-    with AppsV1
-    with BatchV1
-    with NetworkingV1
-    with APIExtensionsV1
-    with RbacV1
-    with PolicyV1
-    with AutoscalingV1
-    with AutoscalingV2
-    with StorageV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
-}
+import io.k8s.api.core.v1.PersistentVolumeClaim
+import io.k8s.api.core.v1.PersistentVolumeClaimList
 
-object APIs extends APIs
+object PersistentVolumeClaimAPI
+    extends CoreV1.NamespacedResourceAPI[
+      PersistentVolumeClaim,
+      PersistentVolumeClaimList
+    ](
+      "persistentvolumeclaims"
+    )
+
+final case class PersistentVolumeClaimAPI(namespace: String)
+    extends PersistentVolumeClaimAPI.NamespacedAPIBuilders
+
+object ClusterPersistentVolumeClaimAPI
+    extends PersistentVolumeClaimAPI.ClusterwideAPIBuilders

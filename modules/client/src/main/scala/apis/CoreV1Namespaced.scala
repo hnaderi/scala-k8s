@@ -28,5 +28,7 @@ trait CoreV1Namespaced { self: NamespacedAPI =>
   final val events: EventAPI = EventAPI(namespace)
   final val serviceAccounts: ServiceAccountAPI = ServiceAccountAPI(namespace)
   final val resourceQuotas: ResourceQuotaAPI = ResourceQuotaAPI(namespace)
+  final val persistentVolumeClaims: PersistentVolumeClaimAPI =
+    PersistentVolumeClaimAPI(namespace)
 
 }

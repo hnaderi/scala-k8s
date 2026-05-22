@@ -15,20 +15,21 @@
  */
 
 package dev.hnaderi.k8s.client
+package apis.policyv1
 
-trait APIs
-    extends CoreV1
-    with AppsV1
-    with BatchV1
-    with NetworkingV1
-    with APIExtensionsV1
-    with RbacV1
-    with PolicyV1
-    with AutoscalingV1
-    with AutoscalingV2
-    with StorageV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
-}
+import io.k8s.api.policy.v1.PodDisruptionBudget
+import io.k8s.api.policy.v1.PodDisruptionBudgetList
 
-object APIs extends APIs
+object PodDisruptionBudgetAPI
+    extends PolicyV1.NamespacedResourceAPI[
+      PodDisruptionBudget,
+      PodDisruptionBudgetList
+    ](
+      "poddisruptionbudgets"
+    )
+
+final case class PodDisruptionBudgetAPI(namespace: String)
+    extends PodDisruptionBudgetAPI.NamespacedAPIBuilders
+
+object ClusterPodDisruptionBudgetAPI
+    extends PodDisruptionBudgetAPI.ClusterwideAPIBuilders

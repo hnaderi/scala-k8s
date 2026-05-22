@@ -217,6 +217,23 @@ abstract class APIGroupAPI(base: String) {
           force = force
         )
 
+    case class GetStatus(namespace: String, name: String)
+        extends GetRequest[RES](urlFor(namespace, name) + "/status")
+    case class ReplaceStatus(
+        namespace: String,
+        name: String,
+        body: RES,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ) extends ReplaceRequest[RES](
+          urlFor(namespace, name) + "/status",
+          body,
+          dryRun = dryRun,
+          fieldManager = fieldManager,
+          fieldValidation = fieldValidation
+        )
+
     trait NamespacedAPIBuilders extends NamespacedAPI {
       def get(name: String): Get = Get(namespace, name)
       def list(
@@ -396,6 +413,21 @@ abstract class APIGroupAPI(base: String) {
         dryRun = dryRun,
         force = force
       )
+      def getStatus(name: String): GetStatus = GetStatus(namespace, name)
+      def replaceStatus(
+          name: String,
+          body: RES,
+          dryRun: Option[String] = None,
+          fieldManager: Option[String] = None,
+          fieldValidation: Option[String] = None
+      ): ReplaceStatus = ReplaceStatus(
+        namespace,
+        name,
+        body,
+        dryRun = dryRun,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation
+      )
     }
   }
 
@@ -505,6 +537,22 @@ abstract class APIGroupAPI(base: String) {
           fieldValidation = fieldValidation,
           fieldManager = fieldManager,
           force = force
+        )
+
+    case class GetStatus(name: String)
+        extends GetRequest[RES](urlFor(name) + "/status")
+    case class ReplaceStatus(
+        name: String,
+        body: RES,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ) extends ReplaceRequest[RES](
+          urlFor(name) + "/status",
+          body,
+          dryRun = dryRun,
+          fieldManager = fieldManager,
+          fieldValidation = fieldValidation
         )
 
     def get(name: String): Get = Get(name)
@@ -674,6 +722,20 @@ abstract class APIGroupAPI(base: String) {
       fieldValidation = fieldValidation,
       dryRun = dryRun,
       force = force
+    )
+    def getStatus(name: String): GetStatus = GetStatus(name)
+    def replaceStatus(
+        name: String,
+        body: RES,
+        dryRun: Option[String] = None,
+        fieldManager: Option[String] = None,
+        fieldValidation: Option[String] = None
+    ): ReplaceStatus = ReplaceStatus(
+      name,
+      body,
+      dryRun = dryRun,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation
     )
 
   }

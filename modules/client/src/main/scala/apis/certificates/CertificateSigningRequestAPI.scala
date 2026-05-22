@@ -54,31 +54,4 @@ object CertificateSigningRequestAPI
     fieldValidation = fieldValidation
   )
 
-  case class StatusRequest(
-      name: String,
-      body: CertificateSigningRequest,
-      dryRun: Option[String] = None,
-      fieldManager: Option[String] = None,
-      fieldValidation: Option[String] = None
-  ) extends ReplaceRequest(
-        s"${urlFor(name)}/status",
-        body,
-        dryRun = dryRun,
-        fieldManager = fieldManager,
-        fieldValidation = fieldValidation
-      )
-
-  def replaceStatus(
-      name: String,
-      csr: CertificateSigningRequest,
-      dryRun: Option[String] = None,
-      fieldManager: Option[String] = None,
-      fieldValidation: Option[String] = None
-  ): StatusRequest = StatusRequest(
-    name,
-    csr,
-    dryRun = dryRun,
-    fieldManager = fieldManager,
-    fieldValidation = fieldValidation
-  )
 }

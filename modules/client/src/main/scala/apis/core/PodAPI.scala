@@ -118,22 +118,6 @@ object PodAPI
         limitBytes = limitBytes
       )
 
-  case class GetStatus(namespace: String, name: String)
-      extends GetRequest[Pod](PodAPI.urlFor(namespace, name) + "/status")
-  case class ReplaceStatus(
-      namespace: String,
-      name: String,
-      body: Pod,
-      dryRun: Option[String] = None,
-      fieldManager: Option[String] = None,
-      fieldValidation: Option[String] = None
-  ) extends ReplaceRequest[Pod](
-        PodAPI.urlFor(namespace, name) + "/status",
-        body,
-        dryRun = dryRun,
-        fieldManager = fieldManager,
-        fieldValidation = fieldValidation
-      )
   case class Evict(
       namespace: String,
       name: String,
@@ -211,23 +195,6 @@ final case class PodAPI(namespace: String)
     limitBytes = limitBytes
   )
 
-  def getStatus(name: String): PodAPI.GetStatus =
-    PodAPI.GetStatus(namespace, name)
-  def replaceStatus(
-      name: String,
-      body: Pod,
-      dryRun: Option[String] = None,
-      fieldManager: Option[String] = None,
-      fieldValidation: Option[String] = None
-  ): PodAPI.ReplaceStatus =
-    PodAPI.ReplaceStatus(
-      namespace,
-      name,
-      body,
-      dryRun = dryRun,
-      fieldManager = fieldManager,
-      fieldValidation = fieldValidation
-    )
   def evict(
       name: String,
       eviction: Eviction = Eviction(),

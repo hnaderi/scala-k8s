@@ -15,20 +15,12 @@
  */
 
 package dev.hnaderi.k8s.client
+package apis.rbacv1
 
-trait APIs
-    extends CoreV1
-    with AppsV1
-    with BatchV1
-    with NetworkingV1
-    with APIExtensionsV1
-    with RbacV1
-    with PolicyV1
-    with AutoscalingV1
-    with AutoscalingV2
-    with StorageV1 {
-  val namespaces = NamespaceAPI
-  def namespace(name: String) = NamespaceAPI(name)
-}
+import io.k8s.api.rbac.v1.ClusterRole
+import io.k8s.api.rbac.v1.ClusterRoleList
 
-object APIs extends APIs
+object ClusterRoleAPI
+    extends RbacV1.ClusterResourceAPI[ClusterRole, ClusterRoleList](
+      "clusterroles"
+    )

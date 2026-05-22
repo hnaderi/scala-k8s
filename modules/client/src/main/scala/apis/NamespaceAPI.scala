@@ -24,6 +24,10 @@ final case class NamespaceAPI(namespace: String)
     with AppsV1Namespaced
     with BatchV1Namespaced
     with NetworkingV1Namespaced
+    with RbacV1Namespaced
+    with PolicyV1Namespaced
+    with AutoscalingV1Namespaced
+    with AutoscalingV2Namespaced
     with NamespacedAPI
 
 object NamespaceAPI {
