@@ -353,7 +353,7 @@ jobs:
 
   post-build:
     name: post build
-    needs: [build, integration]
+    needs: [build, integration, generator-tests]
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -406,6 +406,51 @@ jobs:
 
       - name: Run integration tests
         run: sbt '++ ${{ matrix.scala }}' integrationTests/test
+
+  generator-tests:
+    name: Generator Tests
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        java: [temurin@11]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout current branch (full)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Setup Java (temurin@11)
+        id: setup-java-temurin-11
+        if: matrix.java == 'temurin@11'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 11
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@11' && steps.setup-java-temurin-11.outputs.cache-hit == 'false'
+        run: sbt +update
+
+      - name: Setup Java (temurin@17)
+        id: setup-java-temurin-17
+        if: matrix.java == 'temurin@17'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
+        run: sbt +update
+
+      - name: Test code generators
+        run: cd project && sbt generator/test
 
   site:
     name: Generate Site

@@ -31,7 +31,7 @@ ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
   id = "post-build",
   name = "post build",
-  needs = List("build", "integration"),
+  needs = List("build", "integration", "generator-tests"),
   steps = List(
     WorkflowStep.Run(
       commands = List("echo success!"),
@@ -50,6 +50,20 @@ ThisBuild / githubWorkflowAddedJobs += {
     steps = setup :+ WorkflowStep.Sbt(
       commands = List("integrationTests/test"),
       name = Some("Run integration tests")
+    ),
+    scalas = Nil,
+    javas = List(PrimaryJava)
+  )
+}
+
+ThisBuild / githubWorkflowAddedJobs += {
+  val setup = (ThisBuild / githubWorkflowJobSetup).value.toList
+  WorkflowJob(
+    id = "generator-tests",
+    name = "Generator Tests",
+    steps = setup :+ WorkflowStep.Run(
+      commands = List("cd project && sbt generator/test"),
+      name = Some("Test code generators")
     ),
     scalas = Nil,
     javas = List(PrimaryJava)
