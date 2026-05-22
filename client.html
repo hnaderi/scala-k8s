@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="generator" content="Typelevel Laika + Helium Theme" />
+  <title>Client</title>
+  
+  <meta name="author" content="Hossein Naderi"/>
+  
+  
+  <meta name="description" content="docs"/>
+  
+  
+  
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700">
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:500">
+  
+  <link rel="stylesheet" type="text/css" href="helium/site/icofont.min.css" />
+    <link rel="stylesheet" type="text/css" href="helium/site/laika-helium.css" />
+  <script src="helium/site/laika-helium.js"></script>
+  
+  
+  <script> /* for avoiding page load transitions */ </script>
+</head>
+
+  <body>
+
+    <header id="top-bar" class="light-default dark-default">
+
+  <div class="row">
+    <a id="nav-icon">
+      <i class="icofont-laika navigationMenu" title="Navigation">&#xefa2;</i>
+    </a>
+    
+    
+  </div>
+
+  <a class="icon-link glyph-link" href="index.html"><i class="icofont-laika home" title="Home">&#xef47;</i></a>
+
+  <div class="row links">
+    
+    <a class="icon-link svg-link" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/"><span class="api" title="API"><svg class="svg-icon" width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+  <g class="svg-shape">
+    <path d="M75,47.5c13.246,0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm-50,-0c13.246,-0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,-0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm2.705,16.735l7.239,0l0.622,-4.904l-21.833,0l-0,4.904l7.589,0l0,22.067l6.383,0l-0,-22.067Zm58.076,7.265c-0,-8.757 -3.698,-14.166 -10.781,-14.166c-7.083,-0 -10.781,5.604 -10.781,14.166c0,8.757 3.698,14.166 10.781,14.166c7.083,0 10.781,-5.604 10.781,-14.166Zm-6.539,0c0,6.538 -1.128,9.496 -4.242,9.496c-2.997,0 -4.242,-2.88 -4.242,-9.496c-0,-6.616 1.206,-9.496 4.242,-9.496c3.036,-0 4.242,2.88 4.242,9.496Zm-29.242,-67c13.246,0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm0.512,9.834c-7.122,-0 -12.609,5.098 -12.609,14.127c-0,9.263 5.215,14.205 12.532,14.205c4.164,0 7.083,-1.634 9.068,-3.658l-2.88,-3.697c-1.518,1.206 -3.153,2.413 -5.838,2.413c-3.697,-0 -6.266,-2.763 -6.266,-9.263c-0,-6.616 2.724,-9.379 6.149,-9.379c2.102,-0 3.892,0.778 5.371,1.984l3.113,-3.775c-2.257,-1.868 -4.748,-2.957 -8.64,-2.957Z"/>
+  </g>
+</svg></span></a>
+    
+    <a class="icon-link svg-link" href="https://github.com/hnaderi/scala-k8s"><span class="github" title="Source Code"><svg class="svg-icon" width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+  <g class="svg-shape">
+    <path d="M49.995,1c-27.609,-0 -49.995,22.386 -49.995,50.002c-0,22.09 14.325,40.83 34.194,47.444c2.501,0.458 3.413,-1.086 3.413,-2.412c0,-1.185 -0.043,-4.331 -0.067,-8.503c-13.908,3.021 -16.843,-6.704 -16.843,-6.704c-2.274,-5.773 -5.552,-7.311 -5.552,-7.311c-4.54,-3.103 0.344,-3.042 0.344,-3.042c5.018,0.356 7.658,5.154 7.658,5.154c4.46,7.64 11.704,5.433 14.552,4.156c0.454,-3.232 1.744,-5.436 3.174,-6.685c-11.102,-1.262 -22.775,-5.553 -22.775,-24.713c-0,-5.457 1.949,-9.92 5.147,-13.416c-0.516,-1.265 -2.231,-6.348 0.488,-13.233c0,0 4.199,-1.344 13.751,5.126c3.988,-1.108 8.266,-1.663 12.518,-1.682c4.245,0.019 8.523,0.574 12.517,1.682c9.546,-6.47 13.736,-5.126 13.736,-5.126c2.728,6.885 1.013,11.968 0.497,13.233c3.204,3.496 5.141,7.959 5.141,13.416c0,19.209 -11.691,23.436 -22.83,24.673c1.795,1.544 3.394,4.595 3.394,9.26c0,6.682 -0.061,12.076 -0.061,13.715c0,1.338 0.899,2.894 3.438,2.406c19.853,-6.627 34.166,-25.354 34.166,-47.438c-0,-27.616 -22.389,-50.002 -50.005,-50.002"/>
+  </g>
+</svg></span></a>
+    
+  </div>  
+
+</header>
+    
+    <nav id="sidebar">
+
+  <div class="row">
+    
+    <a class="icon-link svg-link" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/"><span class="api" title="API"><svg class="svg-icon" width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+  <g class="svg-shape">
+    <path d="M75,47.5c13.246,0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm-50,-0c13.246,-0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,-0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm2.705,16.735l7.239,0l0.622,-4.904l-21.833,0l-0,4.904l7.589,0l0,22.067l6.383,0l-0,-22.067Zm58.076,7.265c-0,-8.757 -3.698,-14.166 -10.781,-14.166c-7.083,-0 -10.781,5.604 -10.781,14.166c0,8.757 3.698,14.166 10.781,14.166c7.083,0 10.781,-5.604 10.781,-14.166Zm-6.539,0c0,6.538 -1.128,9.496 -4.242,9.496c-2.997,0 -4.242,-2.88 -4.242,-9.496c-0,-6.616 1.206,-9.496 4.242,-9.496c3.036,-0 4.242,2.88 4.242,9.496Zm-29.242,-67c13.246,0 24,10.754 24,24c0,13.246 -10.754,24 -24,24c-13.246,0 -24,-10.754 -24,-24c0,-13.246 10.754,-24 24,-24Zm0.512,9.834c-7.122,-0 -12.609,5.098 -12.609,14.127c-0,9.263 5.215,14.205 12.532,14.205c4.164,0 7.083,-1.634 9.068,-3.658l-2.88,-3.697c-1.518,1.206 -3.153,2.413 -5.838,2.413c-3.697,-0 -6.266,-2.763 -6.266,-9.263c-0,-6.616 2.724,-9.379 6.149,-9.379c2.102,-0 3.892,0.778 5.371,1.984l3.113,-3.775c-2.257,-1.868 -4.748,-2.957 -8.64,-2.957Z"/>
+  </g>
+</svg></span></a>
+    
+    <a class="icon-link svg-link" href="https://github.com/hnaderi/scala-k8s"><span class="github" title="Source Code"><svg class="svg-icon" width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+  <g class="svg-shape">
+    <path d="M49.995,1c-27.609,-0 -49.995,22.386 -49.995,50.002c-0,22.09 14.325,40.83 34.194,47.444c2.501,0.458 3.413,-1.086 3.413,-2.412c0,-1.185 -0.043,-4.331 -0.067,-8.503c-13.908,3.021 -16.843,-6.704 -16.843,-6.704c-2.274,-5.773 -5.552,-7.311 -5.552,-7.311c-4.54,-3.103 0.344,-3.042 0.344,-3.042c5.018,0.356 7.658,5.154 7.658,5.154c4.46,7.64 11.704,5.433 14.552,4.156c0.454,-3.232 1.744,-5.436 3.174,-6.685c-11.102,-1.262 -22.775,-5.553 -22.775,-24.713c-0,-5.457 1.949,-9.92 5.147,-13.416c-0.516,-1.265 -2.231,-6.348 0.488,-13.233c0,0 4.199,-1.344 13.751,5.126c3.988,-1.108 8.266,-1.663 12.518,-1.682c4.245,0.019 8.523,0.574 12.517,1.682c9.546,-6.47 13.736,-5.126 13.736,-5.126c2.728,6.885 1.013,11.968 0.497,13.233c3.204,3.496 5.141,7.959 5.141,13.416c0,19.209 -11.691,23.436 -22.83,24.673c1.795,1.544 3.394,4.595 3.394,9.26c0,6.682 -0.061,12.076 -0.061,13.715c0,1.338 0.899,2.894 3.438,2.406c19.853,-6.627 34.166,-25.354 34.166,-47.438c-0,-27.616 -22.389,-50.002 -50.005,-50.002"/>
+  </g>
+</svg></span></a>
+    
+  </div>
+
+  <ul class="nav-list">
+    <li class="level1 nav-leaf"><a href="index.html">Getting started</a></li>
+    <li class="level1 nav-leaf"><a href="manifests.html">Manifest and Object Generation</a></li>
+    <li class="level1 active nav-leaf"><a href="#">Client</a></li>
+    <li class="level1 nav-leaf"><a href="operator.html">Writing an Operator</a></li>
+    <li class="level1 nav-header">Related projects</li>
+    <li class="level2 nav-leaf"><a href="https://github.com/kubernetes/kubernetes">Kubernetes</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/hnaderi/sbt-k8s">sbt k8s</a></li>
+    <li class="level2 nav-leaf"><a href="https://http4s.org/">http4s</a></li>
+    <li class="level2 nav-leaf"><a href="https://fs2.io/">fs2</a></li>
+    <li class="level2 nav-leaf"><a href="https://scalacheck.org/">scalacheck</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/zio/zio">ZIO</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/zio/zio-http">ZIO-http</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/zio/zio-json">ZIO-json</a></li>
+    <li class="level2 nav-leaf"><a href="https://sttp.softwaremill.com">sttp</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/circe/circe">Circe</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/spray/spray-json">Spray json</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/playframework/play-json">Play json</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/json4s/json4s">Json4s</a></li>
+    <li class="level2 nav-leaf"><a href="https://github.com/typelevel/jawn">Jawn</a></li>
+  </ul>
+
+</nav>
+
+    <div id="container">
+
+      
+<nav id="page-nav">
+  <p class="header"><a href="#">Client</a></p>
+
+  <ul class="nav-list">
+    <li class="level1 nav-leaf"><a href="#http4s-based-client">Http4s based client</a></li>
+    <li class="level1 nav-leaf"><a href="#zio-based-client">ZIO based client</a></li>
+    <li class="level1 nav-leaf"><a href="#sttp-based-client">Sttp based client</a></li>
+    <li class="level1 nav-node"><a href="#api-calls">API calls</a></li>
+    <li class="level2 nav-leaf"><a href="#working-with-requests">Working with requests</a></li>
+    <li class="level2 nav-leaf"><a href="#advanced-requests">Advanced requests</a></li>
+    <li class="level2 nav-leaf"><a href="#pod-exec">Pod exec</a></li>
+    <li class="level2 nav-leaf"><a href="#implementing-new-requests">Implementing new requests</a></li>
+  </ul>
+
+  <p class="footer"></p>
+</nav>
+
+
+      <main class="content">
+
+        <h1 id="client" class="title">Client</h1>
+        <p>Scala k8s provides a Kubernetes client built on top of a generic HTTP client, allowing different backends based on your project&#39;s ecosystem.</p>
+        <p>The following examples use <code>kubectl proxy</code> for simplicity.</p>
+        
+        <h2 id="http4s-based-client" class="section"><a class="anchor-link left" href="#http4s-based-client"><i class="icofont-laika link">&#xef71;</i></a>Http4s based client</h2>
+        <p>Http4s based client supports all APIs.</p>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">http4s</span><span>.</span><span class="type-name">EmberKubernetesClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">http4s</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="identifier">_</span><span>
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">buildClient</span><span> = </span><span class="type-name">EmberKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">defaultConfig</span><span>[</span><span class="type-name">Json</span><span>]
+</span><span class="comment">// buildClient: Resource[IO, http4s.package.KClient[IO]] = Bind(Allocate(cats.effect.kernel.Resource$$Lambda$13591/0x00000008037a6840@36a3cc23),cats.effect.kernel.Resource$$Lambda$13592/0x00000008037a6040@547271d)
+</span><span>
+</span><span class="keyword">val</span><span> </span><span class="identifier">getNodes</span><span> = </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>)
+</span><span class="comment">// getNodes: IO[io.k8s.api.core.v1.NodeList] = IO(...)
+</span><span>
+</span><span class="keyword">val</span><span> </span><span class="identifier">watchNodes</span><span> = </span><span class="identifier">fs2</span><span>.</span><span class="type-name">Stream</span><span>.</span><span class="identifier">resource</span><span>(</span><span class="identifier">buildClient</span><span>).</span><span class="identifier">flatMap</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">listen</span><span>)
+</span><span class="comment">// watchNodes: fs2.Stream[[x]IO[x], WatchEvent[io.k8s.api.core.v1.Node]] = Stream(..)
+</span><span>
+</span><span class="keyword">val</span><span> </span><span class="identifier">getConfigMaps</span><span> =
+  </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="identifier">client</span><span> =&gt;
+    </span><span class="type-name">APIs</span><span>
+      .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;kube-system&quot;</span><span>)
+      .</span><span class="identifier">configMaps</span><span>
+      .</span><span class="identifier">get</span><span>(</span><span class="string-literal">&quot;kube-proxy&quot;</span><span>)
+      .</span><span class="identifier">send</span><span>(</span><span class="identifier">client</span><span>)
+  )
+</span><span class="comment">// getConfigMaps: IO[ConfigMap] = IO(...)</span></code></pre>
+        
+        <h2 id="zio-based-client" class="section"><a class="anchor-link left" href="#zio-based-client"><i class="icofont-laika link">&#xef71;</i></a>ZIO based client</h2>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">ZIOKubernetesClient</span><span>
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">client</span><span> = </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">make</span><span>(</span><span class="string-literal">&quot;http://localhost:8001&quot;</span><span>)
+</span><span class="keyword">val</span><span> </span><span class="identifier">nodes</span><span> = </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">send</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>())</span></code></pre>
+        
+        <h2 id="sttp-based-client" class="section"><a class="anchor-link left" href="#sttp-based-client"><i class="icofont-laika link">&#xef71;</i></a>Sttp based client</h2>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">SttpJdkURLClientBuilder</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">sttp</span><span>.</span><span class="identifier">client3</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="identifier">_</span><span>
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">client</span><span> = </span><span class="type-name">SttpJdkURLClientBuilder</span><span>.</span><span class="identifier">defaultConfig</span><span>[</span><span class="type-name">Json</span><span>]
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">nodes</span><span> = </span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>(</span><span class="identifier">client</span><span>)
+</span><span class="identifier">nodes</span><span>.</span><span class="identifier">body</span><span>.</span><span class="identifier">items</span><span>.</span><span class="identifier">flatMap</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>).</span><span class="identifier">flatMap</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">name</span><span>).</span><span class="identifier">foreach</span><span>(</span><span class="identifier">println</span><span>)</span></code></pre>
+        
+        <h1 id="api-calls" class="section"><a class="anchor-link left" href="#api-calls"><i class="icofont-laika link">&#xef71;</i></a>API calls</h1>
+        
+        <h2 id="working-with-requests" class="section"><a class="anchor-link left" href="#working-with-requests"><i class="icofont-laika link">&#xef71;</i></a>Working with requests</h2>
+        <p>Requests are plain data, so you can manipulate or pass them like any normal value:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">sysConfig</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;kube-system&quot;</span><span>)
+  .</span><span class="identifier">configMaps</span><span>
+</span><span class="comment">// sysConfig: apis.corev1.ConfigMapAPI = ConfigMapAPI(&quot;kube-system&quot;)
+</span><span>
+</span><span class="keyword">val</span><span> </span><span class="identifier">defaultConfig</span><span> = </span><span class="identifier">sysConfig</span><span>.</span><span class="identifier">copy</span><span>(</span><span class="identifier">namespace</span><span> = </span><span class="string-literal">&quot;default&quot;</span><span>)
+</span><span class="comment">// defaultConfig: apis.corev1.ConfigMapAPI = ConfigMapAPI(&quot;default&quot;)</span></code></pre>
+        
+        <h2 id="advanced-requests" class="section"><a class="anchor-link left" href="#advanced-requests"><i class="icofont-laika link">&#xef71;</i></a>Advanced requests</h2>
+        <p>Strategic merge patch:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch1</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+  .</span><span class="identifier">configMaps</span><span>
+  .</span><span class="identifier">patch</span><span>(
+    </span><span class="string-literal">&quot;test&quot;</span><span>,
+    </span><span class="type-name">ConfigMap</span><span>(</span><span class="identifier">metadata</span><span> = </span><span class="type-name">ObjectMeta</span><span>(</span><span class="identifier">labels</span><span> = </span><span class="type-name">Map</span><span>(</span><span class="string-literal">&quot;new&quot;</span><span> -&gt; </span><span class="string-literal">&quot;label&quot;</span><span>)))
+  )
+</span><span class="comment">// patch1: apis.corev1.ConfigMapAPI.GenericPatch[ConfigMap] = GenericPatch(test,default,ConfigMap(None,None,None,Some(ObjectMeta(None,None,None,None,None,None,None,None,None,None,None,Some(Map(new -&gt; label)),None,None,None))),StrategicMerge,None,None,None,None)</span></code></pre>
+        <p><a href="https://www.rfc-editor.org/rfc/rfc6902">Json patch</a>:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch2</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+  .</span><span class="identifier">configMaps</span><span>
+  .</span><span class="identifier">jsonPatch</span><span>(</span><span class="string-literal">&quot;test&quot;</span><span>)(
+    </span><span class="type-name">JsonPatch</span><span>[</span><span class="type-name">ConfigMap</span><span>].</span><span class="identifier">builder</span><span>
+      .</span><span class="identifier">add</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;new&quot;</span><span>), </span><span class="string-literal">&quot;label&quot;</span><span>)
+      .</span><span class="identifier">move</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;a&quot;</span><span>), </span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;b&quot;</span><span>))
+      .</span><span class="identifier">remove</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">data</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;to-delete&quot;</span><span>))
+  )
+</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@77cfb6b2,JsonPatch,None,None,None,None)</span></code></pre>
+        <p>Server side apply:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch3</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+  .</span><span class="identifier">configMaps</span><span>
+  .</span><span class="identifier">serverSideApply</span><span>(</span><span class="string-literal">&quot;test&quot;</span><span>, </span><span class="type-name">ConfigMap</span><span>(), </span><span class="identifier">fieldManager</span><span> = </span><span class="string-literal">&quot;my-operator&quot;</span><span>)
+</span><span class="comment">// patch3: apis.corev1.ConfigMapAPI.ServerSideApply = ServerSideApply(test,default,ConfigMap(None,None,None,None),my-operator,None,None,None)</span></code></pre>
+        <p><a href="https://www.rfc-editor.org/rfc/rfc7386">Json merge patch</a>:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch4</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+  .</span><span class="identifier">configMaps</span><span>
+  .</span><span class="identifier">patch</span><span>(
+    </span><span class="string-literal">&quot;test&quot;</span><span>,
+    </span><span class="type-name">ConfigMap</span><span>(</span><span class="identifier">metadata</span><span> = </span><span class="type-name">ObjectMeta</span><span>(</span><span class="identifier">labels</span><span> = </span><span class="type-name">Map</span><span>(</span><span class="string-literal">&quot;new&quot;</span><span> -&gt; </span><span class="string-literal">&quot;label&quot;</span><span>))),
+    </span><span class="identifier">patch</span><span> = </span><span class="type-name">PatchType</span><span>.</span><span class="type-name">Merge</span><span>
+  )
+</span><span class="comment">// patch4: apis.corev1.ConfigMapAPI.GenericPatch[ConfigMap] = GenericPatch(test,default,ConfigMap(None,None,None,Some(ObjectMeta(None,None,None,None,None,None,None,None,None,None,None,Some(Map(new -&gt; label)),None,None,None))),Merge,None,None,None,None)</span></code></pre>
+        <p>Custom type merge:</p>
+        <pre><code class="nohighlight"><span class="keyword">type</span><span> </span><span class="type-name">CustomMerge</span><span> = </span><span class="type-name">String</span><span>
+</span><span class="keyword">val</span><span> </span><span class="identifier">customMergeObject</span><span>: </span><span class="type-name">CustomMerge</span><span> = </span><span class="string-literal">&quot;&quot;</span><span>
+</span><span class="comment">// customMergeObject: CustomMerge = 
+</span><span>
+</span><span class="keyword">val</span><span> </span><span class="identifier">patch5</span><span> = </span><span class="type-name">APIs</span><span>
+  .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+  .</span><span class="identifier">configMaps</span><span>
+  .</span><span class="identifier">patchGeneric</span><span>(
+    </span><span class="string-literal">&quot;test&quot;</span><span>,
+    </span><span class="identifier">customMergeObject</span><span>,
+    </span><span class="identifier">patch</span><span> = </span><span class="type-name">PatchType</span><span>.</span><span class="type-name">Merge</span><span>
+  )
+</span><span class="comment">// patch5: apis.corev1.ConfigMapAPI.GenericPatch[CustomMerge] = GenericPatch(test,default,,Merge,None,None,None,None)</span></code></pre>
+        
+        <h2 id="pod-exec" class="section"><a class="anchor-link left" href="#pod-exec"><i class="icofont-laika link">&#xef71;</i></a>Pod exec</h2>
+        <p>The <code>http4s-jdk</code> and <code>http4s-netty</code> backends support executing commands inside pods over WebSockets using the Kubernetes exec API.</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-http4s-jdk&quot;</span><span> % </span><span class="string-literal">&quot;0.29.0&quot;</span></code></pre>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">http4s</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="type-name">Stream</span><span>
+
+</span><span class="comment">// JDKKubernetesClient also supports defaultConfigWithExec, kubeconfigWithExec,
+// fromConfigWithExec, fromWithExec, podConfigWithExec
+</span><span class="keyword">val</span><span> </span><span class="identifier">execApp</span><span>: </span><span class="type-name">IO</span><span>[</span><span class="type-name">Unit</span><span>] =
+  </span><span class="type-name">JDKKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">defaultConfigWithExec</span><span>[</span><span class="type-name">Json</span><span>].</span><span class="identifier">use</span><span> { </span><span class="identifier">client</span><span> =&gt;
+    </span><span class="keyword">val</span><span> </span><span class="identifier">pipe</span><span> = </span><span class="identifier">client</span><span>.</span><span class="identifier">pipe</span><span>(
+      </span><span class="type-name">APIs</span><span>
+        .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+        .</span><span class="identifier">pods</span><span>
+        .</span><span class="identifier">exec</span><span>(</span><span class="string-literal">&quot;my-pod&quot;</span><span>, </span><span class="type-name">Seq</span><span>(</span><span class="string-literal">&quot;sh&quot;</span><span>, </span><span class="string-literal">&quot;-c&quot;</span><span>, </span><span class="string-literal">&quot;echo hello&quot;</span><span>))
+    )
+
+    </span><span class="identifier">pipe</span><span>(</span><span class="type-name">Stream</span><span>.</span><span class="identifier">empty</span><span>)
+      .</span><span class="identifier">evalMap</span><span> {
+        </span><span class="keyword">case</span><span> </span><span class="type-name">ExecEvent</span><span>.</span><span class="type-name">Stdout</span><span>(</span><span class="identifier">data</span><span>) =&gt;
+          </span><span class="type-name">IO</span><span>.</span><span class="identifier">println</span><span>(</span><span class="string-literal">s&quot;stdout: </span><span class="substitution">${new String(data, &quot;UTF-8&quot;).trim}</span><span class="string-literal">&quot;</span><span>)
+        </span><span class="keyword">case</span><span> </span><span class="type-name">ExecEvent</span><span>.</span><span class="type-name">Stderr</span><span>(</span><span class="identifier">data</span><span>) =&gt;
+          </span><span class="type-name">IO</span><span>.</span><span class="identifier">println</span><span>(</span><span class="string-literal">s&quot;stderr: </span><span class="substitution">${new String(data, &quot;UTF-8&quot;).trim}</span><span class="string-literal">&quot;</span><span>)
+        </span><span class="keyword">case</span><span> </span><span class="type-name">ExecEvent</span><span>.</span><span class="type-name">Error</span><span>(</span><span class="identifier">status</span><span>) =&gt;
+          </span><span class="type-name">IO</span><span>.</span><span class="identifier">println</span><span>(</span><span class="string-literal">s&quot;exit status: </span><span class="substitution">${status.status.getOrElse(&quot;unknown&quot;)}</span><span class="string-literal">&quot;</span><span>)
+      }
+      .</span><span class="identifier">compile</span><span>
+      .</span><span class="identifier">drain</span><span>
+  }</span></code></pre>
+        <p>To pass stdin, stream <code>ExecInput.Stdin</code> values into the pipe:</p>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">http4s</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="type-name">Stream</span><span>
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">stdinApp</span><span>: </span><span class="type-name">IO</span><span>[</span><span class="type-name">Unit</span><span>] =
+  </span><span class="type-name">JDKKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">defaultConfigWithExec</span><span>[</span><span class="type-name">Json</span><span>].</span><span class="identifier">use</span><span> { </span><span class="identifier">client</span><span> =&gt;
+    </span><span class="keyword">val</span><span> </span><span class="identifier">pipe</span><span> = </span><span class="identifier">client</span><span>.</span><span class="identifier">pipe</span><span>(
+      </span><span class="type-name">APIs</span><span>
+        .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+        .</span><span class="identifier">pods</span><span>
+        .</span><span class="identifier">exec</span><span>(</span><span class="string-literal">&quot;my-pod&quot;</span><span>, </span><span class="type-name">Seq</span><span>(</span><span class="string-literal">&quot;cat&quot;</span><span>), </span><span class="identifier">stdinEnabled</span><span> = </span><span class="boolean-literal">true</span><span>)
+    )
+
+    </span><span class="keyword">val</span><span> </span><span class="identifier">input</span><span>: </span><span class="type-name">Stream</span><span>[</span><span class="type-name">IO</span><span>, </span><span class="type-name">ExecInput</span><span>] =
+      </span><span class="type-name">Stream</span><span>.</span><span class="identifier">emit</span><span>(</span><span class="type-name">ExecInput</span><span>.</span><span class="type-name">Stdin</span><span>(</span><span class="string-literal">&quot;hello</span><span class="escape-sequence">\n</span><span class="string-literal">&quot;</span><span>.</span><span class="identifier">getBytes</span><span>(</span><span class="string-literal">&quot;UTF-8&quot;</span><span>)))
+
+    </span><span class="identifier">pipe</span><span>(</span><span class="identifier">input</span><span>)
+      .</span><span class="identifier">collect</span><span> { </span><span class="keyword">case</span><span> </span><span class="type-name">ExecEvent</span><span>.</span><span class="type-name">Stdout</span><span>(</span><span class="identifier">data</span><span>) =&gt; </span><span class="keyword">new</span><span> </span><span class="type-name">String</span><span>(</span><span class="identifier">data</span><span>, </span><span class="string-literal">&quot;UTF-8&quot;</span><span>) }
+      .</span><span class="identifier">evalMap</span><span>(</span><span class="type-name">IO</span><span>.</span><span class="identifier">println</span><span>)
+      .</span><span class="identifier">compile</span><span>
+      .</span><span class="identifier">drain</span><span>
+  }</span></code></pre>
+        <p>The exec stream terminates automatically when the process exits.</p>
+        
+        <h2 id="implementing-new-requests" class="section"><a class="anchor-link left" href="#implementing-new-requests"><i class="icofont-laika link">&#xef71;</i></a>Implementing new requests</h2>
+        <p>You can implement your own requests for CRDs or non-standard resources.
+        First define your data models (see <a href="manifests.html#custom-resources">Custom Resources</a>), then define the request types:</p>
+        
+        <h3 id="specific-requests" class="section"><a class="anchor-link left" href="#specific-requests"><i class="icofont-laika link">&#xef71;</i></a>Specific requests</h3>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">case</span><span> </span><span class="keyword">class</span><span> </span><span class="type-name">MyCustomRequest</span><span>(</span><span class="identifier">name</span><span>: </span><span class="type-name">String</span><span>) </span><span class="keyword">extends</span><span> </span><span class="type-name">GetRequest</span><span>[</span><span class="type-name">CustomResource</span><span>](
+  </span><span class="string-literal">s&quot;/apis/my.custom-resource.io/</span><span class="substitution">$name</span><span class="string-literal">&quot;</span><span>
+)</span></code></pre>
+        <p>Other available request types:
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/dev/hnaderi/k8s/client/ListingRequest.html">ListingRequest</a>,
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/dev/hnaderi/k8s/client/GetRequest.html">GetRequest</a>,
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/dev/hnaderi/k8s/client/CreateRequest.html">CreateRequest</a>,
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/dev/hnaderi/k8s/client/ReplaceRequest.html">ReplaceRequest</a>,
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/dev/hnaderi/k8s/client/PartialUpdateRequest.html">PartialUpdateRequest</a>,
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/dev/hnaderi/k8s/client/DeleteCollectionRequest.html">DeleteCollectionRequest</a>,
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/dev/hnaderi/k8s/client/DeleteRequest.html">DeleteRequest</a>,
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/dev/hnaderi/k8s/client/APIResourceListingRequest.html">APIResourceListingRequest</a>,
+        <a class="api" href="https://www.javadoc.io/doc/dev.hnaderi/scala-k8s-docs_2.12/0.29.0/dev/hnaderi/k8s/client/APIGroupListingRequest.html">APIGroupListingRequest</a></p>
+        
+        <h3 id="api-group-requests" class="section"><a class="anchor-link left" href="#api-group-requests"><i class="icofont-laika link">&#xef71;</i></a>API group requests</h3>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">object</span><span> </span><span class="type-name">MyCustomAPIGroup</span><span>
+    </span><span class="keyword">extends</span><span> </span><span class="type-name">APIGroupAPI</span><span>(</span><span class="string-literal">&quot;/apis/custom.api.group.type/v1&quot;</span><span>)
+
+</span><span class="keyword">object</span><span> </span><span class="type-name">MyCustomResourceAPIs</span><span>
+    </span><span class="keyword">extends</span><span> </span><span class="type-name">MyCustomAPIGroup</span><span>.</span><span class="type-name">ClusterResourceAPI</span><span>[
+      </span><span class="type-name">CustomResource</span><span>,
+      </span><span class="type-name">CustomResourceList</span><span>
+    ](</span><span class="string-literal">&quot;customresourcedefinitions&quot;</span><span>)</span></code></pre>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">customRequest</span><span> = </span><span class="type-name">MyCustomResourceAPIs</span><span>.</span><span class="identifier">list</span><span>()</span></code></pre>
+
+        
+<hr class="footer-rule"/>
+<footer>
+  Site generated by <a href="https://typelevel.org/Laika/">Laika</a> with the Helium theme.
+</footer>
+
+
+      </main>
+
+    </div>
+
+  </body>
+
+</html>
