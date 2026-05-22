@@ -20,6 +20,76 @@ package apis.corev1
 import io.k8s.api.core.v1.Pod
 import io.k8s.api.core.v1.PodList
 
+private[corev1] abstract class PodLogsRequest(
+    url: String,
+    container: Option[String] = None,
+    follow: Boolean = false,
+    previous: Boolean = false,
+    sinceSeconds: Option[Long] = None,
+    sinceTime: Option[String] = None,
+    timestamps: Boolean = false,
+    tailLines: Option[Long] = None,
+    limitBytes: Option[Long] = None
+) extends LinesRequest {
+  private def params: Seq[(String, String)] = Seq(
+    container.map("container" -> _),
+    if (follow) Some("follow" -> "true") else None,
+    if (previous) Some("previous" -> "true") else None,
+    sinceSeconds.map("sinceSeconds" -> _.toString),
+    sinceTime.map("sinceTime" -> _),
+    if (timestamps) Some("timestamps" -> "true") else None,
+    tailLines.map("tailLines" -> _.toString),
+    limitBytes.map("limitBytes" -> _.toString)
+  ).flatten
+
+  override def lines[F[_]](client: StreamingClient[F]): F[String] =
+    client.lines(url, params: _*)
+}
+
+private[corev1] abstract class PodExecRequest(
+    url: String,
+    command: Seq[String],
+    container: Option[String] = None,
+    tty: Boolean = false,
+    stdinEnabled: Boolean = false,
+    stdoutEnabled: Boolean = true,
+    stderrEnabled: Boolean = true
+) extends ExecRequest {
+  private def params: Seq[(String, String)] =
+    command.map("command" -> _) ++
+      container.map("container" -> _) ++
+      Seq(
+        "stdout" -> stdoutEnabled.toString,
+        "stderr" -> stderrEnabled.toString,
+        "stdin" -> stdinEnabled.toString,
+        "tty" -> tty.toString
+      )
+
+  override def exec[F[_]](client: ExecClient[F]): F[ExecInput] => F[ExecEvent] =
+    client.exec(url, params: _*)
+}
+
+private[corev1] abstract class PodAttachRequest(
+    url: String,
+    container: Option[String] = None,
+    tty: Boolean = false,
+    stdinEnabled: Boolean = false,
+    stdoutEnabled: Boolean = true,
+    stderrEnabled: Boolean = true
+) extends ExecRequest {
+  private def params: Seq[(String, String)] =
+    container.map("container" -> _).toSeq ++
+      Seq(
+        "stdout" -> stdoutEnabled.toString,
+        "stderr" -> stderrEnabled.toString,
+        "stdin" -> stdinEnabled.toString,
+        "tty" -> tty.toString
+      )
+
+  override def exec[F[_]](client: ExecClient[F]): F[ExecInput] => F[ExecEvent] =
+    client.exec(url, params: _*)
+}
+
 object PodAPI
     extends CoreV1.NamespacedResourceAPI[Pod, PodList](
       "pods"
@@ -65,6 +135,23 @@ object PodAPI
         stdoutEnabled = stdoutEnabled,
         stderrEnabled = stderrEnabled
       )
+
+  case class Attach(
+      namespace: String,
+      name: String,
+      container: Option[String] = None,
+      tty: Boolean = false,
+      stdinEnabled: Boolean = false,
+      stdoutEnabled: Boolean = true,
+      stderrEnabled: Boolean = true
+  ) extends PodAttachRequest(
+        PodAPI.urlFor(namespace, name) + "/attach",
+        container = container,
+        tty = tty,
+        stdinEnabled = stdinEnabled,
+        stdoutEnabled = stdoutEnabled,
+        stderrEnabled = stderrEnabled
+      )
 }
 
 final case class PodAPI(namespace: String)
@@ -104,6 +191,23 @@ final case class PodAPI(namespace: String)
     namespace,
     name,
     command,
+    container = container,
+    tty = tty,
+    stdinEnabled = stdinEnabled,
+    stdoutEnabled = stdoutEnabled,
+    stderrEnabled = stderrEnabled
+  )
+
+  def attach(
+      name: String,
+      container: Option[String] = None,
+      tty: Boolean = false,
+      stdinEnabled: Boolean = false,
+      stdoutEnabled: Boolean = true,
+      stderrEnabled: Boolean = true
+  ): PodAPI.Attach = PodAPI.Attach(
+    namespace,
+    name,
     container = container,
     tty = tty,
     stdinEnabled = stdinEnabled,

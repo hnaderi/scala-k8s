@@ -29,6 +29,22 @@ class PodExecSuite extends K3sSuite {
 
   private val ns = "default"
 
+  private def stdinBusybox(name: String) = Pod(
+    metadata = ObjectMeta(name = name),
+    spec = PodSpec(
+      containers = Seq(
+        Container(
+          name = "busybox",
+          image = "busybox:1.36",
+          command = Seq("head", "-n", "1"),
+          stdin = Some(true),
+          stdinOnce = Some(true)
+        )
+      ),
+      restartPolicy = Some("Never")
+    )
+  )
+
   private def sleepingBusybox(name: String) = Pod(
     metadata = ObjectMeta(name = name),
     spec = PodSpec(
@@ -76,5 +92,21 @@ class PodExecSuite extends K3sSuite {
         .collect { case ExecEvent.Stdout(data) => new String(data, "UTF-8") }
         .mkString
     } yield assert(stdout.contains("from stdin"))
+  }
+
+  podFixture(stdinBusybox("attach-test-pod"), "Running").test(
+    "attach with stdin passes data to running process"
+  ) { case (client, pod) =>
+    val name = pod.metadata.flatMap(_.name).get
+    val pipe = client.pipe(
+      APIs.namespace(ns).pods.attach(name, stdinEnabled = true)
+    )
+    val input = Stream.emit(ExecInput.Stdin("from attach\n".getBytes("UTF-8")))
+    for {
+      events <- pipe(input).compile.toList
+      stdout = events
+        .collect { case ExecEvent.Stdout(data) => new String(data, "UTF-8") }
+        .mkString
+    } yield assert(stdout.contains("from attach"))
   }
 }

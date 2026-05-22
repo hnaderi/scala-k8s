@@ -174,55 +174,6 @@ abstract class DeleteRequest[OUT: Decoder](
   ): F[OUT] = http.delete(url, params: _*)(body)
 }
 
-abstract class PodLogsRequest(
-    url: String,
-    container: Option[String] = None,
-    follow: Boolean = false,
-    previous: Boolean = false,
-    sinceSeconds: Option[Long] = None,
-    sinceTime: Option[String] = None,
-    timestamps: Boolean = false,
-    tailLines: Option[Long] = None,
-    limitBytes: Option[Long] = None
-) extends LinesRequest {
-  private def params: Seq[(String, String)] = Seq(
-    container.map("container" -> _),
-    if (follow) Some("follow" -> "true") else None,
-    if (previous) Some("previous" -> "true") else None,
-    sinceSeconds.map("sinceSeconds" -> _.toString),
-    sinceTime.map("sinceTime" -> _),
-    if (timestamps) Some("timestamps" -> "true") else None,
-    tailLines.map("tailLines" -> _.toString),
-    limitBytes.map("limitBytes" -> _.toString)
-  ).flatten
-
-  override def lines[F[_]](client: StreamingClient[F]): F[String] =
-    client.lines(url, params: _*)
-}
-
-abstract class PodExecRequest(
-    url: String,
-    command: Seq[String],
-    container: Option[String] = None,
-    tty: Boolean = false,
-    stdinEnabled: Boolean = false,
-    stdoutEnabled: Boolean = true,
-    stderrEnabled: Boolean = true
-) extends ExecRequest {
-  private def params: Seq[(String, String)] =
-    command.map("command" -> _) ++
-      container.map("container" -> _) ++
-      Seq(
-        "stdout" -> stdoutEnabled.toString,
-        "stderr" -> stderrEnabled.toString,
-        "stdin" -> stdinEnabled.toString,
-        "tty" -> tty.toString
-      )
-
-  override def exec[F[_]](client: ExecClient[F]): F[ExecInput] => F[ExecEvent] =
-    client.exec(url, params: _*)
-}
-
 abstract class APIResourceListingRequest(url: String)
     extends HttpRequest[APIResourceList] {
   override def send[F[_]](
