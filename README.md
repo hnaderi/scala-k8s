@@ -34,7 +34,7 @@ for easy to use recipes and integration with sbt, visit [this project](https://g
 
 ## Getting started
 
-This library is currently available for Scala binary versions 2.12, 2.13 and 3.2 on JVM/JS/Native.  
+This library is currently available for Scala binary versions 2.12, 2.13 and 3.3 on JVM/JS/Native.  
 This library is designed in a microkernel fashion and all the main kubernetes stuff are implemented/generated in pure scala, and integration modules are provided separately.  
 main modules are:
 
