@@ -19,6 +19,7 @@ package apis.corev1
 
 import io.k8s.api.core.v1.Pod
 import io.k8s.api.core.v1.PodList
+import io.k8s.api.policy.v1.Eviction
 
 private[corev1] abstract class PodLogsRequest(
     url: String,
@@ -117,6 +118,37 @@ object PodAPI
         limitBytes = limitBytes
       )
 
+  case class GetStatus(namespace: String, name: String)
+      extends GetRequest[Pod](PodAPI.urlFor(namespace, name) + "/status")
+  case class ReplaceStatus(
+      namespace: String,
+      name: String,
+      body: Pod,
+      dryRun: Option[String] = None,
+      fieldManager: Option[String] = None,
+      fieldValidation: Option[String] = None
+  ) extends ReplaceRequest[Pod](
+        PodAPI.urlFor(namespace, name) + "/status",
+        body,
+        dryRun = dryRun,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation
+      )
+  case class Evict(
+      namespace: String,
+      name: String,
+      eviction: Eviction = Eviction(),
+      dryRun: Option[String] = None,
+      fieldManager: Option[String] = None,
+      fieldValidation: Option[String] = None
+  ) extends CreateRequest[Eviction](
+        PodAPI.urlFor(namespace, name) + "/eviction",
+        eviction,
+        dryRun = dryRun,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation
+      )
+
   case class Exec(
       namespace: String,
       name: String,
@@ -178,6 +210,39 @@ final case class PodAPI(namespace: String)
     tailLines = tailLines,
     limitBytes = limitBytes
   )
+
+  def getStatus(name: String): PodAPI.GetStatus =
+    PodAPI.GetStatus(namespace, name)
+  def replaceStatus(
+      name: String,
+      body: Pod,
+      dryRun: Option[String] = None,
+      fieldManager: Option[String] = None,
+      fieldValidation: Option[String] = None
+  ): PodAPI.ReplaceStatus =
+    PodAPI.ReplaceStatus(
+      namespace,
+      name,
+      body,
+      dryRun = dryRun,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation
+    )
+  def evict(
+      name: String,
+      eviction: Eviction = Eviction(),
+      dryRun: Option[String] = None,
+      fieldManager: Option[String] = None,
+      fieldValidation: Option[String] = None
+  ): PodAPI.Evict =
+    PodAPI.Evict(
+      namespace,
+      name,
+      eviction,
+      dryRun = dryRun,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation
+    )
 
   def exec(
       name: String,

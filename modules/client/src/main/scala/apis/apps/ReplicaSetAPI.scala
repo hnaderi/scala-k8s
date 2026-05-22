@@ -19,13 +19,51 @@ package apis.appsv1
 
 import io.k8s.api.apps.v1.ReplicaSet
 import io.k8s.api.apps.v1.ReplicaSetList
+import io.k8s.api.autoscaling.v1.Scale
 
 object ReplicaSetAPI
     extends AppsV1.NamespacedResourceAPI[ReplicaSet, ReplicaSetList](
       "replicasets"
-    )
+    ) {
+  case class GetScale(namespace: String, name: String)
+      extends GetRequest[Scale](
+        ReplicaSetAPI.urlFor(namespace, name) + "/scale"
+      )
+  case class ReplaceScale(
+      namespace: String,
+      name: String,
+      body: Scale,
+      dryRun: Option[String] = None,
+      fieldManager: Option[String] = None,
+      fieldValidation: Option[String] = None
+  ) extends ReplaceRequest[Scale](
+        ReplicaSetAPI.urlFor(namespace, name) + "/scale",
+        body,
+        dryRun = dryRun,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation
+      )
+}
 
 final case class ReplicaSetAPI(namespace: String)
-    extends ReplicaSetAPI.NamespacedAPIBuilders
+    extends ReplicaSetAPI.NamespacedAPIBuilders {
+  def getScale(name: String): ReplicaSetAPI.GetScale =
+    ReplicaSetAPI.GetScale(namespace, name)
+  def replaceScale(
+      name: String,
+      body: Scale,
+      dryRun: Option[String] = None,
+      fieldManager: Option[String] = None,
+      fieldValidation: Option[String] = None
+  ): ReplicaSetAPI.ReplaceScale =
+    ReplicaSetAPI.ReplaceScale(
+      namespace,
+      name,
+      body,
+      dryRun = dryRun,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation
+    )
+}
 
 object ClusterReplicaSetAPI extends ReplicaSetAPI.ClusterwideAPIBuilders

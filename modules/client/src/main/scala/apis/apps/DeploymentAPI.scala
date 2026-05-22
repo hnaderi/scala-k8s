@@ -19,13 +19,51 @@ package apis.appsv1
 
 import io.k8s.api.apps.v1.Deployment
 import io.k8s.api.apps.v1.DeploymentList
+import io.k8s.api.autoscaling.v1.Scale
 
 object DeploymentAPI
     extends AppsV1.NamespacedResourceAPI[Deployment, DeploymentList](
       "deployments"
-    )
+    ) {
+  case class GetScale(namespace: String, name: String)
+      extends GetRequest[Scale](
+        DeploymentAPI.urlFor(namespace, name) + "/scale"
+      )
+  case class ReplaceScale(
+      namespace: String,
+      name: String,
+      body: Scale,
+      dryRun: Option[String] = None,
+      fieldManager: Option[String] = None,
+      fieldValidation: Option[String] = None
+  ) extends ReplaceRequest[Scale](
+        DeploymentAPI.urlFor(namespace, name) + "/scale",
+        body,
+        dryRun = dryRun,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation
+      )
+}
 
 final case class DeploymentAPI(namespace: String)
-    extends DeploymentAPI.NamespacedAPIBuilders
+    extends DeploymentAPI.NamespacedAPIBuilders {
+  def getScale(name: String): DeploymentAPI.GetScale =
+    DeploymentAPI.GetScale(namespace, name)
+  def replaceScale(
+      name: String,
+      body: Scale,
+      dryRun: Option[String] = None,
+      fieldManager: Option[String] = None,
+      fieldValidation: Option[String] = None
+  ): DeploymentAPI.ReplaceScale =
+    DeploymentAPI.ReplaceScale(
+      namespace,
+      name,
+      body,
+      dryRun = dryRun,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation
+    )
+}
 
 object ClusterDeploymentAPI extends DeploymentAPI.ClusterwideAPIBuilders

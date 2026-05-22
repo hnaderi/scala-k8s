@@ -19,13 +19,51 @@ package apis.appsv1
 
 import io.k8s.api.apps.v1.StatefulSet
 import io.k8s.api.apps.v1.StatefulSetList
+import io.k8s.api.autoscaling.v1.Scale
 
 object StatefulSetAPI
     extends AppsV1.NamespacedResourceAPI[StatefulSet, StatefulSetList](
       "statefulsets"
-    )
+    ) {
+  case class GetScale(namespace: String, name: String)
+      extends GetRequest[Scale](
+        StatefulSetAPI.urlFor(namespace, name) + "/scale"
+      )
+  case class ReplaceScale(
+      namespace: String,
+      name: String,
+      body: Scale,
+      dryRun: Option[String] = None,
+      fieldManager: Option[String] = None,
+      fieldValidation: Option[String] = None
+  ) extends ReplaceRequest[Scale](
+        StatefulSetAPI.urlFor(namespace, name) + "/scale",
+        body,
+        dryRun = dryRun,
+        fieldManager = fieldManager,
+        fieldValidation = fieldValidation
+      )
+}
 
 final case class StatefulSetAPI(namespace: String)
-    extends StatefulSetAPI.NamespacedAPIBuilders
+    extends StatefulSetAPI.NamespacedAPIBuilders {
+  def getScale(name: String): StatefulSetAPI.GetScale =
+    StatefulSetAPI.GetScale(namespace, name)
+  def replaceScale(
+      name: String,
+      body: Scale,
+      dryRun: Option[String] = None,
+      fieldManager: Option[String] = None,
+      fieldValidation: Option[String] = None
+  ): StatefulSetAPI.ReplaceScale =
+    StatefulSetAPI.ReplaceScale(
+      namespace,
+      name,
+      body,
+      dryRun = dryRun,
+      fieldManager = fieldManager,
+      fieldValidation = fieldValidation
+    )
+}
 
 object ClusterStatefulSetAPI extends StatefulSetAPI.ClusterwideAPIBuilders
