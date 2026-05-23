@@ -117,7 +117,7 @@ lazy val root =
     )
 
 lazy val circeVersion = "0.14.15"
-lazy val munitVersion = "1.2.0"
+lazy val munitVersion = "1.2.4"
 lazy val munitCatsEffectVersion = "2.2.0"
 lazy val testcontainersVersion = "0.44.1"
 
