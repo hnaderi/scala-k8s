@@ -1,6 +1,6 @@
 # Getting started
 
-This library is available for Scala binary versions 2.12, 2.13 and 3.2 on JVM/JS/Native.
+This library is available for Scala binary versions 2.12, 2.13 and 3.3 on JVM/JS/Native.
 It is designed in a microkernel fashion: all Kubernetes objects are implemented in pure Scala with no dependencies, and integration modules are provided separately.
 
 ## Core modules
