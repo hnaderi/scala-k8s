@@ -28,6 +28,11 @@ import org.scalacheck.Gen
 import Arbitrary.arbitrary
 
 private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
+  // Safe Integer Range: -(2^53 - 1) to (2^53 - 1)
+  private val minSafeInteger: Long = -9007199254740991L
+  private val maxSafeInteger: Long = 9007199254740991L
+  private[scalacheck] implicit val arbLong: Arbitrary[Long] =
+    Arbitrary(Gen.chooseNum(minSafeInteger, maxSafeInteger).map(_.toLong))
   private[scalacheck] implicit def arbSeq[T: Arbitrary]: Arbitrary[Seq[T]] =
     Arbitrary(
       Gen.choose(0, 3).flatMap(n => Gen.listOfN(n, Arbitrary.arbitrary[T]))

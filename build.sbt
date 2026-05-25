@@ -120,7 +120,7 @@ lazy val circeVersion = "0.14.15"
 lazy val munitVersion = "1.2.0"
 lazy val munitCatsEffectVersion = "2.2.0"
 lazy val testcontainersVersion = "0.44.1"
-lazy val zioVersion = "2.1.23"
+lazy val zioVersion = "2.1.26"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
@@ -290,7 +290,7 @@ lazy val zio = module("zio") {
     .settings(
       description := "zio-http based client for kubernetes",
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio-http" % "3.8.1",
+        "dev.zio" %% "zio-http" % "3.11.2",
         "dev.zio" %% "zio-test" % zioVersion % Test,
         "dev.zio" %% "zio-test-sbt" % zioVersion % Test
       ),
@@ -431,7 +431,7 @@ lazy val `zio-json` = module("zio-json") {
     .settings(
       description := "zio-json codecs for kubernetes data models",
       libraryDependencies ++= Seq(
-        "dev.zio" %%% "zio-json" % "0.7.21"
+        "dev.zio" %%% "zio-json" % "0.9.1"
       )
     )
     .dependsOn(objects)
