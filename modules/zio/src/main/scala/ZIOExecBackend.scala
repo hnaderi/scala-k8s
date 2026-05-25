@@ -58,10 +58,13 @@ class ZIOExecBackend(client: Client)
     ZStream.unwrapScoped[Any] {
       for {
         wsUrl <- urlFor(url, params).map(rewriteToWs)
-        wsHeaders = Headers("Sec-WebSocket-Protocol" -> "v4.channel.k8s.io") ++
-          headersFor(headers) ++ cookiesFor(cookies)
+        wsHeaders = headersFor(headers) ++ cookiesFor(cookies)
 
         events <- Queue.unbounded[Take[Throwable, ExecEvent]]
+
+        wsConfig = WebSocketConfig.default.subProtocol(
+          Some("v4.channel.k8s.io")
+        )
 
         handler = Handler.webSocket { channel =>
           val sendInput = input
@@ -107,6 +110,7 @@ class ZIOExecBackend(client: Client)
         }
 
         _ <- handler
+          .withConfig(wsConfig)
           .connect(wsUrl, wsHeaders)
           .provideSomeEnvironment[Scope](_.add[Client](client))
           .tapErrorCause(c => events.offer(Take.failCause(c)).unit)
