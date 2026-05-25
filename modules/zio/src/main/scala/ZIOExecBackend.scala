@@ -90,15 +90,35 @@ class ZIOExecBackend(client: Client)
             }
             .runDrain
 
-          val receiveOutput = channel.receiveAll {
-            case ChannelEvent.Read(WebSocketFrame.Binary(data)) =>
-              decodeFrame(data) match {
-                case Some(e) => events.offer(Take.single(e)).unit
-                case None    => ZIO.unit
+          // Netty/zio-http does not aggregate WebSocket fragments. A logical
+          // exec message can arrive as Binary(isFinal=false) followed by one
+          // or more Continuation frames; only the assembled payload starts
+          // with the v4-channel byte, so we must buffer until isFinal=true
+          // before decoding.
+          def deliver(data: Chunk[Byte]): UIO[Unit] =
+            decodeFrame(data) match {
+              case Some(e) => events.offer(Take.single(e)).unit
+              case None    => ZIO.unit
+            }
+
+          val receiveOutput =
+            Ref.make[Chunk[Byte]](Chunk.empty).flatMap { buffer =>
+              channel.receiveAll {
+                case ChannelEvent.Read(frame @ WebSocketFrame.Binary(data)) =>
+                  if (frame.isFinal) buffer.set(Chunk.empty) *> deliver(data)
+                  else buffer.set(data)
+                case ChannelEvent.Read(
+                      frame @ WebSocketFrame.Continuation(data)
+                    ) =>
+                  if (frame.isFinal)
+                    buffer
+                      .getAndSet(Chunk.empty)
+                      .flatMap(prev => deliver(prev ++ data))
+                  else buffer.update(_ ++ data)
+                case ChannelEvent.ExceptionCaught(cause) => ZIO.fail(cause)
+                case _                                   => ZIO.unit
               }
-            case ChannelEvent.ExceptionCaught(cause) => ZIO.fail(cause)
-            case _                                   => ZIO.unit
-          }
+            }
 
           ZIO
             .scoped[Any] {
