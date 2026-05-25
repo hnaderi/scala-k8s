@@ -106,7 +106,7 @@ class ZIOBackend(protected val client: Client) extends HttpBackend[ScopedTask] {
         case (qs, (k, v)) =>
           qs.get(k) match {
             case None        => qs.updated(k, Chunk(v))
-            case Some(value) => qs.updated(k, Chunk(v) ++ value)
+            case Some(value) => qs.updated(k, value ++ Chunk(v))
           }
       }
     } yield u.setQueryParams(QueryParams(qp))
