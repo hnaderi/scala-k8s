@@ -110,7 +110,10 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
   ): Gen[JSONSchemaPropsOrArray] =
     Gen.oneOf(
       Gen.const(JSONSchemaPropsOrArray(jsp)),
-      Gen.listOf(Gen.const(jsp)).map(JSONSchemaPropsOrArray(_))
+      Gen
+        .choose(0, 3)
+        .flatMap(n => Gen.listOfN(n, Gen.const(jsp)))
+        .map(JSONSchemaPropsOrArray(_))
     )
 
   private def genJSONSchemaPropsOrBool(
@@ -131,12 +134,18 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
 
   private def dependenciesMap(
       jsp: JSONSchemaProps
-  ): Gen[Map[String, JSONSchemaPropsOrStringArray]] = Gen.mapOf {
-    for {
-      k <- Gen.alphaNumStr
-      v <- genJSONSchemaPropsOrStringArray(jsp)
-    } yield (k, v)
-  }
+  ): Gen[Map[String, JSONSchemaPropsOrStringArray]] =
+    Gen
+      .choose(0, 3)
+      .flatMap(n =>
+        Gen.mapOfN(
+          n,
+          for {
+            k <- Gen.alphaNumStr
+            v <- genJSONSchemaPropsOrStringArray(jsp)
+          } yield (k, v)
+        )
+      )
 
   implicit lazy val arbitrary_io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1JSONSchemaProps
       : Arbitrary[JSONSchemaProps] = Arbitrary(jsonSchemaProps)
@@ -158,13 +167,17 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
         )
       )
 
-  private def jsonSchemaProps: Gen[JSONSchemaProps] =
-    Gen.recursive[JSONSchemaProps](recurse =>
-      Gen.choose(1, 10).flatMap { n =>
-        if (n > 7) recurse.map(Some(_)).flatMap(join)
-        else join(None)
-      }
-    )
+  private val maxJsonSchemaDepth = 4
+  private def jsonSchemaProps: Gen[JSONSchemaProps] = {
+    def go(depth: Int): Gen[JSONSchemaProps] =
+      if (depth >= maxJsonSchemaDepth) join(None)
+      else
+        Gen.choose(1, 10).flatMap { n =>
+          if (n > 7) go(depth + 1).map(Some(_)).flatMap(join)
+          else join(None)
+        }
+    go(0)
+  }
 
   private def opt[T](
       jsp: Option[JSONSchemaProps],

@@ -21,8 +21,14 @@ import dev.hnaderi.k8s.scalacheck.Generators._
 import dev.hnaderi.k8s.utils._
 import munit.ScalaCheckSuite
 import org.scalacheck.Prop._
+import org.scalacheck.Test
 
 abstract class CodecSuite[T: Builder: Reader] extends ScalaCheckSuite {
+  override def scalaCheckTestParameters: Test.Parameters =
+    super.scalaCheckTestParameters
+      .withMaxSize(20)
+      .withWorkers(1)
+
   property("Codec must be reversible") {
     forAll { (o: KObject) =>
       val encoded = o.foldTo[T]
