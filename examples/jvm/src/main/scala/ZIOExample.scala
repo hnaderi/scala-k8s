@@ -24,7 +24,7 @@ import zio.*
 object ZIOExample extends ZIOAppDefault {
 
   override def run: ZIO[Environment with ZIOAppArgs with Scope, Any, Any] =
-    ZIO.scoped {
+    ZIO.scoped[Any] {
       for {
         client <- ZIOKubernetesClient.defaultConfig
         pods <- APIs.namespace("default").pods.list().send(client)

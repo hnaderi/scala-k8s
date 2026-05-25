@@ -51,7 +51,7 @@ object ZIOIntegrationSuite extends ZIOSpec[K3sContainer] {
       factory: dev.hnaderi.k8s.client.Config => ZIO[Scope, Throwable, C]
   )(f: C => ZIO[Scope, Throwable, A]): ZIO[K3sContainer, Throwable, A] =
     ZIO.serviceWithZIO[K3sContainer] { container =>
-      ZIO.scoped {
+      ZIO.scoped[Any] {
         for {
           config <- ZIO.fromEither(
             manifest.parse[dev.hnaderi.k8s.client.Config](container.kubeConfigYaml)
