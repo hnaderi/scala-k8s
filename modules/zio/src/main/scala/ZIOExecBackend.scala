@@ -50,25 +50,28 @@ class ZIOExecBackend(client: Client)
           headersFor(headers) ++ cookiesFor(cookies)
 
         handler = Handler.fromFunctionZIO[WsChannel] { channel =>
-          val send = input.mapZIO {
-            case ExecInput.Stdin(bytes) =>
-              channel.send(
-                ChannelEvent.Read(
-                  WebSocketFrame.Binary(
-                    Chunk.single(0x00.toByte) ++ Chunk.fromArray(bytes)
+          val send = input
+            .mapZIO[Any, Throwable, Unit] {
+              case ExecInput.Stdin(bytes) =>
+                channel.send(
+                  ChannelEvent.Read(
+                    WebSocketFrame.Binary(
+                      Chunk.single(0x00.toByte) ++ Chunk.fromArray(bytes)
+                    )
                   )
                 )
-              )
-            case ExecInput.Resize(cols, rows) =>
-              val json = s"""{"Width":$cols,"Height":$rows}""".getBytes("UTF-8")
-              channel.send(
-                ChannelEvent.Read(
-                  WebSocketFrame.Binary(
-                    Chunk.single(0x04.toByte) ++ Chunk.fromArray(json)
+              case ExecInput.Resize(cols, rows) =>
+                val json =
+                  s"""{"Width":$cols,"Height":$rows}""".getBytes("UTF-8")
+                channel.send(
+                  ChannelEvent.Read(
+                    WebSocketFrame.Binary(
+                      Chunk.single(0x04.toByte) ++ Chunk.fromArray(json)
+                    )
                   )
                 )
-              )
-          }.runDrain
+            }
+            .runDrain
 
           val receive = channel
             .receiveAll {

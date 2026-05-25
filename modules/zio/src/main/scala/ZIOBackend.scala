@@ -114,7 +114,7 @@ class ZIOBackend(protected val client: Client) extends HttpBackend[ScopedTask] {
   protected def expect[O: Decoder](req: http.Request): ScopedTask[O] =
     client.request(req).flatMap { res =>
       def readBody[T: Decoder]: ScopedTask[T] =
-        res.body.asString.flatMap(body =>
+        res.body.asString.flatMap[Any, Throwable, T](body =>
           ZIO.fromEither(
             JsonDecoder[T]
               .decodeJson(body)
