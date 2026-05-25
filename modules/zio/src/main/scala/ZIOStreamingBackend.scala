@@ -49,7 +49,9 @@ class ZIOStreamingBackend(client: Client)
           version = Version.`HTTP/1.1`,
           remoteAddress = None
         )
-        res <- client.request(req)
+        res <- ZClient
+          .streaming(req)
+          .provideSomeEnvironment[Scope](_.add[Client](client))
       } yield res.body.asStream
     }
 

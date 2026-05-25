@@ -112,7 +112,7 @@ class ZIOBackend(protected val client: Client) extends HttpBackend[ScopedTask] {
     } yield u.setQueryParams(QueryParams(qp))
 
   protected def expect[O: Decoder](req: http.Request): ScopedTask[O] =
-    client.request(req).flatMap { res =>
+    client.batched(req).flatMap { res =>
       def readBody[T: Decoder]: ScopedTask[T] =
         res.body.asString.flatMap[Any, Throwable, T](body =>
           ZIO.fromEither(
