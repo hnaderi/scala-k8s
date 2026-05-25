@@ -20,6 +20,7 @@ package zio
 import dev.hnaderi.k8s.manifest
 import _root_.zio._
 import _root_.zio.http._
+import _root_.zio.http.netty.NettyConfig
 
 import java.io.FileNotFoundException
 import java.nio.file.{Files => JFiles, Paths => JPaths}
@@ -32,8 +33,18 @@ object ZIOKubernetesClient {
 
   private def makeClient(
       sslConfig: ClientSSLConfig
-  ): ZIO[Scope, Throwable, Client] =
-    ZClient.default.build.map(_.get[Client].ssl(sslConfig))
+  ): ZIO[Scope, Throwable, Client] = {
+    // SSL must be baked into ZClient.Config rather than applied via
+    // Client.ssl(...): zio-http's `socket` driver path uses the base config
+    // directly and ignores the per-client SSL overlay, so WebSocket
+    // connections would otherwise miss the client cert and get 401s.
+    val cfg = ZClient.Config.default.ssl(sslConfig)
+    val layer =
+      (ZLayer.succeed(cfg) ++
+        ZLayer.succeed(NettyConfig.defaultWithFastShutdown) ++
+        DnsResolver.default) >>> ZClient.live
+    layer.build.map(_.get[Client])
+  }
 
   private def readFile(path: String): ZIO[Any, Throwable, String] =
     ZIO.attemptBlockingIO(new String(JFiles.readAllBytes(JPaths.get(path))))
