@@ -135,7 +135,7 @@
 </span><span class="keyword">import</span><span> </span><span class="identifier">org</span><span>.</span><span class="identifier">http4s</span><span>.</span><span class="identifier">circe</span><span>.</span><span class="identifier">_</span><span>
 
 </span><span class="keyword">val</span><span> </span><span class="identifier">buildClient</span><span> = </span><span class="type-name">EmberKubernetesClient</span><span>[</span><span class="type-name">IO</span><span>].</span><span class="identifier">defaultConfig</span><span>[</span><span class="type-name">Json</span><span>]
-</span><span class="comment">// buildClient: Resource[IO, http4s.package.KClient[IO]] = Bind(Allocate(cats.effect.kernel.Resource$$Lambda$13844/0x00000008037a6840@44e7513),cats.effect.kernel.Resource$$Lambda$13845/0x00000008037b0040@39b3d1a5)
+</span><span class="comment">// buildClient: Resource[IO, http4s.package.KClient[IO]] = Bind(Allocate(cats.effect.kernel.Resource$$Lambda$11607/0x00007fbda61dcaf0@1489e8ce),cats.effect.kernel.Resource$$Lambda$11608/0x00007fbda61dced0@19abb7f2)
 </span><span>
 </span><span class="keyword">val</span><span> </span><span class="identifier">getNodes</span><span> = </span><span class="identifier">buildClient</span><span>.</span><span class="identifier">use</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>)
 </span><span class="comment">// getNodes: IO[io.k8s.api.core.v1.NodeList] = IO(...)
@@ -154,10 +154,50 @@
 </span><span class="comment">// getConfigMaps: IO[ConfigMap] = IO(...)</span></code></pre>
         
         <h2 id="zio-based-client" class="section"><a class="anchor-link left" href="#zio-based-client"><i class="icofont-laika link">&#xef71;</i></a>ZIO based client</h2>
-        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">ZIOKubernetesClient</span><span>
+        <p>The ZIO backend is built on top of <a href="https://github.com/zio/zio-http">zio-http</a> and supports all APIs including streaming and pod exec.</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-zio&quot;</span><span> % </span><span class="string-literal">&quot;0.29.0&quot;</span></code></pre>
+        <p>Talking to a <code>kubectl proxy</code> (no authentication):</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">APIs</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">zio</span><span>.</span><span class="type-name">ZIOKubernetesClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.</span><span class="identifier">_</span><span>
 
-</span><span class="keyword">val</span><span> </span><span class="identifier">client</span><span> = </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">make</span><span>(</span><span class="string-literal">&quot;http://localhost:8001&quot;</span><span>)
-</span><span class="keyword">val</span><span> </span><span class="identifier">nodes</span><span> = </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">send</span><span>(</span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>())</span></code></pre>
+</span><span class="keyword">val</span><span> </span><span class="identifier">listNodes</span><span>: </span><span class="type-name">ZIO</span><span>[</span><span class="type-name">Scope</span><span>, </span><span class="type-name">Throwable</span><span>, </span><span class="type-name">Unit</span><span>] =
+  </span><span class="keyword">for</span><span> {
+    </span><span class="identifier">client</span><span> &lt;- </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">make</span><span>(</span><span class="string-literal">&quot;http://localhost:8001&quot;</span><span>)
+    </span><span class="identifier">nodes</span><span> &lt;- </span><span class="type-name">APIs</span><span>.</span><span class="identifier">nodes</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>(</span><span class="identifier">client</span><span>)
+    </span><span class="identifier">_</span><span> &lt;- </span><span class="type-name">ZIO</span><span>.</span><span class="identifier">foreachDiscard</span><span>(</span><span class="identifier">nodes</span><span>.</span><span class="identifier">items</span><span>.</span><span class="identifier">flatMap</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>).</span><span class="identifier">flatMap</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">name</span><span>))(
+      </span><span class="type-name">Console</span><span>.</span><span class="identifier">printLine</span><span>(</span><span class="identifier">_</span><span>)
+    )
+  } </span><span class="keyword">yield</span><span> ()</span></code></pre>
+        <p>For a real cluster the factory picks up your kubeconfig (or the in-pod service account when running inside Kubernetes):</p>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">APIs</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">zio</span><span>.</span><span class="type-name">ZIOKubernetesClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.</span><span class="identifier">_</span><span>
+
+</span><span class="comment">// Also: kubeconfig(), load(&quot;/path/to/kubeconfig&quot;), fromConfig(parsedConfig),
+// from(server, ca, clientCert, clientKey, auth), podConfig
+</span><span class="keyword">val</span><span> </span><span class="identifier">listNodes</span><span>: </span><span class="type-name">ZIO</span><span>[</span><span class="type-name">Scope</span><span>, </span><span class="type-name">Throwable</span><span>, </span><span class="type-name">Unit</span><span>] =
+   </span><span class="keyword">for</span><span> {
+     </span><span class="identifier">client</span><span> &lt;- </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">defaultConfig</span><span>
+     </span><span class="identifier">pods</span><span> &lt;- </span><span class="type-name">APIs</span><span>.</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>).</span><span class="identifier">pods</span><span>.</span><span class="identifier">list</span><span>().</span><span class="identifier">send</span><span>(</span><span class="identifier">client</span><span>)
+     </span><span class="identifier">names</span><span> = </span><span class="identifier">pods</span><span>.</span><span class="identifier">items</span><span>.</span><span class="identifier">flatMap</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">flatMap</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">name</span><span>))
+     </span><span class="identifier">_</span><span> &lt;- </span><span class="type-name">ZIO</span><span>.</span><span class="identifier">foreach</span><span>(</span><span class="identifier">names</span><span>)(</span><span class="type-name">Console</span><span>.</span><span class="identifier">printLine</span><span>(</span><span class="identifier">_</span><span>))
+   } </span><span class="keyword">yield</span><span> ()</span></code></pre>
+        <p>Streaming endpoints (watches, pod logs) return a <code>ZStream</code>:</p>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">APIs</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">zio</span><span>.</span><span class="type-name">ZIOKubernetesClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.</span><span class="identifier">_</span><span>
+
+</span><span class="keyword">val</span><span> </span><span class="identifier">watchPods</span><span>: </span><span class="type-name">ZIO</span><span>[</span><span class="type-name">Scope</span><span>, </span><span class="type-name">Throwable</span><span>, </span><span class="type-name">Unit</span><span>] =
+  </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">defaultConfig</span><span>.</span><span class="identifier">flatMap</span><span> { </span><span class="identifier">client</span><span> =&gt;
+    </span><span class="type-name">APIs</span><span>
+      .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+      .</span><span class="identifier">pods</span><span>
+      .</span><span class="identifier">list</span><span>()
+      .</span><span class="identifier">listen</span><span>(</span><span class="identifier">client</span><span>)
+      .</span><span class="identifier">runForeach</span><span>(</span><span class="identifier">evt</span><span> =&gt; </span><span class="type-name">Console</span><span>.</span><span class="identifier">printLine</span><span>(</span><span class="identifier">evt</span><span>.</span><span class="identifier">event</span><span>.</span><span class="identifier">toString</span><span>))
+  }</span></code></pre>
+        <p>The client builder returns a scoped resource, so it should be acquired inside <code>ZIO.scoped</code> (or via a <code>ZLayer</code>). All connections and the underlying Netty event loop are released when the scope closes.</p>
         
         <h2 id="sttp-based-client" class="section"><a class="anchor-link left" href="#sttp-based-client"><i class="icofont-laika link">&#xef71;</i></a>Sttp based client</h2>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="type-name">SttpJdkURLClientBuilder</span><span>
@@ -200,7 +240,7 @@
       .</span><span class="identifier">move</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;a&quot;</span><span>), </span><span class="identifier">_</span><span>.</span><span class="identifier">metadata</span><span>.</span><span class="identifier">labels</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;b&quot;</span><span>))
       .</span><span class="identifier">remove</span><span>(</span><span class="identifier">_</span><span>.</span><span class="identifier">data</span><span>.</span><span class="identifier">at</span><span>(</span><span class="string-literal">&quot;to-delete&quot;</span><span>))
   )
-</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@47969f26,JsonPatch,None,None,None,None)</span></code></pre>
+</span><span class="comment">// patch2: apis.corev1.ConfigMapAPI.GenericPatch[JsonPatch[ConfigMap, io.k8s.api.core.v1.ConfigMapPointer]] = GenericPatch(test,default,dev.hnaderi.k8s.client.JsonPatch@2c372b83,JsonPatch,None,None,None,None)</span></code></pre>
         <p>Server side apply:</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="keyword">val</span><span> </span><span class="identifier">patch3</span><span> = </span><span class="type-name">APIs</span><span>
   .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
@@ -233,7 +273,7 @@
 </span><span class="comment">// patch5: apis.corev1.ConfigMapAPI.GenericPatch[CustomMerge] = GenericPatch(test,default,,Merge,None,None,None,None)</span></code></pre>
         
         <h2 id="pod-exec" class="section"><a class="anchor-link left" href="#pod-exec"><i class="icofont-laika link">&#xef71;</i></a>Pod exec</h2>
-        <p>The <code>http4s-jdk</code> and <code>http4s-netty</code> backends support executing commands inside pods over WebSockets using the Kubernetes exec API.</p>
+        <p>The <code>http4s-jdk</code>, <code>http4s-netty</code>, and <code>zio</code> backends support executing commands inside pods over WebSockets using the Kubernetes exec API.</p>
         <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-http4s-jdk&quot;</span><span> % </span><span class="string-literal">&quot;0.29.0&quot;</span></code></pre>
         <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">http4s</span><span>.</span><span class="identifier">_</span><span>
 </span><span class="keyword">import</span><span> </span><span class="identifier">fs2</span><span>.</span><span class="type-name">Stream</span><span>
@@ -284,6 +324,35 @@
       .</span><span class="identifier">drain</span><span>
   }</span></code></pre>
         <p>The exec stream terminates automatically when the process exits.</p>
+        <p>The ZIO equivalent uses <code>ZStream</code> instead of <code>fs2.Stream</code>:</p>
+        <pre><code class="nohighlight"><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.{</span><span class="type-name">APIs</span><span>, </span><span class="type-name">ExecEvent</span><span>}
+</span><span class="keyword">import</span><span> </span><span class="identifier">dev</span><span>.</span><span class="identifier">hnaderi</span><span>.</span><span class="identifier">k8s</span><span>.</span><span class="identifier">client</span><span>.</span><span class="identifier">zio</span><span>.</span><span class="type-name">ZIOKubernetesClient</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.</span><span class="identifier">_</span><span>
+</span><span class="keyword">import</span><span> </span><span class="identifier">zio</span><span>.</span><span class="identifier">stream</span><span>.</span><span class="identifier">_</span><span>
+
+</span><span class="comment">// Also: defaultConfigWithExec, kubeconfigWithExec, makeWithExec,
+// fromWithExec, podConfigWithExec
+</span><span class="keyword">val</span><span> </span><span class="identifier">zioExecApp</span><span>: </span><span class="type-name">ZIO</span><span>[</span><span class="type-name">Scope</span><span>, </span><span class="type-name">Throwable</span><span>, </span><span class="type-name">Unit</span><span>] =
+  </span><span class="type-name">ZIOKubernetesClient</span><span>.</span><span class="identifier">defaultConfigWithExec</span><span>.</span><span class="identifier">flatMap</span><span> { </span><span class="identifier">client</span><span> =&gt;
+    </span><span class="keyword">val</span><span> </span><span class="identifier">pipe</span><span> = </span><span class="identifier">client</span><span>.</span><span class="identifier">pipe</span><span>(
+      </span><span class="type-name">APIs</span><span>
+        .</span><span class="identifier">namespace</span><span>(</span><span class="string-literal">&quot;default&quot;</span><span>)
+        .</span><span class="identifier">pods</span><span>
+        .</span><span class="identifier">exec</span><span>(</span><span class="string-literal">&quot;my-pod&quot;</span><span>, </span><span class="type-name">Seq</span><span>(</span><span class="string-literal">&quot;sh&quot;</span><span>, </span><span class="string-literal">&quot;-c&quot;</span><span>, </span><span class="string-literal">&quot;echo hello&quot;</span><span>))
+    )
+
+    </span><span class="identifier">pipe</span><span>(</span><span class="type-name">ZStream</span><span>.</span><span class="identifier">empty</span><span>)
+      .</span><span class="identifier">runForeach</span><span> {
+        </span><span class="keyword">case</span><span> </span><span class="type-name">ExecEvent</span><span>.</span><span class="type-name">Stdout</span><span>(</span><span class="identifier">data</span><span>) =&gt;
+          </span><span class="type-name">Console</span><span>.</span><span class="identifier">printLine</span><span>(</span><span class="string-literal">s&quot;stdout: </span><span class="substitution">${new String(data, &quot;UTF-8&quot;).trim}</span><span class="string-literal">&quot;</span><span>)
+        </span><span class="keyword">case</span><span> </span><span class="type-name">ExecEvent</span><span>.</span><span class="type-name">Stderr</span><span>(</span><span class="identifier">data</span><span>) =&gt;
+          </span><span class="type-name">Console</span><span>.</span><span class="identifier">printLine</span><span>(</span><span class="string-literal">s&quot;stderr: </span><span class="substitution">${new String(data, &quot;UTF-8&quot;).trim}</span><span class="string-literal">&quot;</span><span>)
+        </span><span class="keyword">case</span><span> </span><span class="type-name">ExecEvent</span><span>.</span><span class="type-name">Error</span><span>(</span><span class="identifier">status</span><span>) =&gt;
+          </span><span class="type-name">Console</span><span>.</span><span class="identifier">printLine</span><span>(
+            </span><span class="string-literal">s&quot;exit status: </span><span class="substitution">${status.status.getOrElse(&quot;unknown&quot;)}</span><span class="string-literal">&quot;</span><span>
+          )
+      }
+  }</span></code></pre>
         
         <h2 id="implementing-new-requests" class="section"><a class="anchor-link left" href="#implementing-new-requests"><i class="icofont-laika link">&#xef71;</i></a>Implementing new requests</h2>
         <p>You can implement your own requests for CRDs or non-standard resources.

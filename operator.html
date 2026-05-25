@@ -136,6 +136,10 @@
   </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-http4s-ember&quot;</span><span> % </span><span class="string-literal">&quot;0.29.0&quot;</span><span>,
   </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-circe&quot;</span><span>        % </span><span class="string-literal">&quot;0.29.0&quot;</span><span>
 )</span></code></pre>
+        <p>The ZIO backend is also supported (JVM only); swap the dependencies and use
+        <code>ZIOKubernetesClient</code> from <a href="client.html#zio-based-client">the client docs</a> in
+        place of <code>EmberKubernetesClient</code>:</p>
+        <pre class="keep-together pdf epub"><code class="nohighlight"><span class="identifier">libraryDependencies</span><span> += </span><span class="string-literal">&quot;dev.hnaderi&quot;</span><span> %% </span><span class="string-literal">&quot;scala-k8s-zio&quot;</span><span> % </span><span class="string-literal">&quot;0.29.0&quot;</span></code></pre>
         
         <h2 id="connecting-to-the-api-server" class="section"><a class="anchor-link left" href="#connecting-to-the-api-server"><i class="icofont-laika link">&#xef71;</i></a>Connecting to the API server</h2>
         <p><code>defaultConfig</code> tries the kubeconfig file first (<code>KUBECONFIG</code> env var, then <code>~/.kube/config</code>),
