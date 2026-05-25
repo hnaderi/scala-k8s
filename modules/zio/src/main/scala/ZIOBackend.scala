@@ -15,21 +15,17 @@
  */
 
 package dev.hnaderi.k8s.client
+package zio
 
 import dev.hnaderi.k8s.utils.Decoder
 import dev.hnaderi.k8s.utils.Encoder
 import dev.hnaderi.k8s.zioJson._
 import io.k8s.apimachinery.pkg.apis.meta.v1
-import zio._
-import zio.http._
-import zio.json._
+import _root_.zio._
+import _root_.zio.http._
+import _root_.zio.json._
 
-import ZIOBackend._
-import ScopedZIO._
-
-final case class ZIOBackend(
-    client: Client
-) extends HttpBackend[ScopedTask] {
+class ZIOBackend(protected val client: Client) extends HttpBackend[ScopedTask] {
 
   override def send[O: Decoder](
       url: String,
@@ -44,7 +40,7 @@ final case class ZIOBackend(
       method = methodFor(verb),
       url = u,
       body = Body.empty,
-      headers = Headers(con) ++ cookiesFor(cookies),
+      headers = Headers(con) ++ headersFor(headers) ++ cookiesFor(cookies),
       version = Version.`HTTP/1.1`,
       remoteAddress = None
     )
@@ -65,21 +61,23 @@ final case class ZIOBackend(
       method = methodFor(verb),
       url = u,
       body = Body.fromString(body.toJson),
-      headers = Headers(con) ++ cookiesFor(cookies),
+      headers = Headers(con) ++ headersFor(headers) ++ cookiesFor(cookies),
       version = Version.`HTTP/1.1`,
       remoteAddress = None
     )
     o <- expect(req)
   } yield o
 
-  private def cookiesFor(values: Seq[(String, String)]) = NonEmptyChunk
-    .fromIterableOption(values.map { case (k, v) =>
-      Cookie.Request(k, v)
-    })
-    .map(Header.Cookie(_))
-    .fold(Headers.empty)(Headers(_))
+  protected def headersFor(values: Seq[(String, String)]): Headers =
+    Headers(values.map { case (k, v) => Header.Custom(k, v) })
 
-  private def methodFor: APIVerb => Method = {
+  protected def cookiesFor(values: Seq[(String, String)]): Headers =
+    NonEmptyChunk
+      .fromIterableOption(values.map { case (k, v) => Cookie.Request(k, v) })
+      .map(Header.Cookie(_))
+      .fold(Headers.empty)(Headers(_))
+
+  protected def methodFor: APIVerb => Method = {
     case APIVerb.GET      => Method.GET
     case APIVerb.POST     => Method.POST
     case APIVerb.DELETE   => Method.DELETE
@@ -87,34 +85,33 @@ final case class ZIOBackend(
     case APIVerb.PATCH(_) => Method.PATCH
   }
 
-  private def contentType(verb: APIVerb) =
+  protected def contentType(verb: APIVerb): ScopedTask[Header.ContentType] =
     ZIO.fromEither(
       Header.ContentType
-        .parse(
-          verb match {
-            case APIVerb.PATCH(ptype) => ptype.contentType
-            case _                    => "application/json"
-          }
-        )
+        .parse(verb match {
+          case APIVerb.PATCH(ptype) => ptype.contentType
+          case _                    => "application/json"
+        })
         .left
         .map(new IllegalArgumentException(_))
     )
 
-  private def urlFor(
+  protected def urlFor(
       url: String,
       params: Seq[(String, String)]
-  ): ScopedTask[http.URL] = for {
-    u <- ZIO.fromEither(URL.decode(url))
-    qp = params.foldLeft(Map.empty[String, Chunk[String]]) {
-      case (qs, (k, v)) =>
-        qs.get(k) match {
-          case None        => qs.updated(k, Chunk(v))
-          case Some(value) => qs.updated(k, Chunk(v) ++ value)
-        }
-    }
-  } yield u.setQueryParams(QueryParams(qp))
+  ): ScopedTask[http.URL] =
+    for {
+      u <- ZIO.fromEither(URL.decode(url))
+      qp = params.foldLeft(Map.empty[String, Chunk[String]]) {
+        case (qs, (k, v)) =>
+          qs.get(k) match {
+            case None        => qs.updated(k, Chunk(v))
+            case Some(value) => qs.updated(k, Chunk(v) ++ value)
+          }
+      }
+    } yield u.setQueryParams(QueryParams(qp))
 
-  private def expect[O: Decoder](req: http.Request): ScopedTask[O] =
+  protected def expect[O: Decoder](req: http.Request): ScopedTask[O] =
     client.request(req).flatMap { res =>
       def readBody[T: Decoder]: ScopedTask[T] =
         res.body.asString.flatMap(body =>
@@ -122,7 +119,7 @@ final case class ZIOBackend(
             JsonDecoder[T]
               .decodeJson(body)
               .left
-              .map(DecodeError(_))
+              .map(ZIOBackend.DecodeError(_))
           )
         )
 
@@ -135,8 +132,7 @@ final case class ZIOBackend(
           case http.Status.NotFound     => ErrorStatus.NotFound
           case s                        => ErrorStatus.Other(s.code)
         }
-        val status = readBody[v1.Status]
-        status.map(ErrorResponse(err, _)).flatMap(ZIO.die(_))
+        readBody[v1.Status].map(ErrorResponse(err, _)).flatMap(ZIO.die(_))
       }
     }
 }
@@ -145,6 +141,6 @@ object ZIOBackend {
   final case class DecodeError(msg: String) extends Exception(msg)
 
   def make: ZLayer[Client, Nothing, ZIOBackend] = Scope.default >>> ZLayer {
-    ZIO.service[Client].map(ZIOBackend(_))
+    ZIO.service[Client].map(new ZIOBackend(_))
   }
 }

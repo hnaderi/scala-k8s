@@ -120,6 +120,7 @@ lazy val circeVersion = "0.14.15"
 lazy val munitVersion = "1.2.0"
 lazy val munitCatsEffectVersion = "2.2.0"
 lazy val testcontainersVersion = "0.44.1"
+lazy val zioVersion = "2.1.23"
 
 val rootDir = Def.setting((ThisBuild / baseDirectory).value)
 
@@ -289,10 +290,13 @@ lazy val zio = module("zio") {
     .settings(
       description := "zio-http based client for kubernetes",
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio-http" % "3.8.1"
-      )
+        "dev.zio" %% "zio-http" % "3.8.1",
+        "dev.zio" %% "zio-test" % zioVersion % Test,
+        "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+      ),
+      testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
     )
-    .dependsOn(client, `zio-json`)
+    .dependsOn(client, `zio-json`, jawn)
 }
 
 lazy val scalacheck = module("scalacheck") {
@@ -360,10 +364,13 @@ lazy val integrationTests = project
       "org.http4s" %% "http4s-circe" % "0.23.34" % Test,
       "com.dimafeng" %% "testcontainers-scala-core" % testcontainersVersion % Test,
       "com.dimafeng" %% "testcontainers-scala-k3s" % testcontainersVersion % Test,
-      "org.typelevel" %% "munit-cats-effect" % munitCatsEffectVersion % Test
-    )
+      "org.typelevel" %% "munit-cats-effect" % munitCatsEffectVersion % Test,
+      "dev.zio" %% "zio-test" % zioVersion % Test,
+      "dev.zio" %% "zio-test-sbt" % zioVersion % Test
+    ),
+    testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(http4sEmber.jvm, http4sJDK.jvm, circe.jvm)
+  .dependsOn(http4sEmber.jvm, http4sJDK.jvm, circe.jvm, zio.jvm, `zio-json`.jvm)
 
 lazy val circe = module("circe") {
   crossProject(JVMPlatform, JSPlatform, NativePlatform)

@@ -14,23 +14,12 @@
  * limitations under the License.
  */
 
-package example
+package dev.hnaderi.k8s.client
 
-import dev.hnaderi.k8s.client.APIs
-import dev.hnaderi.k8s.client.zio.ZIOKubernetesClient
-import zio.*
+package object zio {
+  type ScopedTask[+T] = _root_.zio.ZIO[_root_.zio.Scope, Throwable, T]
+  type ZKStream[+T] = _root_.zio.stream.ZStream[Any, Throwable, T]
 
-//NOTE run `kubectl proxy` before running this example
-object ZIOExample extends ZIOAppDefault {
-
-  override def run: ZIO[Environment with ZIOAppArgs with Scope, Any, Any] =
-    ZIO.scoped {
-      for {
-        client <- ZIOKubernetesClient.defaultConfig
-        pods <- APIs.namespace("default").pods.list().send(client)
-        names = pods.items.flatMap(_.metadata.flatMap(_.name))
-        _ <- ZIO.foreach(names)(Console.printLine(_))
-      } yield ()
-    }
-
+  type ZKClient = HttpClient[ScopedTask] with StreamingClient[ZKStream]
+  type ZKExecClient = ZKClient with ExecClient[ZKStream]
 }

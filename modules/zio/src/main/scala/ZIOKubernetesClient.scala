@@ -15,22 +15,226 @@
  */
 
 package dev.hnaderi.k8s.client
+package zio
 
-import zio._
+import dev.hnaderi.k8s.manifest
+import _root_.zio._
+import _root_.zio.http._
 
-object ScopedZIO {
-  type ScopedTask[+T] = ZIO[Any & Scope, Throwable, T]
-}
+import java.io.FileNotFoundException
+import java.nio.file.{Files => JFiles, Paths => JPaths}
 
-import ScopedZIO._
 object ZIOKubernetesClient {
-  def send[O](
-      req: HttpRequest[O]
-  ): ZIO[HttpClient[ScopedTask] with Scope, Throwable, O] =
-    ZIO.service[HttpClient[ScopedTask]].flatMap(req.send)
 
-  def make(url: String): ZLayer[ZIOBackend, Nothing, HttpClient[ScopedTask]] =
-    ZLayer {
-      ZIO.service[HttpBackend[ScopedTask]].map(HttpClient(url, _))
+  private val serviceAccountBase =
+    "/var/run/secrets/kubernetes.io/serviceaccount"
+  private val podApiServer = "https://kubernetes.default.svc"
+
+  private def makeClient(
+      sslConfig: ClientSSLConfig
+  ): ZIO[Scope, Throwable, Client] =
+    ZClient.default.build.map(_.get[Client].ssl(sslConfig))
+
+  private def readFile(path: String): ZIO[Any, Throwable, String] =
+    ZIO.attemptBlockingIO(new String(JFiles.readAllBytes(JPaths.get(path))))
+
+  private def kubeconfigPath: ZIO[Any, Throwable, Option[String]] =
+    ZIO.attempt(Option(java.lang.System.getenv("KUBECONFIG"))).flatMap {
+      case some @ Some(_) => ZIO.succeed(some)
+      case None           =>
+        ZIO.attempt {
+          val home =
+            Option(java.lang.System.getProperty("user.home")).getOrElse("~")
+          val path = s"$home/.kube/config"
+          if (new java.io.File(path).exists()) Some(path) else None
+        }
     }
+
+  private def podServiceAccountAuth: ZIO[Any, Throwable, AuthenticationParams] =
+    readFile(s"$serviceAccountBase/token").map(AuthenticationParams.bearer)
+
+  private def resolveConfig(
+      config: dev.hnaderi.k8s.client.Config,
+      context: Option[String],
+      cluster: Option[String]
+  ): ZIO[Any, Throwable, (Cluster, String, AuthInfo)] = {
+    val currentContext = context.getOrElse(config.`current-context`)
+    val result = for {
+      ctx <- config.contexts.find(_.name == currentContext)
+      clusterName = cluster.getOrElse(ctx.context.cluster)
+      cl <- config.clusters.find(_.name == clusterName)
+      user <- config.users.find(_.name == ctx.context.user)
+    } yield (cl.cluster, cl.cluster.server, user.user)
+
+    ZIO
+      .fromOption(result)
+      .orElseFail(
+        new IllegalArgumentException(
+          "Cannot find connection details in kubeconfig"
+        )
+      )
+  }
+
+  /** Build client from an already-constructed URL and optional auth. */
+  def make(
+      url: String,
+      sslConfig: ClientSSLConfig = ClientSSLConfig.Default,
+      auth: AuthenticationParams = AuthenticationParams.empty
+  ): ZIO[Scope, Throwable, ZKClient] =
+    makeClient(sslConfig).map { client =>
+      HttpClient.streaming(url, new ZIOStreamingBackend(client), auth)
+    }
+
+  /** Build exec-capable client from an already-constructed URL. */
+  def makeWithExec(
+      url: String,
+      sslConfig: ClientSSLConfig = ClientSSLConfig.Default,
+      auth: AuthenticationParams = AuthenticationParams.empty
+  ): ZIO[Scope, Throwable, ZKExecClient] =
+    makeClient(sslConfig).map { client =>
+      HttpClient.withExec(url, new ZIOExecBackend(client), auth)
+    }
+
+  /** Build client from a [[dev.hnaderi.k8s.client.Config]] data structure. */
+  def fromConfig(
+      config: dev.hnaderi.k8s.client.Config,
+      context: Option[String] = None,
+      cluster: Option[String] = None
+  ): ZIO[Scope, Throwable, ZKClient] =
+    for {
+      resolved <- resolveConfig(config, context, cluster)
+      (clusterData, server, auth) = resolved
+      sslConfig <- ZIOSSLConfig.fromClusterAndAuth(clusterData, auth)
+      client <- makeClient(sslConfig)
+    } yield HttpClient.streaming(
+      server,
+      new ZIOStreamingBackend(client),
+      AuthenticationParams.from(auth)
+    )
+
+  /** Build exec-capable client from a [[dev.hnaderi.k8s.client.Config]] data
+    * structure.
+    */
+  def fromConfigWithExec(
+      config: dev.hnaderi.k8s.client.Config,
+      context: Option[String] = None,
+      cluster: Option[String] = None
+  ): ZIO[Scope, Throwable, ZKExecClient] =
+    for {
+      resolved <- resolveConfig(config, context, cluster)
+      (clusterData, server, auth) = resolved
+      sslConfig <- ZIOSSLConfig.fromClusterAndAuth(clusterData, auth)
+      client <- makeClient(sslConfig)
+    } yield HttpClient.withExec(
+      server,
+      new ZIOExecBackend(client),
+      AuthenticationParams.from(auth)
+    )
+
+  /** Build client from explicit certificate file paths. */
+  def from(
+      server: String,
+      ca: Option[String] = None,
+      clientCert: Option[String] = None,
+      clientKey: Option[String] = None,
+      auth: AuthenticationParams = AuthenticationParams.empty
+  ): ZIO[Scope, Throwable, ZKClient] =
+    makeClient(ZIOSSLConfig.fromFiles(ca, clientCert, clientKey)).map {
+      client =>
+        HttpClient.streaming(server, new ZIOStreamingBackend(client), auth)
+    }
+
+  /** Build exec-capable client from explicit certificate file paths. */
+  def fromWithExec(
+      server: String,
+      ca: Option[String] = None,
+      clientCert: Option[String] = None,
+      clientKey: Option[String] = None,
+      auth: AuthenticationParams = AuthenticationParams.empty
+  ): ZIO[Scope, Throwable, ZKExecClient] =
+    makeClient(ZIOSSLConfig.fromFiles(ca, clientCert, clientKey)).map {
+      client =>
+        HttpClient.withExec(server, new ZIOExecBackend(client), auth)
+    }
+
+  /** Build client from a kubeconfig file. */
+  def load(
+      configFile: String,
+      context: Option[String] = None,
+      cluster: Option[String] = None
+  ): ZIO[Scope, Throwable, ZKClient] =
+    readFile(configFile)
+      .flatMap(content =>
+        ZIO.fromEither(manifest.parse[dev.hnaderi.k8s.client.Config](content))
+      )
+      .flatMap(fromConfig(_, context, cluster))
+
+  /** Build exec-capable client from a kubeconfig file. */
+  def loadWithExec(
+      configFile: String,
+      context: Option[String] = None,
+      cluster: Option[String] = None
+  ): ZIO[Scope, Throwable, ZKExecClient] =
+    readFile(configFile)
+      .flatMap(content =>
+        ZIO.fromEither(manifest.parse[dev.hnaderi.k8s.client.Config](content))
+      )
+      .flatMap(fromConfigWithExec(_, context, cluster))
+
+  /** Build client using the kubeconfig found at the default location. Tries:
+    *   - `KUBECONFIG` environment variable
+    *   - `~/.kube/config`
+    */
+  def kubeconfig(
+      context: Option[String] = None,
+      cluster: Option[String] = None
+  ): ZIO[Scope, Throwable, ZKClient] =
+    kubeconfigPath.flatMap {
+      case Some(path) => load(path, context, cluster)
+      case None => ZIO.fail(new FileNotFoundException("No kubeconfig found"))
+    }
+
+  /** Build exec-capable client using the default kubeconfig location. */
+  def kubeconfigWithExec(
+      context: Option[String] = None,
+      cluster: Option[String] = None
+  ): ZIO[Scope, Throwable, ZKExecClient] =
+    kubeconfigPath.flatMap {
+      case Some(path) => loadWithExec(path, context, cluster)
+      case None => ZIO.fail(new FileNotFoundException("No kubeconfig found"))
+    }
+
+  /** Build client from the pod's service account credentials at
+    * `/var/run/secrets/kubernetes.io/serviceaccount`.
+    */
+  def podConfig: ZIO[Scope, Throwable, ZKClient] =
+    podServiceAccountAuth.flatMap { auth =>
+      from(
+        server = podApiServer,
+        ca = Some(s"$serviceAccountBase/ca.crt"),
+        auth = auth
+      )
+    }
+
+  /** Build exec-capable client from pod service account credentials. */
+  def podConfigWithExec: ZIO[Scope, Throwable, ZKExecClient] =
+    podServiceAccountAuth.flatMap { auth =>
+      fromWithExec(
+        server = podApiServer,
+        ca = Some(s"$serviceAccountBase/ca.crt"),
+        auth = auth
+      )
+    }
+
+  /** Build client from the default config. Tries kubeconfig, then pod service
+    * account.
+    */
+  def defaultConfig: ZIO[Scope, Throwable, ZKClient] =
+    kubeconfig().orElse(podConfig)
+
+  /** Build exec-capable client from the default config. Tries kubeconfig, then
+    * pod service account.
+    */
+  def defaultConfigWithExec: ZIO[Scope, Throwable, ZKExecClient] =
+    kubeconfigWithExec().orElse(podConfigWithExec)
 }
