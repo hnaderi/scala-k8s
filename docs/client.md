@@ -35,8 +35,6 @@ object CustomResourceList {
 }
 ```
 
-The following examples use `kubectl proxy` for simplicity.
-
 ## Http4s based client
 
 Http4s based client supports all APIs.
@@ -67,23 +65,6 @@ The ZIO backend is built on top of [zio-http](https://github.com/zio/zio-http) a
 
 ```scala
 libraryDependencies += "dev.hnaderi" %% "scala-k8s-zio" % "@VERSION@"
-```
-
-Talking to a `kubectl proxy` (no authentication):
-
-```scala mdoc:compile-only
-import dev.hnaderi.k8s.client.APIs
-import dev.hnaderi.k8s.client.zio.ZIOKubernetesClient
-import zio._
-
-val listNodes: ZIO[Scope, Throwable, Unit] =
-  for {
-    client <- ZIOKubernetesClient.make("http://localhost:8001")
-    nodes <- APIs.nodes.list().send(client)
-    _ <- ZIO.foreachDiscard(nodes.items.flatMap(_.metadata).flatMap(_.name))(
-      Console.printLine(_)
-    )
-  } yield ()
 ```
 
 For a real cluster the factory picks up your kubeconfig (or the in-pod service account when running inside Kubernetes):
@@ -120,6 +101,23 @@ val watchPods: ZIO[Scope, Throwable, Unit] =
       .listen(client)
       .runForeach(evt => Console.printLine(evt.event.toString))
   }
+```
+
+Talking to a `kubectl proxy` (no authentication):
+
+```scala mdoc:compile-only
+import dev.hnaderi.k8s.client.APIs
+import dev.hnaderi.k8s.client.zio.ZIOKubernetesClient
+import zio._
+
+val listNodes: ZIO[Scope, Throwable, Unit] =
+  for {
+    client <- ZIOKubernetesClient.make("http://localhost:8001")
+    nodes <- APIs.nodes.list().send(client)
+    _ <- ZIO.foreachDiscard(nodes.items.flatMap(_.metadata).flatMap(_.name))(
+      Console.printLine(_)
+    )
+  } yield ()
 ```
 
 The client builder returns a scoped resource, so it should be acquired inside `ZIO.scoped` (or via a `ZLayer`). All connections and the underlying Netty event loop are released when the scope closes.
