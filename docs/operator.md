@@ -15,6 +15,14 @@ libraryDependencies ++= Seq(
 )
 ```
 
+The ZIO backend is also supported (JVM only); swap the dependencies and use
+`ZIOKubernetesClient` from [the client docs](client.md#zio-based-client) in
+place of `EmberKubernetesClient`:
+
+```scala
+libraryDependencies += "dev.hnaderi" %% "scala-k8s-zio" % "@VERSION@"
+```
+
 ```scala mdoc:invisible
 import cats.effect._
 import dev.hnaderi.k8s.utils._

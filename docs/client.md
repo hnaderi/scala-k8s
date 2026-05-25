@@ -5,7 +5,7 @@ Scala k8s provides a Kubernetes client built on top of a generic HTTP client, al
 ```scala mdoc:invisible
 import cats.effect._
 import dev.hnaderi.k8s._
-import dev.hnaderi.k8s.client._
+import dev.hnaderi.k8s.client.{zio => _, _}
 import dev.hnaderi.k8s.implicits._
 import dev.hnaderi.k8s.circe._
 import dev.hnaderi.k8s.client.implicits._
@@ -63,12 +63,66 @@ val getConfigMaps =
 
 ## ZIO based client
 
-```scala
-import dev.hnaderi.k8s.client.ZIOKubernetesClient
+The ZIO backend is built on top of [zio-http](https://github.com/zio/zio-http) and supports all APIs including streaming and pod exec.
 
-val client = ZIOKubernetesClient.make("http://localhost:8001")
-val nodes = ZIOKubernetesClient.send(APIs.nodes.list())
+```scala
+libraryDependencies += "dev.hnaderi" %% "scala-k8s-zio" % "@VERSION@"
 ```
+
+Talking to a `kubectl proxy` (no authentication):
+
+```scala mdoc:compile-only
+import dev.hnaderi.k8s.client.APIs
+import dev.hnaderi.k8s.client.zio.ZIOKubernetesClient
+import zio._
+
+val listNodes: ZIO[Scope, Throwable, Unit] =
+  for {
+    client <- ZIOKubernetesClient.make("http://localhost:8001")
+    nodes <- APIs.nodes.list().send(client)
+    _ <- ZIO.foreachDiscard(nodes.items.flatMap(_.metadata).flatMap(_.name))(
+      Console.printLine(_)
+    )
+  } yield ()
+```
+
+For a real cluster the factory picks up your kubeconfig (or the in-pod service account when running inside Kubernetes):
+
+```scala mdoc:compile-only
+import dev.hnaderi.k8s.client.APIs
+import dev.hnaderi.k8s.client.zio.ZIOKubernetesClient
+import zio._
+
+// Also: kubeconfig(), load("/path/to/kubeconfig"), fromConfig(parsedConfig),
+// from(server, ca, clientCert, clientKey, auth), podConfig
+val listNodes: ZIO[Scope, Throwable, Unit] =
+   for {
+     client <- ZIOKubernetesClient.defaultConfig
+     pods <- APIs.namespace("default").pods.list().send(client)
+     names = pods.items.flatMap(_.metadata.flatMap(_.name))
+     _ <- ZIO.foreach(names)(Console.printLine(_))
+   } yield ()
+```
+
+Streaming endpoints (watches, pod logs) return a `ZStream`:
+
+```scala mdoc:compile-only
+import dev.hnaderi.k8s.client.APIs
+import dev.hnaderi.k8s.client.zio.ZIOKubernetesClient
+import zio._
+
+val watchPods: ZIO[Scope, Throwable, Unit] =
+  ZIOKubernetesClient.defaultConfig.flatMap { client =>
+    APIs
+      .namespace("default")
+      .pods
+      .list()
+      .listen(client)
+      .runForeach(evt => Console.printLine(evt.event.toString))
+  }
+```
+
+The client builder returns a scoped resource, so it should be acquired inside `ZIO.scoped` (or via a `ZLayer`). All connections and the underlying Netty event loop are released when the scope closes.
 
 ## Sttp based client
 
@@ -164,7 +218,7 @@ val patch5 = APIs
 
 ## Pod exec
 
-The `http4s-jdk` and `http4s-netty` backends support executing commands inside pods over WebSockets using the Kubernetes exec API.
+The `http4s-jdk`, `http4s-netty`, and `zio` backends support executing commands inside pods over WebSockets using the Kubernetes exec API.
 
 ```scala
 libraryDependencies += "dev.hnaderi" %% "scala-k8s-http4s-jdk" % "@VERSION@"
@@ -226,6 +280,39 @@ val stdinApp: IO[Unit] =
 ```
 
 The exec stream terminates automatically when the process exits.
+
+The ZIO equivalent uses `ZStream` instead of `fs2.Stream`:
+
+```scala mdoc:compile-only
+import dev.hnaderi.k8s.client.{APIs, ExecEvent}
+import dev.hnaderi.k8s.client.zio.ZIOKubernetesClient
+import zio._
+import zio.stream._
+
+// Also: defaultConfigWithExec, kubeconfigWithExec, makeWithExec,
+// fromWithExec, podConfigWithExec
+val zioExecApp: ZIO[Scope, Throwable, Unit] =
+  ZIOKubernetesClient.defaultConfigWithExec.flatMap { client =>
+    val pipe = client.pipe(
+      APIs
+        .namespace("default")
+        .pods
+        .exec("my-pod", Seq("sh", "-c", "echo hello"))
+    )
+
+    pipe(ZStream.empty)
+      .runForeach {
+        case ExecEvent.Stdout(data) =>
+          Console.printLine(s"stdout: ${new String(data, "UTF-8").trim}")
+        case ExecEvent.Stderr(data) =>
+          Console.printLine(s"stderr: ${new String(data, "UTF-8").trim}")
+        case ExecEvent.Error(status) =>
+          Console.printLine(
+            s"exit status: ${status.status.getOrElse("unknown")}"
+          )
+      }
+  }
+```
 
 ## Implementing new requests
 

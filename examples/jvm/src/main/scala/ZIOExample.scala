@@ -20,7 +20,6 @@ import dev.hnaderi.k8s.client.APIs
 import dev.hnaderi.k8s.client.zio.ZIOKubernetesClient
 import zio.*
 
-//NOTE run `kubectl proxy` before running this example
 object ZIOExample extends ZIOAppDefault {
 
   override def run: ZIO[Environment with ZIOAppArgs with Scope, Any, Any] =
