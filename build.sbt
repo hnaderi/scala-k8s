@@ -16,8 +16,7 @@ ThisBuild / developers := List(
 val scala212 = "2.12.21"
 val scala213 = "2.13.18"
 val scala3 = "3.3.7"
-val PrimaryJava = JavaSpec.temurin("11")
-val LTSJava = JavaSpec.temurin("17")
+val PrimaryJava = JavaSpec.temurin("17")
 
 val supportScalaVersions = Seq(scala212, scala213, scala3)
 
@@ -25,7 +24,11 @@ ThisBuild / tlSitePublishBranch := Some("main")
 ThisBuild / tlJdkRelease := Some(11)
 ThisBuild / scalaVersion := scala212
 ThisBuild / crossScalaVersions := supportScalaVersions
-ThisBuild / githubWorkflowJavaVersions := Seq(PrimaryJava, LTSJava)
+ThisBuild / githubWorkflowJavaVersions := Seq(
+  PrimaryJava,
+  JavaSpec.temurin("21"),
+  JavaSpec.temurin("25")
+)
 ThisBuild / githubWorkflowBuildMatrixFailFast := Some(false)
 // This job is used as a sign that all build jobs have been successful and is used by mergify
 ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
