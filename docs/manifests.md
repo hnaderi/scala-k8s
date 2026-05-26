@@ -1,5 +1,11 @@
 # Manifest and Object Generation
 
+``` scala
+libraryDependencies ++= Seq(
+  "dev.hnaderi" %% "scala-k8s-manifests" % "@VERSION@"
+)
+```
+
 First, import the following:
 
 ```scala mdoc
