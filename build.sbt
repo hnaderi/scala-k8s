@@ -99,6 +99,7 @@ lazy val root =
       http4sNetty,
       http4sBlaze,
       http4sJDK,
+      jdk,
       zio,
       sttp,
       codecTest,
@@ -274,6 +275,21 @@ lazy val http4sJDK = module("http4s-jdk") {
     .dependsOn(http4s)
 }
 
+lazy val jdk = module("jdk") {
+  crossProject(JVMPlatform)
+    .crossType(CrossType.Pure)
+    .settings(
+      description :=
+        "jdk-only client for kubernetes (CompletableFuture + scala.concurrent.Future)",
+      libraryDependencies ++= Seq(
+        "org.scalameta" %%% "munit" % munitVersion % Test
+      )
+    )
+    .dependsOn(client, jawn)
+    .jvmConfigure(_.dependsOn(javaSSL.jvm))
+    .jvmConfigure(_.dependsOn(circe.jvm % Test))
+}
+
 lazy val sttp = module("sttp") {
   crossProject(JVMPlatform, JSPlatform, NativePlatform)
     .crossType(CrossType.Pure)
@@ -373,7 +389,14 @@ lazy val integrationTests = project
     ),
     testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(http4sEmber.jvm, http4sJDK.jvm, circe.jvm, zio.jvm, `zio-json`.jvm)
+  .dependsOn(
+    http4sEmber.jvm,
+    http4sJDK.jvm,
+    jdk.jvm,
+    circe.jvm,
+    zio.jvm,
+    `zio-json`.jvm
+  )
 
 lazy val circe = module("circe") {
   crossProject(JVMPlatform, JSPlatform, NativePlatform)
@@ -521,7 +544,7 @@ lazy val exampleJVM = example("jvm") {
         "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
       )
     )
-    .dependsOn(http4sNetty, http4sEmber, http4sJDK, circe, zio, sttp)
+    .dependsOn(http4sNetty, http4sEmber, http4sJDK, jdk, circe, zio, sttp)
 }
 
 lazy val exampleCrossPlatform = example("cross-platform") {

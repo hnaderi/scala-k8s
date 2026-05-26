@@ -19,12 +19,14 @@ package dev.hnaderi.k8s
 import dev.hnaderi.k8s.utils.Builder
 import dev.hnaderi.k8s.utils.Decoder
 import dev.hnaderi.k8s.utils.Encoder
+import dev.hnaderi.k8s.utils.Printer
 import dev.hnaderi.k8s.utils.Reader
 import io.circe.Json
 
 package object circe {
   implicit val circeBuilder: Builder[Json] = CirceBuilder
   implicit val circeReader: Reader[Json] = CirceReader
+  implicit val circePrinter: Printer[Json] = Printer.instance(_.noSpaces)
   implicit def k8sEncoder[T](implicit enc: Encoder[T]): io.circe.Encoder[T] =
     o => enc(o)
   implicit def k8sDecoder[T](implicit dec: Decoder[T]): io.circe.Decoder[T] =

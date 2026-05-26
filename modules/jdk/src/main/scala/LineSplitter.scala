@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package dev.hnaderi.k8s
+package dev.hnaderi.k8s.client
+package jdk
 
-import dev.hnaderi.k8s.utils._
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
-import zio.json.ast.Json
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 
-package object zioJson {
-  implicit val zioReader: Reader[Json] = ZIOReader
-  implicit val zioBuilder: Builder[Json] = ZIOBuilder
-  implicit val zioPrinter: Printer[Json] =
-    Printer.instance(JsonEncoder[Json].encodeJson(_, None).toString)
-  implicit def zioEncoderFor[T: Encoder]: JsonEncoder[T] =
-    JsonEncoder[Json].contramap(_.encodeTo[Json])
-  implicit def zioDecoderFor[T: Decoder]: JsonDecoder[T] =
-    JsonDecoder[Json].mapOrFail(_.decodeTo[T])
+private[jdk] final class LineSplitter {
+  private val decoder = StandardCharsets.UTF_8.newDecoder()
+  private val carry = new StringBuilder
+
+  def feed(buf: ByteBuffer, push: String => Unit): Unit = {
+    carry.append(decoder.decode(buf))
+    var idx = carry.indexOf('\n')
+    while (idx >= 0) {
+      val line = carry.substring(0, idx)
+      carry.delete(0, idx + 1)
+      if (line.nonEmpty) push(line)
+      idx = carry.indexOf('\n')
+    }
+  }
 }

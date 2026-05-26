@@ -22,6 +22,8 @@ import spray.json._
 package object sprayJson {
   implicit val sprayJsonBuilder: Builder[JsValue] = SprayBuilder
   implicit val sprayJsonReader: Reader[JsValue] = SprayReader
+  implicit val sprayJsonPrinter: Printer[JsValue] =
+    Printer.instance(_.compactPrint)
   implicit def k8sJsonWriter[T](implicit enc: Encoder[T]): JsonWriter[T] =
     JsonWriter.func2Writer(enc(_))
   implicit def k8sJsonReader[T](implicit dec: Decoder[T]): JsonReader[T] =

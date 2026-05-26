@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package dev.hnaderi.k8s
+package dev.hnaderi.k8s.utils
 
-import dev.hnaderi.k8s.utils._
-import zio.json.JsonDecoder
-import zio.json.JsonEncoder
-import zio.json.ast.Json
+trait Printer[T] {
+  def print(t: T): String
+}
 
-package object zioJson {
-  implicit val zioReader: Reader[Json] = ZIOReader
-  implicit val zioBuilder: Builder[Json] = ZIOBuilder
-  implicit val zioPrinter: Printer[Json] =
-    Printer.instance(JsonEncoder[Json].encodeJson(_, None).toString)
-  implicit def zioEncoderFor[T: Encoder]: JsonEncoder[T] =
-    JsonEncoder[Json].contramap(_.encodeTo[Json])
-  implicit def zioDecoderFor[T: Decoder]: JsonDecoder[T] =
-    JsonDecoder[Json].mapOrFail(_.decodeTo[T])
+object Printer {
+  def apply[T](implicit p: Printer[T]): Printer[T] = p
+
+  def instance[T](f: T => String): Printer[T] = new Printer[T] {
+    def print(t: T): String = f(t)
+  }
 }

@@ -22,6 +22,8 @@ import play.api.libs.json._
 package object playJson {
   implicit val playJsonBuilder: Builder[JsValue] = PlayJsonBuilder
   implicit val playJsonReader: Reader[JsValue] = PlayJsonReader
+  implicit val playJsonPrinter: Printer[JsValue] =
+    Printer.instance(Json.stringify)
   implicit def k8sJsonWrites[T](implicit enc: Encoder[T]): Writes[T] =
     Writes(enc(_))
   implicit def k8sJsonReads[T](implicit dec: Decoder[T]): Reads[T] =
