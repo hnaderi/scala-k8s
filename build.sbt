@@ -421,7 +421,7 @@ lazy val json4s = module("json4s") {
     .settings(
       description := "json4s codecs for kubernetes data models",
       libraryDependencies ++= Seq(
-        "io.github.json4s" %%% "json4s-ast" % "4.1.0"
+        "io.github.json4s" %%% "json4s-ast" % "4.1.1"
       )
     )
     .dependsOn(objects)
