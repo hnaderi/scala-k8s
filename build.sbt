@@ -15,7 +15,7 @@ ThisBuild / developers := List(
 
 val scala212 = "2.12.21"
 val scala213 = "2.13.18"
-val scala3 = "3.3.8"
+val scala3 = "3.8.4"
 val PrimaryJava = JavaSpec.temurin("17")
 
 val supportScalaVersions = Seq(scala212, scala213, scala3)
