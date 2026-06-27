@@ -293,7 +293,7 @@ lazy val zio = module("zio") {
     .settings(
       description := "zio-http based client for kubernetes",
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio-http" % "3.11.2",
+        "dev.zio" %% "zio-http" % "3.11.3",
         "dev.zio" %% "zio-test" % zioVersion % Test,
         "dev.zio" %% "zio-test-sbt" % zioVersion % Test
       ),
