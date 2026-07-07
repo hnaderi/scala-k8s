@@ -212,7 +212,7 @@ lazy val http4s = module("http4s") {
     .settings(
       description := "http4s based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-client" % "0.23.34"
+        "org.http4s" %%% "http4s-client" % "0.23.36"
       )
     )
     .dependsOn(client, jawn)
@@ -234,7 +234,7 @@ lazy val http4sEmber = module("http4s-ember") {
     .settings(
       description := "http4s ember based client for kubernetes",
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-ember-client" % "0.23.34"
+        "org.http4s" %%% "http4s-ember-client" % "0.23.36"
       )
     )
     .dependsOn(http4s)
@@ -364,7 +364,7 @@ lazy val integrationTests = project
     name := "scala-k8s-integration-tests",
     Test / fork := true,
     libraryDependencies ++= Seq(
-      "org.http4s" %% "http4s-circe" % "0.23.34" % Test,
+      "org.http4s" %% "http4s-circe" % "0.23.36" % Test,
       "com.dimafeng" %% "testcontainers-scala-core" % testcontainersVersion % Test,
       "com.dimafeng" %% "testcontainers-scala-k3s" % testcontainersVersion % Test,
       "org.typelevel" %% "munit-cats-effect" % munitCatsEffectVersion % Test,
@@ -471,7 +471,7 @@ lazy val docs = project
   .enablePlugins(ScalaK8sWebsite)
   .settings(
     libraryDependencies ++= Seq(
-      "org.http4s" %%% "http4s-circe" % "0.23.34",
+      "org.http4s" %%% "http4s-circe" % "0.23.36",
       "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
     )
   )
@@ -517,7 +517,7 @@ lazy val exampleJVM = example("jvm") {
     .crossType(CrossType.Pure)
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-circe" % "0.23.34",
+        "org.http4s" %%% "http4s-circe" % "0.23.36",
         "com.softwaremill.sttp.client3" %%% "circe" % "3.11.0"
       )
     )
@@ -533,7 +533,7 @@ lazy val exampleCrossPlatform = example("cross-platform") {
     .crossType(CrossType.Pure)
     .settings(
       libraryDependencies ++= Seq(
-        "org.http4s" %%% "http4s-circe" % "0.23.34"
+        "org.http4s" %%% "http4s-circe" % "0.23.36"
       )
     )
     .jsSettings(
