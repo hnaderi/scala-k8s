@@ -65,9 +65,11 @@ trait K3sSuite extends CatsEffectSuite {
       awaitPhase: String,
       namespace: String = "default"
   ): SyncIO[FunFixture[(KExecClient[IO], Pod)]] = {
-    val podName = pod.metadata.flatMap(_.name).getOrElse(
-      throw new IllegalArgumentException("pod must have a name")
-    )
+    val podName = pod.metadata
+      .flatMap(_.name)
+      .getOrElse(
+        throw new IllegalArgumentException("pod must have a name")
+      )
     ResourceFunFixture(
       containerResource.flatMap { container =>
         Resource
@@ -87,7 +89,8 @@ trait K3sSuite extends CatsEffectSuite {
               )
               .evalMap { created =>
                 val name = created.metadata.flatMap(_.name).getOrElse(podName)
-                waitForPhase(client, namespace, name, awaitPhase).as(client -> created)
+                waitForPhase(client, namespace, name, awaitPhase)
+                  .as(client -> created)
               }
           }
       }
