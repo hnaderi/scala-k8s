@@ -54,7 +54,8 @@ object ZIOIntegrationSuite extends ZIOSpec[K3sContainer] {
       ZIO.scoped[Any] {
         for {
           config <- ZIO.fromEither(
-            manifest.parse[dev.hnaderi.k8s.client.Config](container.kubeConfigYaml)
+            manifest
+              .parse[dev.hnaderi.k8s.client.Config](container.kubeConfigYaml)
           )
           client <- factory(config)
           result <- f(client)
@@ -73,10 +74,14 @@ object ZIOIntegrationSuite extends ZIOSpec[K3sContainer] {
     withConfiguredClient(ZIOKubernetesClient.fromConfigWithExec(_))(f)
 
   private def podName(pod: Pod): String =
-    pod.metadata.flatMap(_.name).getOrElse(throw new IllegalArgumentException("pod must have a name"))
+    pod.metadata
+      .flatMap(_.name)
+      .getOrElse(throw new IllegalArgumentException("pod must have a name"))
 
   private def collectStdout(events: Chunk[ExecEvent]): String =
-    events.collect { case ExecEvent.Stdout(data) => new String(data, "UTF-8") }.mkString
+    events.collect { case ExecEvent.Stdout(data) =>
+      new String(data, "UTF-8")
+    }.mkString
 
   private def waitForPhase(
       client: ZKExecClient,
@@ -115,7 +120,11 @@ object ZIOIntegrationSuite extends ZIOSpec[K3sContainer] {
       }
   }
 
-  private def withPod[A](pod: Pod, awaitPhase: String, namespace: String = defaultNs)(
+  private def withPod[A](
+      pod: Pod,
+      awaitPhase: String,
+      namespace: String = defaultNs
+  )(
       f: (ZKExecClient, String) => ZIO[Scope, Throwable, A]
   ): ZIO[K3sContainer, Throwable, A] =
     withExecClient { client =>
@@ -194,7 +203,11 @@ object ZIOIntegrationSuite extends ZIOSpec[K3sContainer] {
       withClient { client =>
         for {
           _ <- APIs.namespace(defaultNs).configMaps.create(cm).send(client)
-          fetched <- APIs.namespace(defaultNs).configMaps.get(cmName).send(client)
+          fetched <- APIs
+            .namespace(defaultNs)
+            .configMaps
+            .get(cmName)
+            .send(client)
           _ <- APIs.namespace(defaultNs).configMaps.delete(cmName).send(client)
         } yield fetched
       }.map { fetched =>
@@ -215,27 +228,43 @@ object ZIOIntegrationSuite extends ZIOSpec[K3sContainer] {
 
   private val podExecSuite = suite("pod exec")(
     test("exec echo into busybox pod and capture stdout") {
-      withPod(sleepingBusybox("zio-exec-test-pod"), "Running") { (client, name) =>
-        val pipe = client.pipe(APIs.namespace(defaultNs).pods.exec(name, Seq("sh", "-c", "echo hello")))
-        pipe(ZStream.empty).runCollect
+      withPod(sleepingBusybox("zio-exec-test-pod"), "Running") {
+        (client, name) =>
+          val pipe = client.pipe(
+            APIs
+              .namespace(defaultNs)
+              .pods
+              .exec(name, Seq("sh", "-c", "echo hello"))
+          )
+          pipe(ZStream.empty).runCollect
       }.map { events =>
         assertTrue(collectStdout(events).trim == "hello")
       }
     },
     test("exec with stdin passes data to process") {
-      withPod(sleepingBusybox("zio-exec-stdin-pod"), "Running") { (client, name) =>
-        val pipe = client.pipe(
-          APIs.namespace(defaultNs).pods.exec(name, Seq("sh", "-c", "head -n 1"), stdinEnabled = true)
-        )
-        pipe(ZStream.succeed(ExecInput.Stdin("from stdin\n".getBytes("UTF-8")))).runCollect
+      withPod(sleepingBusybox("zio-exec-stdin-pod"), "Running") {
+        (client, name) =>
+          val pipe = client.pipe(
+            APIs
+              .namespace(defaultNs)
+              .pods
+              .exec(name, Seq("sh", "-c", "head -n 1"), stdinEnabled = true)
+          )
+          pipe(
+            ZStream.succeed(ExecInput.Stdin("from stdin\n".getBytes("UTF-8")))
+          ).runCollect
       }.map { events =>
         assertTrue(collectStdout(events).contains("from stdin"))
       }
     },
     test("attach with stdin passes data to running process") {
       withPod(stdinBusybox("zio-attach-pod"), "Running") { (client, name) =>
-        val pipe = client.pipe(APIs.namespace(defaultNs).pods.attach(name, stdinEnabled = true))
-        pipe(ZStream.succeed(ExecInput.Stdin("from attach\n".getBytes("UTF-8")))).runCollect
+        val pipe = client.pipe(
+          APIs.namespace(defaultNs).pods.attach(name, stdinEnabled = true)
+        )
+        pipe(
+          ZStream.succeed(ExecInput.Stdin("from attach\n".getBytes("UTF-8")))
+        ).runCollect
       }.map { events =>
         assertTrue(collectStdout(events).contains("from attach"))
       }
@@ -248,7 +277,8 @@ object ZIOIntegrationSuite extends ZIOSpec[K3sContainer] {
       configMapSuite,
       podLogsSuite,
       podExecSuite
-    ) @@ TestAspect.withLiveClock @@ TestAspect.sequential @@ TestAspect.timeout(
-      java.time.Duration.ofMinutes(5)
-    )
+    ) @@ TestAspect.withLiveClock @@ TestAspect.sequential @@ TestAspect
+      .timeout(
+        java.time.Duration.ofMinutes(5)
+      )
 }

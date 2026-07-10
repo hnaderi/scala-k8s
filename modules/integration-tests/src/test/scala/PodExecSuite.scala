@@ -68,9 +68,9 @@ class PodExecSuite extends K3sSuite {
     )
     for {
       events <- pipe(Stream.empty[IO]).compile.toList
-      stdout = events
-        .collect { case ExecEvent.Stdout(data) => new String(data, "UTF-8") }
-        .mkString
+      stdout = events.collect { case ExecEvent.Stdout(data) =>
+        new String(data, "UTF-8")
+      }.mkString
     } yield assertEquals(stdout.trim, "hello")
   }
 
@@ -79,18 +79,21 @@ class PodExecSuite extends K3sSuite {
   ) { case (client, pod) =>
     val name = pod.metadata.flatMap(_.name).get
     val pipe = client.pipe(
-      APIs.namespace(ns).pods.exec(
-        name,
-        Seq("sh", "-c", "head -n 1"),
-        stdinEnabled = true
-      )
+      APIs
+        .namespace(ns)
+        .pods
+        .exec(
+          name,
+          Seq("sh", "-c", "head -n 1"),
+          stdinEnabled = true
+        )
     )
     val input = Stream.emit(ExecInput.Stdin("from stdin\n".getBytes("UTF-8")))
     for {
       events <- pipe(input).compile.toList
-      stdout = events
-        .collect { case ExecEvent.Stdout(data) => new String(data, "UTF-8") }
-        .mkString
+      stdout = events.collect { case ExecEvent.Stdout(data) =>
+        new String(data, "UTF-8")
+      }.mkString
     } yield assert(stdout.contains("from stdin"))
   }
 
@@ -104,9 +107,9 @@ class PodExecSuite extends K3sSuite {
     val input = Stream.emit(ExecInput.Stdin("from attach\n".getBytes("UTF-8")))
     for {
       events <- pipe(input).compile.toList
-      stdout = events
-        .collect { case ExecEvent.Stdout(data) => new String(data, "UTF-8") }
-        .mkString
+      stdout = events.collect { case ExecEvent.Stdout(data) =>
+        new String(data, "UTF-8")
+      }.mkString
     } yield assert(stdout.contains("from attach"))
   }
 }
