@@ -21,7 +21,7 @@ val PrimaryJava = JavaSpec.temurin("17")
 val supportScalaVersions = Seq(scala212, scala213, scala3)
 
 ThisBuild / tlSitePublishBranch := Some("main")
-ThisBuild / tlJdkRelease := Some(11)
+ThisBuild / tlJdkRelease := Some(17)
 ThisBuild / scalaVersion := scala212
 ThisBuild / crossScalaVersions := supportScalaVersions
 ThisBuild / githubWorkflowJavaVersions := Seq(
