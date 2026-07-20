@@ -29,7 +29,10 @@ import org.http4s.headers.Cookie
 import org.http4s.headers.`Content-Type`
 import org.http4s.syntax.literals._
 
-class Http4sBackend[F[_], T] private[http4s] (client: Client[F])(implicit
+class Http4sBackend[F[_], T] private[http4s] (
+    client: Client[F],
+    auth: F[AuthenticationParams]
+)(implicit
     F: Concurrent[F],
     enc: EntityEncoder[F, T],
     dec: EntityDecoder[F, T],
@@ -44,24 +47,22 @@ class Http4sBackend[F[_], T] private[http4s] (client: Client[F])(implicit
   override def connectRaw(
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): Stream[F, Byte] =
-    Stream
-      .eval(urlFrom(url, params))
-      .map(methodFor(verb)(_, Headers(headers) ++ cookiesFor(cookies)))
-      .flatMap(client.stream(_))
-      .flatMap(_.body)
+    Stream.eval(auth).flatMap { a =>
+      Stream
+        .eval(urlFrom(url, params ++ a.params))
+        .map(methodFor(verb)(_, Headers(a.headers) ++ cookiesFor(a.cookies)))
+        .flatMap(client.stream(_))
+        .flatMap(_.body)
+    }
 
   override def connectLines(
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): Stream[F, String] =
-    connectRaw(url, verb, headers, params, cookies)
+    connectRaw(url, verb, params)
       .through(fs2.text.utf8.decode)
       .through(fs2.text.lines)
       .filter(_.nonEmpty)
@@ -69,36 +70,36 @@ class Http4sBackend[F[_], T] private[http4s] (client: Client[F])(implicit
   override def send[O: Decoder](
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): F[O] =
-    urlFrom(url, params)
-      .map { url =>
-        methodFor(verb)(
-          url,
-          Headers(headers) ++ cookiesFor(cookies)
-        ).withContentType(`Content-Type`(contentType(verb)))
-      }
-      .flatMap(sendRequest(_))
+    auth.flatMap { a =>
+      urlFrom(url, params ++ a.params)
+        .map { url =>
+          methodFor(verb)(
+            url,
+            Headers(a.headers) ++ cookiesFor(a.cookies)
+          ).withContentType(`Content-Type`(contentType(verb)))
+        }
+        .flatMap(sendRequest(_))
+    }
 
   override def send[I: Encoder, O: Decoder](
       url: String,
       verb: APIVerb,
       body: I,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): F[O] =
-    urlFrom(url, params)
-      .map { url =>
-        methodFor(verb)(
-          body.encodeTo[T],
-          url,
-          Headers(headers) ++ cookiesFor(cookies)
-        ).withContentType(`Content-Type`(contentType(verb)))
-      }
-      .flatMap(sendRequest(_))
+    auth.flatMap { a =>
+      urlFrom(url, params ++ a.params)
+        .map { url =>
+          methodFor(verb)(
+            body.encodeTo[T],
+            url,
+            Headers(a.headers) ++ cookiesFor(a.cookies)
+          ).withContentType(`Content-Type`(contentType(verb)))
+        }
+        .flatMap(sendRequest(_))
+    }
 
   private def cookiesFor(cookies: Seq[(String, String)]) = cookies
     .map { case (k, v) => RequestCookie(k, v) }
@@ -155,20 +156,20 @@ class Http4sBackend[F[_], T] private[http4s] (client: Client[F])(implicit
   override def connect[O: Decoder](
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): Stream[F, O] = {
     import Stream._
 
-    eval(urlFrom(url, params))
-      .map(methodFor(verb)(_, Headers(headers) ++ cookiesFor(cookies)))
-      .flatMap(client.stream(_))
-      .flatMap(_.body.through(parseJsonStream))
-      .flatMap { s =>
-        s.decodeTo[O]
-          .fold(err => raiseError[F](new Exception(s"$err\n$s")), emit(_))
-      }
+    eval(auth).flatMap { a =>
+      eval(urlFrom(url, params ++ a.params))
+        .map(methodFor(verb)(_, Headers(a.headers) ++ cookiesFor(a.cookies)))
+        .flatMap(client.stream(_))
+        .flatMap(_.body.through(parseJsonStream))
+        .flatMap { s =>
+          s.decodeTo[O]
+            .fold(err => raiseError[F](new Exception(s"$err\n$s")), emit(_))
+        }
+    }
   }
 
   private def urlFrom(str: String, params: Seq[(String, String)]): F[Uri] =
@@ -210,5 +211,17 @@ object Http4sBackend {
       dec: EntityDecoder[F, T],
       builder: Builder[T],
       reader: Reader[T]
-  ): Http4sBackend[F, T] = new Http4sBackend[F, T](client)
+  ): Http4sBackend[F, T] =
+    fromClient[F, T](client, F.pure(AuthenticationParams.empty))
+
+  def fromClient[F[_], T](
+      client: Client[F],
+      auth: F[AuthenticationParams]
+  )(implicit
+      F: Concurrent[F],
+      enc: EntityEncoder[F, T],
+      dec: EntityDecoder[F, T],
+      builder: Builder[T],
+      reader: Reader[T]
+  ): Http4sBackend[F, T] = new Http4sBackend[F, T](client, auth)
 }

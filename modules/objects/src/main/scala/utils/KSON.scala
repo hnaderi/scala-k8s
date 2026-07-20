@@ -18,8 +18,69 @@ package dev.hnaderi.k8s.utils
 
 sealed trait KSON extends Serializable with Product {
   def foldTo[T: Builder]: T
+
+  /** Renders this value as a compact JSON string. */
+  def printJson: String = {
+    val sb = new StringBuilder
+    KSON.writeJson(this, sb)
+    sb.toString
+  }
 }
 object KSON {
+
+  private def writeJson(k: KSON, sb: StringBuilder): Unit = k match {
+    case KString(v) => writeString(v, sb)
+    case KInt(v)    => sb.append(v); ()
+    case KLong(v)   => sb.append(v); ()
+    case KDouble(v) => sb.append(v); ()
+    case KBool(v)   => sb.append(if (v) "true" else "false"); ()
+    case KNull      => sb.append("null"); ()
+    case KArr(vs)   =>
+      sb.append('[')
+      var first = true
+      vs.foreach { v =>
+        if (!first) sb.append(',')
+        first = false
+        writeJson(v, sb)
+      }
+      sb.append(']')
+      ()
+    case KObj(fs) =>
+      sb.append('{')
+      var first = true
+      fs.foreach { case (key, v) =>
+        if (!first) sb.append(',')
+        first = false
+        writeString(key, sb)
+        sb.append(':')
+        writeJson(v, sb)
+      }
+      sb.append('}')
+      ()
+  }
+
+  private def writeString(s: String, sb: StringBuilder): Unit = {
+    sb.append('"')
+    s.foreach {
+      case '"'           => sb.append("\\\"")
+      case '\\'          => sb.append("\\\\")
+      case '\n'          => sb.append("\\n")
+      case '\r'          => sb.append("\\r")
+      case '\t'          => sb.append("\\t")
+      case '\b'          => sb.append("\\b")
+      case '\f'          => sb.append("\\f")
+      case c if c < 0x20 =>
+        sb.append("\\u")
+        val h = Integer.toHexString(c.toInt)
+        var i = h.length
+        while (i < 4) { sb.append('0'); i += 1 }
+        sb.append(h)
+        ()
+      case c => sb.append(c); ()
+    }
+    sb.append('"')
+    ()
+  }
   final case class KString(value: String) extends KSON {
     def foldTo[T](implicit b: Builder[T]): T = b.of(value)
   }

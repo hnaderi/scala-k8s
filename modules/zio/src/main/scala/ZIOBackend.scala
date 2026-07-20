@@ -25,22 +25,24 @@ import _root_.zio._
 import _root_.zio.http._
 import _root_.zio.json._
 
-class ZIOBackend(protected val client: Client) extends HttpBackend[ScopedTask] {
+class ZIOBackend(
+    protected val client: Client,
+    protected val auth: Task[AuthenticationParams]
+) extends HttpBackend[ScopedTask] {
 
   override def send[O: Decoder](
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): ScopedTask[O] = for {
-    u <- urlFor(url, params)
+    a <- auth
+    u <- urlFor(url, params ++ a.params)
     con <- contentType(verb)
     req = Request(
       method = methodFor(verb),
       url = u,
       body = Body.empty,
-      headers = Headers(con) ++ headersFor(headers) ++ cookiesFor(cookies),
+      headers = Headers(con) ++ headersFor(a.headers) ++ cookiesFor(a.cookies),
       version = Version.`HTTP/1.1`,
       remoteAddress = None
     )
@@ -51,17 +53,16 @@ class ZIOBackend(protected val client: Client) extends HttpBackend[ScopedTask] {
       url: String,
       verb: APIVerb,
       body: I,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): ScopedTask[O] = for {
-    u <- urlFor(url, params)
+    a <- auth
+    u <- urlFor(url, params ++ a.params)
     con <- contentType(verb)
     req = Request(
       method = methodFor(verb),
       url = u,
       body = Body.fromString(body.toJson),
-      headers = Headers(con) ++ headersFor(headers) ++ cookiesFor(cookies),
+      headers = Headers(con) ++ headersFor(a.headers) ++ cookiesFor(a.cookies),
       version = Version.`HTTP/1.1`,
       remoteAddress = None
     )
@@ -141,6 +142,8 @@ object ZIOBackend {
   final case class DecodeError(msg: String) extends Exception(msg)
 
   def make: ZLayer[Client, Nothing, ZIOBackend] = Scope.default >>> ZLayer {
-    ZIO.service[Client].map(new ZIOBackend(_))
+    ZIO
+      .service[Client]
+      .map(new ZIOBackend(_, ZIO.succeed(AuthenticationParams.empty)))
   }
 }

@@ -30,7 +30,8 @@ import sttp.model.Uri
 import SttpKBackend._
 
 final class SttpKBackend[F[_], T: Builder: Reader] private (
-    client: SttpBackend[F, Any]
+    client: SttpBackend[F, Any],
+    auth: AuthenticationParams
 )(implicit serializer: BodySerializer[T])
     extends HttpBackend[SttpF[F, *]] {
   private implicit val jawn: Facade.SimpleFacade[T] = jawnFacade[T]
@@ -78,13 +79,11 @@ final class SttpKBackend[F[_], T: Builder: Reader] private (
   override def send[O: Decoder](
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): F[Response[O]] = basicRequest
-    .method(methodFor(verb), urlFor(url, params))
-    .headers(headers.map { case (k, v) => Header(k, v) }: _*)
-    .cookies(cookies: _*)
+    .method(methodFor(verb), urlFor(url, params ++ auth.params))
+    .headers(auth.headers.map { case (k, v) => Header(k, v) }: _*)
+    .cookies(auth.cookies: _*)
     .response(respAs[O])
     .send(client)
 
@@ -92,14 +91,12 @@ final class SttpKBackend[F[_], T: Builder: Reader] private (
       url: String,
       verb: APIVerb,
       body: I,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): F[Response[O]] = basicRequest
-    .method(methodFor(verb), urlFor(url, params))
+    .method(methodFor(verb), urlFor(url, params ++ auth.params))
     .body(body.encodeTo[T])
-    .headers(headers.map { case (k, v) => Header(k, v) }: _*)
-    .cookies(cookies: _*)
+    .headers(auth.headers.map { case (k, v) => Header(k, v) }: _*)
+    .cookies(auth.cookies: _*)
     .response(respAs[O])
     .send(client)
 
@@ -111,7 +108,8 @@ object SttpKBackend {
   final case class InvalidURL(msg: String) extends Exception(msg)
 
   def apply[F[_], T: Builder: Reader: BodySerializer](
-      client: SttpBackend[F, Any]
-  ): SttpKBackend[F, T] = new SttpKBackend[F, T](client)
+      client: SttpBackend[F, Any],
+      auth: AuthenticationParams = AuthenticationParams.empty
+  ): SttpKBackend[F, T] = new SttpKBackend[F, T](client, auth)
 
 }

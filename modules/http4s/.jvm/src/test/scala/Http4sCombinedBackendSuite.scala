@@ -20,6 +20,7 @@ import cats.Foldable
 import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all._
+import dev.hnaderi.k8s.client.AuthenticationParams
 import dev.hnaderi.k8s.client.ExecEvent
 import dev.hnaderi.k8s.client.ExecInput
 import dev.hnaderi.k8s.utils.KSON
@@ -89,15 +90,18 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
       (wsClient, reqRef.get, sentRef.get)
     }
 
-  private def backend(ws: WSClient[IO]): Http4sCombinedBackend[IO, KSON] =
-    Http4sCombinedBackend.fromClients[IO, KSON](dummyClient, ws)
+  private def backend(
+      ws: WSClient[IO],
+      auth: AuthenticationParams = AuthenticationParams.empty
+  ): Http4sCombinedBackend[IO, KSON] =
+    Http4sCombinedBackend.fromClients[IO, KSON](dummyClient, ws, IO.pure(auth))
 
   private def run(
       ws: WSClient[IO],
       url: String = "ws://host/exec",
       input: Stream[IO, ExecInput] = Stream.empty
   ): IO[List[ExecEvent]] =
-    backend(ws).execConnect(url, Nil, Nil, Nil)(input).compile.toList
+    backend(ws).execConnect(url, Nil)(input).compile.toList
 
   // ---- channel byte parsing (receive side) ----
 
@@ -273,9 +277,7 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
       _ <- backend(ws)
         .execConnect(
           "ws://host/exec",
-          Nil,
-          Seq("command" -> "ls", "stdout" -> "true"),
-          Nil
+          Seq("command" -> "ls", "stdout" -> "true")
         )(
           Stream.empty
         )
@@ -313,13 +315,11 @@ class Http4sCombinedBackendSuite extends CatsEffectSuite {
     for {
       mock <- mockWSClient(Nil)
       (ws, getReq, _) = mock
-      _ <- backend(ws)
-        .execConnect(
-          "ws://host/exec",
-          Nil,
-          Nil,
-          Seq("tok" -> "abc", "sid" -> "xyz")
-        )(
+      _ <- backend(
+        ws,
+        AuthenticationParams.cookies("tok" -> "abc", "sid" -> "xyz")
+      )
+        .execConnect("ws://host/exec", Nil)(
           Stream.empty
         )
         .compile

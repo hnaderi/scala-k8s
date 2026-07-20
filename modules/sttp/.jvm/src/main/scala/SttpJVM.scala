@@ -63,8 +63,10 @@ private[client] trait SttpJVM[F[_]] {
         val ssl = SSLContexts.from(clusterData, auth)
         HttpClient[SttpF[F, *]](
           server,
-          SttpKBackend[F, T](buildWithSSLContext(ssl)),
-          AuthenticationParams.from(auth)
+          SttpKBackend[F, T](
+            buildWithSSLContext(ssl),
+            AuthenticationParams.from(auth)
+          )
         )
     }
 
@@ -102,8 +104,7 @@ private[client] trait SttpJVM[F[_]] {
 
     HttpClient[SttpF[F, *]](
       server,
-      SttpKBackend[F, T](buildWithSSLContext(ssl)),
-      authentication
+      SttpKBackend[F, T](buildWithSSLContext(ssl), authentication)
     )
   }
 

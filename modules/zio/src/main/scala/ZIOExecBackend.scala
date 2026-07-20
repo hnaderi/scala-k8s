@@ -24,8 +24,8 @@ import _root_.zio.http._
 import _root_.zio.json._
 import _root_.zio.stream._
 
-class ZIOExecBackend(client: Client)
-    extends ZIOStreamingBackend(client)
+class ZIOExecBackend(client: Client, auth: Task[AuthenticationParams])
+    extends ZIOStreamingBackend(client, auth)
     with ExecBackend[ZKStream] {
 
   private def rewriteToWs(url: http.URL): http.URL =
@@ -51,14 +51,13 @@ class ZIOExecBackend(client: Client)
 
   override def execConnect(
       url: String,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): ZKStream[ExecInput] => ZKStream[ExecEvent] = { input =>
     ZStream.unwrapScoped[Any] {
       for {
-        wsUrl <- urlFor(url, params).map(rewriteToWs)
-        wsHeaders = headersFor(headers) ++ cookiesFor(cookies)
+        a <- auth
+        wsUrl <- urlFor(url, params ++ a.params).map(rewriteToWs)
+        wsHeaders = headersFor(a.headers) ++ cookiesFor(a.cookies)
 
         events <- Queue.unbounded[Take[Throwable, ExecEvent]]
 
@@ -143,6 +142,8 @@ class ZIOExecBackend(client: Client)
 
 object ZIOExecBackend {
   def make: ZLayer[Client, Nothing, ZIOExecBackend] = Scope.default >>> ZLayer {
-    ZIO.service[Client].map(new ZIOExecBackend(_))
+    ZIO
+      .service[Client]
+      .map(new ZIOExecBackend(_, ZIO.succeed(AuthenticationParams.empty)))
   }
 }

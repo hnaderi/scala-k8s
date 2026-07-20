@@ -93,7 +93,10 @@ object ZIOKubernetesClient {
       auth: AuthenticationParams = AuthenticationParams.empty
   ): ZIO[Scope, Throwable, ZKClient] =
     makeClient(sslConfig).map { client =>
-      HttpClient.streaming(url, new ZIOStreamingBackend(client), auth)
+      HttpClient.streaming(
+        url,
+        new ZIOStreamingBackend(client, ZIO.succeed(auth))
+      )
     }
 
   /** Build exec-capable client from an already-constructed URL. */
@@ -103,7 +106,7 @@ object ZIOKubernetesClient {
       auth: AuthenticationParams = AuthenticationParams.empty
   ): ZIO[Scope, Throwable, ZKExecClient] =
     makeClient(sslConfig).map { client =>
-      HttpClient.withExec(url, new ZIOExecBackend(client), auth)
+      HttpClient.withExec(url, new ZIOExecBackend(client, ZIO.succeed(auth)))
     }
 
   /** Build client from a [[dev.hnaderi.k8s.client.Config]] data structure. */
@@ -114,13 +117,14 @@ object ZIOKubernetesClient {
   ): ZIO[Scope, Throwable, ZKClient] =
     for {
       resolved <- resolveConfig(config, context, cluster)
-      (clusterData, server, auth) = resolved
+      (clusterData, server, auth0) = resolved
+      execResolved <- ZIOExec.resolve(auth0, clusterData)
+      (auth, authenticator) = execResolved
       sslConfig <- ZIOSSLConfig.fromClusterAndAuth(clusterData, auth)
       client <- makeClient(sslConfig)
     } yield HttpClient.streaming(
       server,
-      new ZIOStreamingBackend(client),
-      AuthenticationParams.from(auth)
+      new ZIOStreamingBackend(client, authenticator)
     )
 
   /** Build exec-capable client from a [[dev.hnaderi.k8s.client.Config]] data
@@ -133,13 +137,14 @@ object ZIOKubernetesClient {
   ): ZIO[Scope, Throwable, ZKExecClient] =
     for {
       resolved <- resolveConfig(config, context, cluster)
-      (clusterData, server, auth) = resolved
+      (clusterData, server, auth0) = resolved
+      execResolved <- ZIOExec.resolve(auth0, clusterData)
+      (auth, authenticator) = execResolved
       sslConfig <- ZIOSSLConfig.fromClusterAndAuth(clusterData, auth)
       client <- makeClient(sslConfig)
     } yield HttpClient.withExec(
       server,
-      new ZIOExecBackend(client),
-      AuthenticationParams.from(auth)
+      new ZIOExecBackend(client, authenticator)
     )
 
   /** Build client from explicit certificate file paths. */
@@ -152,7 +157,10 @@ object ZIOKubernetesClient {
   ): ZIO[Scope, Throwable, ZKClient] =
     makeClient(ZIOSSLConfig.fromFiles(ca, clientCert, clientKey)).map {
       client =>
-        HttpClient.streaming(server, new ZIOStreamingBackend(client), auth)
+        HttpClient.streaming(
+          server,
+          new ZIOStreamingBackend(client, ZIO.succeed(auth))
+        )
     }
 
   /** Build exec-capable client from explicit certificate file paths. */
@@ -165,7 +173,10 @@ object ZIOKubernetesClient {
   ): ZIO[Scope, Throwable, ZKExecClient] =
     makeClient(ZIOSSLConfig.fromFiles(ca, clientCert, clientKey)).map {
       client =>
-        HttpClient.withExec(server, new ZIOExecBackend(client), auth)
+        HttpClient.withExec(
+          server,
+          new ZIOExecBackend(client, ZIO.succeed(auth))
+        )
     }
 
   /** Build client from a kubeconfig file. */

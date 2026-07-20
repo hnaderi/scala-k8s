@@ -123,7 +123,8 @@ final case class AuthInfo(
     `client-key-data`: Option[String] = None,
     token: Option[String] = None,
     username: Option[String] = None,
-    password: Option[String] = None
+    password: Option[String] = None,
+    exec: Option[ExecConfig] = None
 )
 
 object AuthInfo {
@@ -137,6 +138,7 @@ object AuthInfo {
       token <- obj.readOpt[String]("token")
       username <- obj.readOpt[String]("username")
       password <- obj.readOpt[String]("password")
+      exec <- obj.readOpt[ExecConfig]("exec")
     } yield AuthInfo(
       `client-certificate` = cert,
       `client-certificate-data` = certData,
@@ -144,7 +146,52 @@ object AuthInfo {
       `client-key-data` = keyData,
       token = token,
       username = username,
-      password = password
+      password = password,
+      exec = exec
     )
+  }
+}
+
+final case class ExecConfig(
+    apiVersion: String,
+    command: String,
+    args: Option[Seq[String]] = None,
+    env: Option[Seq[ExecEnvVar]] = None,
+    installHint: Option[String] = None,
+    provideClusterInfo: Option[Boolean] = None,
+    interactiveMode: Option[String] = None
+)
+
+object ExecConfig {
+  implicit val decoder: Decoder[ExecConfig] = new Decoder[ExecConfig] {
+    override def apply[T: Reader](t: T): Either[String, ExecConfig] = for {
+      obj <- ObjectReader(t)
+      apiVersion <- obj.getString("apiVersion")
+      command <- obj.getString("command")
+      args <- obj.readOpt[Seq[String]]("args")
+      env <- obj.readOpt[Seq[ExecEnvVar]]("env")
+      installHint <- obj.readOpt[String]("installHint")
+      provideClusterInfo <- obj.readOpt[Boolean]("provideClusterInfo")
+      interactiveMode <- obj.readOpt[String]("interactiveMode")
+    } yield ExecConfig(
+      apiVersion = apiVersion,
+      command = command,
+      args = args,
+      env = env,
+      installHint = installHint,
+      provideClusterInfo = provideClusterInfo,
+      interactiveMode = interactiveMode
+    )
+  }
+}
+
+final case class ExecEnvVar(name: String, value: String)
+object ExecEnvVar {
+  implicit val decoder: Decoder[ExecEnvVar] = new Decoder[ExecEnvVar] {
+    override def apply[T: Reader](t: T): Either[String, ExecEnvVar] = for {
+      obj <- ObjectReader(t)
+      name <- obj.getString("name")
+      value <- obj.getString("value")
+    } yield ExecEnvVar(name, value)
   }
 }

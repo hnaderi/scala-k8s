@@ -29,6 +29,8 @@ import io.k8s.api.core.v1.Pod
 import munit.CatsEffectSuite
 import org.http4s.circe._
 
+import java.nio.file.Files
+import java.util.Base64
 import scala.concurrent.duration._
 
 trait K3sSuite extends CatsEffectSuite {
@@ -57,6 +59,74 @@ trait K3sSuite extends CatsEffectSuite {
       Resource
         .eval(IO.fromEither(manifest.parse[Config](container.kubeConfigYaml)))
         .flatMap(JDKKubernetesClient[IO].fromConfigWithExec[Json](_))
+    }
+  )
+
+  /** Rewrites a kubeconfig so the current user authenticates through an exec
+    * credential plugin: a generated shell script that prints an `ExecCredential`
+    * carrying the cluster's own client certificate/key (as raw PEM, per the
+    * `client.authentication.k8s.io` protocol). Exercises exec -> mTLS -> API.
+    */
+  private def toExecPluginConfig(config: Config): IO[Config] = IO.blocking {
+    val ctx = config.contexts
+      .find(_.name == config.`current-context`)
+      .getOrElse(throw new IllegalStateException("no current context"))
+    val user = config.users
+      .find(_.name == ctx.context.user)
+      .getOrElse(throw new IllegalStateException("no user for context"))
+
+    def decodePem(field: String, data: Option[String]): String =
+      data
+        .map(d => new String(Base64.getDecoder.decode(d), "UTF-8"))
+        .getOrElse(throw new IllegalStateException(s"kubeconfig user has no $field"))
+
+    val certPem = decodePem("client-certificate-data", user.user.`client-certificate-data`)
+    val keyPem = decodePem("client-key-data", user.user.`client-key-data`)
+
+    val response = Json
+      .obj(
+        "apiVersion" -> Json.fromString("client.authentication.k8s.io/v1beta1"),
+        "kind" -> Json.fromString("ExecCredential"),
+        "status" -> Json.obj(
+          "clientCertificateData" -> Json.fromString(certPem),
+          "clientKeyData" -> Json.fromString(keyPem)
+        )
+      )
+      .noSpaces
+
+    val respFile = Files.createTempFile("k8s-execcred-", ".json")
+    Files.write(respFile, response.getBytes("UTF-8"))
+    val script = Files.createTempFile("k8s-execplugin-", ".sh")
+    Files.write(
+      script,
+      s"""|#!/bin/sh
+          |cat "${respFile.toString}"
+          |""".stripMargin.getBytes("UTF-8")
+    )
+    script.toFile.setExecutable(true)
+
+    val execUser = NamedAuthInfo(
+      user.name,
+      AuthInfo(exec =
+        Some(
+          ExecConfig(
+            apiVersion = "client.authentication.k8s.io/v1beta1",
+            command = script.toString
+          )
+        )
+      )
+    )
+    config.copy(users =
+      config.users.map(u => if (u.name == user.name) execUser else u)
+    )
+  }
+
+  val k3sExecPluginClient = ResourceFunFixture(
+    containerResource.flatMap { container =>
+      Resource
+        .eval(IO.fromEither(manifest.parse[Config](container.kubeConfigYaml)))
+        .evalMap(toExecPluginConfig)
+        .flatMap(EmberKubernetesClient[IO].fromConfig[Json](_))
     }
   )
 

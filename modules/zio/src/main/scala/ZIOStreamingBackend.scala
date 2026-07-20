@@ -26,26 +26,26 @@ import _root_.zio.http._
 import _root_.zio.json.ast.Json
 import _root_.zio.stream._
 
-class ZIOStreamingBackend(client: Client)
-    extends ZIOBackend(client)
+class ZIOStreamingBackend(client: Client, auth: Task[AuthenticationParams])
+    extends ZIOBackend(client, auth)
     with StreamingBackend[ZKStream] {
 
   override def connectRaw(
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): ZKStream[Byte] =
     ZStream.unwrapScoped {
       for {
-        u <- urlFor(url, params)
+        a <- auth
+        u <- urlFor(url, params ++ a.params)
         con <- contentType(verb)
         req = Request(
           method = methodFor(verb),
           url = u,
           body = Body.empty,
-          headers = Headers(con) ++ headersFor(headers) ++ cookiesFor(cookies),
+          headers =
+            Headers(con) ++ headersFor(a.headers) ++ cookiesFor(a.cookies),
           version = Version.`HTTP/1.1`,
           remoteAddress = None
         )
@@ -58,22 +58,18 @@ class ZIOStreamingBackend(client: Client)
   override def connectLines(
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): ZKStream[String] =
-    connectRaw(url, verb, headers, params, cookies)
+    connectRaw(url, verb, params)
       .via(ZPipeline.utf8Decode >>> ZPipeline.splitLines)
       .filter(_.nonEmpty)
 
   override def connect[O: Decoder](
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): ZKStream[O] = {
-    val raw = connectRaw(url, verb, headers, params, cookies)
+    val raw = connectRaw(url, verb, params)
     ZStream
       .fromZIO(ZIO.succeed(AsyncParser[Json](AsyncParser.ValueStream)))
       .flatMap { parser =>
@@ -94,6 +90,10 @@ class ZIOStreamingBackend(client: Client)
 object ZIOStreamingBackend {
   def make: ZLayer[Client, Nothing, ZIOStreamingBackend] =
     Scope.default >>> ZLayer {
-      ZIO.service[Client].map(new ZIOStreamingBackend(_))
+      ZIO
+        .service[Client]
+        .map(
+          new ZIOStreamingBackend(_, ZIO.succeed(AuthenticationParams.empty))
+        )
     }
 }

@@ -68,14 +68,17 @@ private[http4s] abstract class JVMPlatform[F[_]](implicit
             "Cannot find where/how to connect using the provided config!"
           ).raiseError
         )
-      case Some((clusterData, server, auth)) =>
-        val sslContext = F.blocking(SSLContexts.from(clusterData, auth))
+      case Some((clusterData, server, auth0)) =>
+        Http4sExec.resolve[F](auth0, clusterData).flatMap {
+          case (auth, authenticator) =>
+            val sslContext = F.blocking(SSLContexts.from(clusterData, auth))
 
-        Resource
-          .eval(sslContext)
-          .flatMap(buildWithSSLContext)
-          .map(Http4sBackend.fromClient(_))
-          .map(HttpClient.streaming(server, _, AuthenticationParams.from(auth)))
+            Resource
+              .eval(sslContext)
+              .flatMap(buildWithSSLContext)
+              .map(Http4sBackend.fromClient(_, authenticator))
+              .map(HttpClient.streaming(server, _))
+        }
     }
 
   }
@@ -120,8 +123,8 @@ private[http4s] abstract class JVMPlatform[F[_]](implicit
     Resource
       .eval(sslContext)
       .flatMap(buildWithSSLContext)
-      .map(Http4sBackend.fromClient(_))
-      .map(HttpClient.streaming(server, _, authentication))
+      .map(Http4sBackend.fromClient(_, F.pure(authentication)))
+      .map(HttpClient.streaming(server, _))
 
   }
 

@@ -71,139 +71,78 @@ trait ExecClient[F[_]] {
 object HttpClient {
   private abstract class Simple[F[_]](
       baseUri: String,
-      backend: HttpBackend[F],
-      auth: AuthenticationParams
+      backend: HttpBackend[F]
   ) extends HttpClient[F] {
     override def get[O: Decoder](
         url: String,
         params: (String, String)*
     ): F[O] =
-      backend.send(
-        s"$baseUri$url",
-        APIVerb.GET,
-        params = params ++ auth.params,
-        headers = auth.headers,
-        cookies = auth.cookies
-      )
+      backend.send(s"$baseUri$url", APIVerb.GET, params = params)
 
     override def post[I: Encoder, O: Decoder](
         url: String,
         params: (String, String)*
     )(body: I): F[O] =
-      backend.send(
-        s"$baseUri$url",
-        APIVerb.POST,
-        body,
-        params = params ++ auth.params,
-        headers = auth.headers,
-        cookies = auth.cookies
-      )
+      backend.send(s"$baseUri$url", APIVerb.POST, body, params = params)
 
     override def put[I: Encoder, O: Decoder](
         url: String,
         params: (String, String)*
     )(body: I): F[O] =
-      backend.send(
-        s"$baseUri$url",
-        APIVerb.PUT,
-        body,
-        params = params ++ auth.params,
-        headers = auth.headers,
-        cookies = auth.cookies
-      )
+      backend.send(s"$baseUri$url", APIVerb.PUT, body, params = params)
 
     override def patch[I: Encoder, O: Decoder](
         url: String,
         patch: PatchType,
         params: (String, String)*
     )(body: I): F[O] =
-      backend.send(
-        s"$baseUri$url",
-        APIVerb.PATCH(patch),
-        body,
-        params = params ++ auth.params,
-        headers = auth.headers,
-        cookies = auth.cookies
-      )
+      backend.send(s"$baseUri$url", APIVerb.PATCH(patch), body, params = params)
 
     override def delete[I: Encoder, O: Decoder](
         url: String,
         params: (String, String)*
     )(body: Option[I]): F[O] =
-      backend.send(
-        s"$baseUri$url",
-        APIVerb.DELETE,
-        params = params ++ auth.params,
-        headers = auth.headers,
-        cookies = auth.cookies
-      )
+      backend.send(s"$baseUri$url", APIVerb.DELETE, params = params)
 
   }
 
   private abstract class WithStreaming[F[_], S[_]](
       baseUri: String,
-      backend: HttpBackend[F] with StreamingBackend[S],
-      auth: AuthenticationParams
-  ) extends Simple[F](baseUri, backend, auth)
+      backend: HttpBackend[F] with StreamingBackend[S]
+  ) extends Simple[F](baseUri, backend)
       with StreamingClient[S] {
     override def connect[O: Decoder](
         url: String,
         params: (String, String)*
     ): S[O] =
-      backend.connect(
-        s"$baseUri$url",
-        APIVerb.GET,
-        params = params ++ auth.params,
-        headers = auth.headers,
-        cookies = auth.cookies
-      )
+      backend.connect(s"$baseUri$url", APIVerb.GET, params = params)
     override def lines(url: String, params: (String, String)*): S[String] =
-      backend.connectLines(
-        s"$baseUri$url",
-        APIVerb.GET,
-        params = params ++ auth.params,
-        headers = auth.headers,
-        cookies = auth.cookies
-      )
+      backend.connectLines(s"$baseUri$url", APIVerb.GET, params = params)
     override def raw(url: String, params: (String, String)*): S[Byte] =
-      backend.connectRaw(
-        s"$baseUri$url",
-        APIVerb.GET,
-        params = params ++ auth.params,
-        headers = auth.headers,
-        cookies = auth.cookies
-      )
+      backend.connectRaw(s"$baseUri$url", APIVerb.GET, params = params)
   }
 
   def apply[F[_]](
       baseUri: String,
-      backend: HttpBackend[F],
-      auth: AuthenticationParams = AuthenticationParams()
-  ): HttpClient[F] = new Simple[F](baseUri, backend, auth) {}
+      backend: HttpBackend[F]
+  ): HttpClient[F] = new Simple[F](baseUri, backend) {}
 
   def streaming[F[_], S[_]](
       baseUri: String,
-      backend: HttpBackend[F] with StreamingBackend[S],
-      auth: AuthenticationParams = AuthenticationParams()
+      backend: HttpBackend[F] with StreamingBackend[S]
   ): HttpClient[F] with StreamingClient[S] =
-    new WithStreaming[F, S](baseUri, backend, auth) {}
+    new WithStreaming[F, S](baseUri, backend) {}
 
   def withExec[F[_], S[_]](
       baseUri: String,
-      backend: HttpBackend[F] with StreamingBackend[S] with ExecBackend[S],
-      auth: AuthenticationParams = AuthenticationParams()
+      backend: HttpBackend[F] with StreamingBackend[S] with ExecBackend[S]
   ): HttpClient[F] with StreamingClient[S] with ExecClient[S] =
-    new WithStreaming[F, S](baseUri, backend, auth) with ExecClient[S] {
+    new WithStreaming[F, S](baseUri, backend) with ExecClient[S] {
       override def exec(
           url: String,
           params: (String, String)*
       ): S[ExecInput] => S[ExecEvent] =
-        backend.execConnect(
-          s"$baseUri$url",
-          headers = auth.headers,
-          params = params ++ auth.params,
-          cookies = auth.cookies
-        )
+        backend.execConnect(s"$baseUri$url", params = params)
     }
 }
 
@@ -231,18 +170,14 @@ trait HttpBackend[F[_]] {
   def send[O: Decoder](
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): F[O]
 
   def send[I: Encoder, O: Decoder](
       url: String,
       verb: APIVerb,
       body: I,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): F[O]
 }
 
@@ -250,31 +185,23 @@ trait StreamingBackend[S[_]] {
   def connect[O: Decoder](
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): S[O]
   def connectLines(
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): S[String]
   def connectRaw(
       url: String,
       verb: APIVerb,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): S[Byte]
 }
 
 trait ExecBackend[S[_]] {
   def execConnect(
       url: String,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): S[ExecInput] => S[ExecEvent]
 }

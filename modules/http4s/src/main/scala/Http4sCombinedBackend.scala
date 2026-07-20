@@ -36,88 +36,90 @@ import scodec.bits.ByteVector
 
 final class Http4sCombinedBackend[F[_], T] private (
     client: Client[F],
-    wsClient: WSClient[F]
+    wsClient: WSClient[F],
+    auth: F[AuthenticationParams]
 )(implicit
     F: Concurrent[F],
     enc: EntityEncoder[F, T],
     dec: EntityDecoder[F, T],
     builder: Builder[T],
     reader: Reader[T]
-) extends Http4sBackend[F, T](client)
+) extends Http4sBackend[F, T](client, auth)
     with ExecBackend[Stream[F, *]] {
 
   private implicit val jawn: Facade.SimpleFacade[T] = jawnFacade[T]
 
   override def execConnect(
       url: String,
-      headers: Seq[(String, String)],
-      params: Seq[(String, String)],
-      cookies: Seq[(String, String)]
+      params: Seq[(String, String)]
   ): Stream[F, ExecInput] => Stream[F, ExecEvent] = { input =>
-    val buildUri = F.fromEither(Uri.fromString(url)).map { uri =>
-      val wsScheme = uri.scheme.map { s =>
-        Uri.Scheme.unsafeFromString(
-          if (s.value.equalsIgnoreCase("https")) "wss"
-          else if (s.value.equalsIgnoreCase("http")) "ws"
-          else s.value
+    Stream.eval(auth).flatMap { a =>
+      val buildUri = F.fromEither(Uri.fromString(url)).map { uri =>
+        val wsScheme = uri.scheme.map { s =>
+          Uri.Scheme.unsafeFromString(
+            if (s.value.equalsIgnoreCase("https")) "wss"
+            else if (s.value.equalsIgnoreCase("http")) "ws"
+            else s.value
+          )
+        }
+        uri.copy(
+          scheme = wsScheme,
+          query =
+            Query((params ++ a.params).map { case (k, v) => (k, Some(v)) }: _*)
         )
       }
-      uri.copy(
-        scheme = wsScheme,
-        query = Query(params.map { case (k, v) => (k, Some(v)) }: _*)
-      )
-    }
 
-    Stream.eval(buildUri).flatMap { wsUri =>
-      val req = WSRequest(
-        wsUri,
-        Headers(
-          headers ++ cookieHeader(cookies) ++ List(
-            "Sec-WebSocket-Protocol" -> "v4.channel.k8s.io"
-          )
-        ),
-        org.http4s.Method.GET
-      )
+      Stream.eval(buildUri).flatMap { wsUri =>
+        val req = WSRequest(
+          wsUri,
+          Headers(
+            a.headers ++ cookieHeader(a.cookies) ++ List(
+              "Sec-WebSocket-Protocol" -> "v4.channel.k8s.io"
+            )
+          ),
+          org.http4s.Method.GET
+        )
 
-      Stream.resource(wsClient.connectHighLevel(req)).flatMap { conn =>
-        val receive: Stream[F, ExecEvent] =
-          conn.receiveStream
-            .collect { case WSFrame.Binary(data, _) if data.nonEmpty => data }
-            .flatMap { data =>
-              (data.head.toInt & 0xff) match {
-                case 1 => Stream.emit(ExecEvent.Stdout(data.tail.toArray))
-                case 2 => Stream.emit(ExecEvent.Stderr(data.tail.toArray))
-                case 3 =>
-                  val event = for {
-                    t <- parseFromByteArray[T](data.tail.toArray).toOption
-                    s <- t.decodeTo[Status].toOption
-                  } yield ExecEvent.Error(s)
-                  event match {
-                    case Some(e) => Stream.emit(e)
-                    case None    => Stream.empty
-                  }
-                case _ => Stream.empty
+        Stream.resource(wsClient.connectHighLevel(req)).flatMap { conn =>
+          val receive: Stream[F, ExecEvent] =
+            conn.receiveStream
+              .collect { case WSFrame.Binary(data, _) if data.nonEmpty => data }
+              .flatMap { data =>
+                (data.head.toInt & 0xff) match {
+                  case 1 => Stream.emit(ExecEvent.Stdout(data.tail.toArray))
+                  case 2 => Stream.emit(ExecEvent.Stderr(data.tail.toArray))
+                  case 3 =>
+                    val event = for {
+                      t <- parseFromByteArray[T](data.tail.toArray).toOption
+                      s <- t.decodeTo[Status].toOption
+                    } yield ExecEvent.Error(s)
+                    event match {
+                      case Some(e) => Stream.emit(e)
+                      case None    => Stream.empty
+                    }
+                  case _ => Stream.empty
+                }
               }
-            }
-            .takeThrough { case _: ExecEvent.Error => false; case _ => true }
+              .takeThrough { case _: ExecEvent.Error => false; case _ => true }
 
-        val send: Stream[F, Nothing] =
-          input
-            .map {
-              case ExecInput.Stdin(bytes) =>
-                WSFrame.Binary(ByteVector(0x00.toByte) ++ ByteVector(bytes))
-              case ExecInput.Resize(cols, rows) =>
-                WSFrame.Binary(
-                  ByteVector(0x04.toByte) ++
-                    ByteVector(
-                      s"""{"Width":$cols,"Height":$rows}""".getBytes("UTF-8")
-                    )
-                )
-            }
-            .through(conn.sendPipe)
-            .drain
+          val send: Stream[F, Nothing] =
+            input
+              .map {
+                case ExecInput.Stdin(bytes) =>
+                  WSFrame.Binary(ByteVector(0x00.toByte) ++ ByteVector(bytes))
+                case ExecInput.Resize(cols, rows) =>
+                  WSFrame.Binary(
+                    ByteVector(0x04.toByte) ++
+                      ByteVector(
+                        s"""{"Width":$cols,"Height":$rows}""".getBytes("UTF-8")
+                      )
+                  )
+              }
+              .through(conn.sendPipe)
+              .drain
 
-        receive.concurrently(send)
+          receive.concurrently(send)
+        }
       }
     }
   }
@@ -138,5 +140,19 @@ object Http4sCombinedBackend {
       enc: EntityEncoder[F, T],
       dec: EntityDecoder[F, T]
   ): Http4sCombinedBackend[F, T] =
-    new Http4sCombinedBackend[F, T](client, wsClient)
+    fromClients[F, T](
+      client,
+      wsClient,
+      Concurrent[F].pure(AuthenticationParams.empty)
+    )
+
+  def fromClients[F[_]: Concurrent, T: Builder: Reader](
+      client: Client[F],
+      wsClient: WSClient[F],
+      auth: F[AuthenticationParams]
+  )(implicit
+      enc: EntityEncoder[F, T],
+      dec: EntityDecoder[F, T]
+  ): Http4sCombinedBackend[F, T] =
+    new Http4sCombinedBackend[F, T](client, wsClient, auth)
 }

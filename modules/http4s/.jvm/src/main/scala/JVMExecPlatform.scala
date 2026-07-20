@@ -64,21 +64,19 @@ private[http4s] abstract class JVMExecPlatform[F[_]](implicit
             "Cannot find where/how to connect using the provided config!"
           ).raiseError
         )
-      case Some((clusterData, server, auth)) =>
-        val sslContext = F.blocking(SSLContexts.from(clusterData, auth))
+      case Some((clusterData, server, auth0)) =>
         for {
-          ssl <- Resource.eval(sslContext)
+          resolved <- Http4sExec.resolve[F](auth0, clusterData)
+          (auth, authenticator) = resolved
+          ssl <- Resource.eval(F.blocking(SSLContexts.from(clusterData, auth)))
           httpClient <- buildWithSSLContext(ssl)
           wsClient <- buildWSClientWithSSLContext(ssl)
           backend = Http4sCombinedBackend.fromClients[F, T](
             httpClient,
-            wsClient
+            wsClient,
+            authenticator
           )
-        } yield HttpClient.withExec(
-          server,
-          backend,
-          AuthenticationParams.from(auth)
-        )
+        } yield HttpClient.withExec(server, backend)
     }
   }
 
@@ -107,8 +105,12 @@ private[http4s] abstract class JVMExecPlatform[F[_]](implicit
       ssl <- Resource.eval(sslContext)
       httpClient <- buildWithSSLContext(ssl)
       wsClient <- buildWSClientWithSSLContext(ssl)
-      backend = Http4sCombinedBackend.fromClients[F, T](httpClient, wsClient)
-    } yield HttpClient.withExec(server, backend, authentication)
+      backend = Http4sCombinedBackend.fromClients[F, T](
+        httpClient,
+        wsClient,
+        F.pure(authentication)
+      )
+    } yield HttpClient.withExec(server, backend)
   }
 
   final def loadWithExec[T](

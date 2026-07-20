@@ -95,17 +95,20 @@ private[http4s] abstract class PlatformCompanion[F[_]: Async: Files: Env]
             "Cannot find where/how to connect using the provided config!"
           ).raiseError
         )
-      case Some((clusterData, server, auth)) =>
-        client(
-          caFile = clusterData.`certificate-authority`,
-          caData = clusterData.`certificate-authority-data`,
-          clientCert = auth.`client-certificate-data`,
-          clientCertFile = auth.`client-certificate`,
-          clientKey = auth.`client-key-data`,
-          clientKeyFile = auth.`client-key`
-        )
-          .map(Http4sBackend.fromClient(_))
-          .map(HttpClient.streaming(server, _, AuthenticationParams.from(auth)))
+      case Some((clusterData, server, auth0)) =>
+        Http4sExec.resolve[F](auth0, clusterData).flatMap {
+          case (auth, authenticator) =>
+            client(
+              caFile = clusterData.`certificate-authority`,
+              caData = clusterData.`certificate-authority-data`,
+              clientCert = auth.`client-certificate-data`,
+              clientCertFile = auth.`client-certificate`,
+              clientKey = auth.`client-key-data`,
+              clientKeyFile = auth.`client-key`
+            )
+              .map(Http4sBackend.fromClient(_, authenticator))
+              .map(HttpClient.streaming(server, _))
+        }
     }
 
   }
@@ -128,6 +131,6 @@ private[http4s] abstract class PlatformCompanion[F[_]: Async: Files: Env]
     clientKeyFile = clientKey.map(_.toString)
     // clientKeyPass = clientKeyPassword TODO does it support key password?
   )
-    .map(Http4sBackend.fromClient(_))
-    .map(HttpClient.streaming(server, _, authentication))
+    .map(Http4sBackend.fromClient(_, Async[F].pure(authentication)))
+    .map(HttpClient.streaming(server, _))
 }
