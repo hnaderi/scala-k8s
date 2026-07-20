@@ -62,7 +62,7 @@ object ZIOExecSuite extends ZIOSpecDefault {
       for {
         script <- writeScript(tokenScript("t0k3n", None))
         auth = AuthInfo(exec = Some(execConfig(script.toString)))
-        params <- ZIO.scoped(ZIOExec.resolve(auth, cluster).flatMap(_._2))
+        params <- ZIOExec.resolve(auth, cluster).flatMap(_._2)
       } yield assertTrue(
         params.headers.toList == List("Authorization" -> "Bearer t0k3n")
       )
@@ -86,7 +86,7 @@ object ZIOExecSuite extends ZIOSpecDefault {
             )
           )
         )
-        _ <- ZIO.scoped(ZIOExec.resolve(auth, cluster).flatMap(_._2))
+        _ <- ZIOExec.resolve(auth, cluster).flatMap(_._2)
         content <- ZIO.attemptBlocking(
           new String(Files.readAllBytes(out), "UTF-8")
         )
@@ -105,7 +105,7 @@ object ZIOExecSuite extends ZIOSpecDefault {
               .copy(installHint = Some("please install"))
           )
         )
-        exit <- ZIO.scoped(ZIOExec.resolve(auth, cluster).flatMap(_._2)).exit
+        exit <- ZIOExec.resolve(auth, cluster).flatMap(_._2).exit
         msg = exit.causeOption
           .flatMap(_.failureOption)
           .map(_.getMessage)
@@ -127,10 +127,9 @@ object ZIOExecSuite extends ZIOSpecDefault {
              |""".stripMargin + tokenScript("t", Some("1970-01-01T00:00:00Z"))
         )
         auth = AuthInfo(exec = Some(execConfig(script.toString)))
-        _ <- ZIO.scoped(ZIOExec.resolve(auth, cluster).flatMap {
-          case (_, getP) =>
-            getP *> getP
-        })
+        _ <- ZIOExec.resolve(auth, cluster).flatMap { case (_, getP) =>
+          getP *> getP
+        }
         n <- ZIO.attemptBlocking(Files.readAllBytes(counter).length)
       } yield assertTrue(n == 3) // 1 initial run + 2 refreshes
     },
@@ -144,10 +143,9 @@ object ZIOExecSuite extends ZIOSpecDefault {
              |""".stripMargin + tokenScript("t", Some("2999-01-01T00:00:00Z"))
         )
         auth = AuthInfo(exec = Some(execConfig(script.toString)))
-        _ <- ZIO.scoped(ZIOExec.resolve(auth, cluster).flatMap {
-          case (_, getP) =>
-            getP *> getP
-        })
+        _ <- ZIOExec.resolve(auth, cluster).flatMap { case (_, getP) =>
+          getP *> getP
+        }
         n <- ZIO.attemptBlocking(Files.readAllBytes(counter).length)
       } yield assertTrue(n == 1) // fetched once, then cached
     },
@@ -159,7 +157,7 @@ object ZIOExecSuite extends ZIOSpecDefault {
                |""".stripMargin
         )
         auth = AuthInfo(exec = Some(execConfig(script.toString)))
-        merged <- ZIO.scoped(ZIOExec.resolve(auth, cluster).map(_._1))
+        merged <- ZIOExec.resolve(auth, cluster).map(_._1)
         decode = (o: Option[String]) =>
           o.map(d => new String(java.util.Base64.getDecoder.decode(d), "UTF-8"))
       } yield assertTrue(

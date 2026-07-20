@@ -35,7 +35,7 @@ private[zio] object ZIOExec {
   def resolve(
       auth: AuthInfo,
       cluster: Cluster
-  ): ZIO[Scope, Throwable, (AuthInfo, Task[AuthenticationParams])] =
+  ): Task[(AuthInfo, Task[AuthenticationParams])] =
     auth.exec match {
       case None =>
         ZIO.succeed((auth, ZIO.succeed(AuthenticationParams.from(auth))))
