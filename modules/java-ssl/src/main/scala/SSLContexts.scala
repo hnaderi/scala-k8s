@@ -25,6 +25,7 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.security.KeyStore
 import java.security.SecureRandom
@@ -91,54 +92,114 @@ private[client] object SSLContexts {
   private def trustManagers(
       caData: Option[String] = None,
       caFile: Option[File]
-  ) = {
-    val certDataStream = caData.map(data =>
-      new ByteArrayInputStream(Base64.getDecoder.decode(data))
-    )
-    val certFileStream = caFile.map(new FileInputStream(_))
+  ): Array[TrustManager] = trustManagersFrom(caData, caFile, baseTrustStore)
 
-    certDataStream.orElse(certFileStream).foreach { certStream =>
-      val certificateFactory = CertificateFactory.getInstance("X509")
-      val certificates =
-        certificateFactory.generateCertificates(certStream).asScala
-      certificates
-        .map(_.asInstanceOf[X509Certificate])
-        .zipWithIndex
-        .foreach { case (certificate, i) =>
-          val alias = s"${certificate.getSubjectX500Principal.getName}-$i"
-          defaultTrustStore.setCertificateEntry(alias, certificate)
-        }
-    }
+  /** Build trust managers from an optional cluster CA and an optional base
+    * trust store. Exposed for testing; `base` is normally [[baseTrustStore]].
+    */
+  private[client] def trustManagersFrom(
+      caData: Option[String],
+      caFile: Option[File],
+      base: Option[KeyStore]
+  ): Array[TrustManager] =
+    trustManagersFor(trustStoreFor(caData, caFile, base))
 
+  private def trustStoreFor(
+      caData: Option[String],
+      caFile: Option[File],
+      base: Option[KeyStore]
+  ): Option[KeyStore] =
+    clusterCACertStream(caData, caFile)
+      .map(baseStoreTrustingCA(base, _))
+      .orElse(base)
+
+  private def clusterCACertStream(
+      caData: Option[String],
+      caFile: Option[File]
+  ): Option[InputStream] =
+    caData
+      .map(data => new ByteArrayInputStream(Base64.getDecoder.decode(data)))
+      .orElse(caFile.map(new FileInputStream(_)))
+
+  private def baseStoreTrustingCA(
+      base: Option[KeyStore],
+      certStream: InputStream
+  ): KeyStore = {
+    val keyStore = base.getOrElse(emptyTrustStore)
+    val certificateFactory = CertificateFactory.getInstance("X509")
+    certificateFactory
+      .generateCertificates(certStream)
+      .asScala
+      .map(_.asInstanceOf[X509Certificate])
+      .zipWithIndex
+      .foreach { case (certificate, i) =>
+        val alias = s"${certificate.getSubjectX500Principal.getName}-$i"
+        keyStore.setCertificateEntry(alias, certificate)
+      }
+    keyStore
+  }
+
+  private def trustManagersFor(
+      trustStore: Option[KeyStore]
+  ): Array[TrustManager] = {
     val trustManagerFactory =
       TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
-    trustManagerFactory.init(defaultTrustStore)
+    trustManagerFactory.init(orPlatformDefault(trustStore))
     trustManagerFactory.getTrustManagers
   }
 
-  private lazy val defaultTrustStore = {
-    val securityDirectory = s"${System.getProperty("java.home")}/lib/security"
+  private def orPlatformDefault(trustStore: Option[KeyStore]): KeyStore =
+    trustStore.orNull
 
+  private def emptyTrustStore = {
+    val keyStore = KeyStore.getInstance(KeyStore.getDefaultType)
+    keyStore.load(null, null)
+    keyStore
+  }
+
+  /** The JVM's default trust store, resolved from the
+    * `javax.net.ssl.trustStore` system property, or `jssecacerts`/`cacerts`
+    * under `$java.home/lib/security`.
+    *
+    * Returns `None` when none can be resolved — most notably in a GraalVM
+    * native image, where `System.getProperty("java.home")` is null and there is
+    * no security directory to read from.
+    */
+  private lazy val baseTrustStore: Option[KeyStore] =
+    resolveTrustStore(
+      Option(System.getProperty("java.home")).map(home => s"$home/lib/security")
+    )
+
+  /** Resolve the base trust store from the given security directory (normally
+    * `$java.home/lib/security`), falling back to the `javax.net.ssl.trustStore`
+    * system property. Returns `None` when no store can be resolved. Exposed for
+    * testing the GraalVM native-image case where no security directory exists.
+    */
+  private[client] def resolveTrustStore(
+      securityDirectory: Option[String]
+  ): Option[KeyStore] = {
     val propertyTrustStoreFile =
       Option(System.getProperty(TrustStoreSystemProperty, ""))
         .filter(_.nonEmpty)
         .map(new File(_))
-    val jssecacertsFile =
-      Option(new File(s"$securityDirectory/jssecacerts")).filter(f =>
-        f.exists && f.isFile
-      )
-    val cacertsFile = new File(s"$securityDirectory/cacerts")
+    def inSecurityDir(name: String) =
+      securityDirectory
+        .map(dir => new File(s"$dir/$name"))
+        .filter(f => f.exists && f.isFile)
 
-    val keyStore = KeyStore.getInstance(KeyStore.getDefaultType)
-    keyStore.load(
-      new FileInputStream(
-        propertyTrustStoreFile.orElse(jssecacertsFile).getOrElse(cacertsFile)
-      ),
-      System
-        .getProperty(TrustStorePasswordSystemProperty, "changeit")
-        .toCharArray
-    )
-    keyStore
+    propertyTrustStoreFile
+      .orElse(inSecurityDir("jssecacerts"))
+      .orElse(inSecurityDir("cacerts"))
+      .map { file =>
+        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType)
+        keyStore.load(
+          new FileInputStream(file),
+          System
+            .getProperty(TrustStorePasswordSystemProperty, "changeit")
+            .toCharArray
+        )
+        keyStore
+      }
   }
 
   private def keyManagers(

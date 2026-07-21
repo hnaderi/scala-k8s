@@ -22,7 +22,6 @@ import _root_.zio._
 import _root_.zio.http._
 import _root_.zio.http.netty.NettyConfig
 
-import java.io.FileNotFoundException
 import java.nio.file.{Files => JFiles, Paths => JPaths}
 
 object ZIOKubernetesClient {
@@ -213,7 +212,7 @@ object ZIOKubernetesClient {
   ): ZIO[Scope, Throwable, ZKClient] =
     kubeconfigPath.flatMap {
       case Some(path) => load(path, context, cluster)
-      case None => ZIO.fail(new FileNotFoundException("No kubeconfig found"))
+      case None       => ZIO.fail(new NoKubeconfig)
     }
 
   /** Build exec-capable client using the default kubeconfig location. */
@@ -223,7 +222,7 @@ object ZIOKubernetesClient {
   ): ZIO[Scope, Throwable, ZKExecClient] =
     kubeconfigPath.flatMap {
       case Some(path) => loadWithExec(path, context, cluster)
-      case None => ZIO.fail(new FileNotFoundException("No kubeconfig found"))
+      case None       => ZIO.fail(new NoKubeconfig)
     }
 
   /** Build client from the pod's service account credentials at
@@ -252,11 +251,13 @@ object ZIOKubernetesClient {
     * account.
     */
   def defaultConfig: ZIO[Scope, Throwable, ZKClient] =
-    kubeconfig().orElse(podConfig)
+    kubeconfig().catchSome { case _: NoKubeconfig => podConfig }
 
   /** Build exec-capable client from the default config. Tries kubeconfig, then
     * pod service account.
     */
   def defaultConfigWithExec: ZIO[Scope, Throwable, ZKExecClient] =
-    kubeconfigWithExec().orElse(podConfigWithExec)
+    kubeconfigWithExec().catchSome { case _: NoKubeconfig =>
+      podConfigWithExec
+    }
 }

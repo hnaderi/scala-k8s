@@ -196,7 +196,8 @@ lazy val javaSSL = module("java-ssl") {
     .settings(
       description := "java ssl for kubernetes config",
       libraryDependencies ++= Seq(
-        "org.bouncycastle" % "bcpkix-jdk18on" % "1.85"
+        "org.bouncycastle" % "bcpkix-jdk18on" % "1.85",
+        "org.scalameta" %%% "munit" % munitVersion % Test
       )
     )
     .dependsOn(client)

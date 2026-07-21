@@ -27,7 +27,6 @@ import fs2.io.file.Path
 import org.http4s._
 import org.http4s.client.websocket.WSClient
 
-import java.io.FileNotFoundException
 import javax.net.ssl.SSLContext
 
 private[http4s] abstract class JVMExecPlatform[F[_]](implicit
@@ -137,9 +136,7 @@ private[http4s] abstract class JVMExecPlatform[F[_]](implicit
     Resource.eval(kubeconfigPath).flatMap {
       case Some(value) => loadWithExec(value, context, cluster)
       case None        =>
-        Resource.eval(
-          F.raiseError(new FileNotFoundException("No kubeconfig found!"))
-        )
+        Resource.eval(F.raiseError(new NoKubeconfig))
     }
 
   final def defaultConfigWithExec[T](implicit
@@ -148,7 +145,7 @@ private[http4s] abstract class JVMExecPlatform[F[_]](implicit
       builder: Builder[T],
       reader: Reader[T]
   ): Resource[F, KExecClient[F]] =
-    kubeconfigWithExec[T]().recoverWith { case _: FileNotFoundException =>
+    kubeconfigWithExec[T]().recoverWith { case _: NoKubeconfig =>
       podConfigWithExec[T]
     }
 

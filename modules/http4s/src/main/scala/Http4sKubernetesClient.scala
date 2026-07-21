@@ -27,7 +27,6 @@ import fs2.io.file.Files
 import fs2.io.file.Path
 import org.http4s._
 import org.http4s.client.Client
-import java.io.FileNotFoundException
 
 private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     F: Async[F],
@@ -189,7 +188,7 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
       builder: Builder[T],
       reader: Reader[T]
   ): Resource[F, KClient[F]] =
-    kubeconfig().recoverWith { case _: FileNotFoundException =>
+    kubeconfig().recoverWith { case _: NoKubeconfig =>
       podConfig[T]
     }
 
@@ -215,9 +214,7 @@ private[http4s] abstract class Http4sKubernetesClient[F[_]](implicit
     Resource.eval(kubeconfigPath).flatMap {
       case Some(value) => load(value, context, cluster)
       case None        =>
-        Resource.eval(
-          F.raiseError(new FileNotFoundException("No kubeconfig found!"))
-        )
+        Resource.eval(F.raiseError(new NoKubeconfig))
     }
 
   /** Build kubernetes client from service account credentials inside pod from

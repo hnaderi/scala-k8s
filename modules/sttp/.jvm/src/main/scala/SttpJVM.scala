@@ -27,7 +27,6 @@ import java.nio.file.Paths
 import javax.net.ssl.SSLContext
 
 import SttpKBackend.SttpF
-import java.io.FileNotFoundException
 
 private[client] trait SttpJVM[F[_]] {
   protected def buildWithSSLContext: SSLContext => SttpBackend[F, Any]
@@ -171,7 +170,7 @@ private[client] trait SttpJVM[F[_]] {
       context: Option[String] = None,
       cluster: Option[String] = None
   ): HttpClient[SttpF[F, *]] = homeConfig match {
-    case None => throw new FileNotFoundException("No kubeconfig found!")
+    case None             => throw new NoKubeconfig
     case Some(configPath) =>
       load(configPath, context = context, cluster = cluster)
   }
