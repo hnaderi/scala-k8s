@@ -63,9 +63,10 @@ trait K3sSuite extends CatsEffectSuite {
   )
 
   /** Rewrites a kubeconfig so the current user authenticates through an exec
-    * credential plugin: a generated shell script that prints an `ExecCredential`
-    * carrying the cluster's own client certificate/key (as raw PEM, per the
-    * `client.authentication.k8s.io` protocol). Exercises exec -> mTLS -> API.
+    * credential plugin: a generated shell script that prints an
+    * `ExecCredential` carrying the cluster's own client certificate/key (as raw
+    * PEM, per the `client.authentication.k8s.io` protocol). Exercises exec ->
+    * mTLS -> API.
     */
   private def toExecPluginConfig(config: Config): IO[Config] = IO.blocking {
     val ctx = config.contexts
@@ -78,9 +79,12 @@ trait K3sSuite extends CatsEffectSuite {
     def decodePem(field: String, data: Option[String]): String =
       data
         .map(d => new String(Base64.getDecoder.decode(d), "UTF-8"))
-        .getOrElse(throw new IllegalStateException(s"kubeconfig user has no $field"))
+        .getOrElse(
+          throw new IllegalStateException(s"kubeconfig user has no $field")
+        )
 
-    val certPem = decodePem("client-certificate-data", user.user.`client-certificate-data`)
+    val certPem =
+      decodePem("client-certificate-data", user.user.`client-certificate-data`)
     val keyPem = decodePem("client-key-data", user.user.`client-key-data`)
 
     val response = Json
