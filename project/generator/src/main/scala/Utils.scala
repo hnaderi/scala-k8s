@@ -42,13 +42,25 @@ object Utils {
   def loadJson(file: File): Either[Error, Json] = parse(loadFile(file))
   def loadDefinitions(file: File): Either[Error, Map[String, Definition]] =
     loadJson(file).flatMap(_.as(definitionsDecoder))
-  def writeOutput(file: File, content: String): Unit = {
-    val printWriter = new PrintWriter(file)
+  private def contentOf(file: File): String = {
+    val source = Source.fromFile(file)
+    try source.mkString
+    finally source.close()
+  }
 
-    try {
-      printWriter.println(content)
-    } finally {
-      printWriter.close()
+  def writeOutput(file: File, content: String): Unit = {
+    val output = content + System.lineSeparator()
+
+    // Rewriting an unchanged file would make every generated source look
+    // modified to the incremental compiler.
+    if (!file.exists() || contentOf(file) != output) {
+      val printWriter = new PrintWriter(file)
+
+      try {
+        printWriter.print(output)
+      } finally {
+        printWriter.close()
+      }
     }
   }
 
