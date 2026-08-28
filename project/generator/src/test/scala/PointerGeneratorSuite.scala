@@ -148,4 +148,33 @@ class PointerGeneratorSuite extends FunSuite {
     assert(code.contains("package io.k8s.kube_aggregator.v1"), code)
     assert(!code.contains("kube-aggregator"), code)
   }
+
+  test("EmptyObject does not produce a pointer class") {
+    val (managed, _) = generate(Seq(allDisruptionMode))
+    assert(
+      !managed.exists(_._1.endsWith("Pointer")),
+      s"EmptyObject should not generate a pointer class, got: ${managed.keys}"
+    )
+  }
+
+  test("EmptyObject-typed field maps to Pointer.Plain") {
+    val model = DataModel.SubResource(
+      "DisruptionMode",
+      "io.k8s.api.scheduling.v1beta1",
+      None,
+      Seq(
+        ModelProperty(
+          "all",
+          ModelPropertyType.Ref(allDisruptionMode.fullName),
+          required = false,
+          default = Some("None")
+        )
+      )
+    )
+    val (managed, _) = generate(Seq(model, allDisruptionMode))
+    assert(
+      managed("DisruptionModePointer").contains("Pointer.Plain"),
+      managed("DisruptionModePointer")
+    )
+  }
 }

@@ -71,6 +71,14 @@ object ModelFixtures {
     description = None
   )
 
+  val allDisruptionMode = DataModel.EmptyObject(
+    name = "AllDisruptionMode",
+    pkg = "io.k8s.api.scheduling.v1beta1",
+    description = Some(
+      "AllDisruptionMode specifies that children can only be disrupted together."
+    )
+  )
+
   // ---- test infrastructure ----
 
   def withScg[A](

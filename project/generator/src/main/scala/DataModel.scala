@@ -25,6 +25,19 @@ sealed trait DataModel extends Serializable with Product {
 }
 
 object DataModel {
+
+  /** Definitions that are declared as an object with no properties, but which
+    * actually carry free form contents that the specification cannot express.
+    *
+    * Unlike a true empty object their wire format is not derivable, so they are
+    * treated as primitives and implemented by hand. They are still part of the
+    * model, so that anything referring to them keeps resolving.
+    */
+  private val opaqueObjects: Set[String] = Set(
+    "io.k8s.apimachinery.pkg.apis.meta.v1.FieldsV1",
+    "io.k8s.apimachinery.pkg.runtime.RawExtension"
+  )
+
   def apply(name: String, definition: Definition): DataModel = {
     val splitIdx = name.lastIndexOf(".")
     val pkgName = name.take(splitIdx)
@@ -66,8 +79,14 @@ object DataModel {
               description = defs.description,
               props
             )
-          case _ =>
+          case _ if opaqueObjects.contains(s"$pkg.$name") =>
             new Primitive(
+              name = name,
+              pkg = pkg,
+              description = defs.description
+            )
+          case _ =>
+            new EmptyObject(
               name = name,
               pkg = pkg,
               description = defs.description
@@ -101,6 +120,23 @@ object DataModel {
       kinds: Seq[Kind]
   ) extends DataModel
 
+  /** An `object` with no properties; it always serializes to `{}`.
+    *
+    * Kubernetes uses these as the variants of a discriminated union (see
+    * `x-kubernetes-unions`), where each variant is an empty marker struct.
+    */
+  final case class EmptyObject(
+      name: String,
+      pkg: String,
+      description: Option[String]
+  ) extends DataModel {
+    override val properties: Seq[ModelProperty] = Nil
+  }
+
+  /** A definition whose wire format is not derivable from the specification,
+    * such as a non-object type or an object with free form contents. These are
+    * implemented by hand.
+    */
   final case class Primitive(
       name: String,
       pkg: String,

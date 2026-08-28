@@ -1,6 +1,6 @@
 package dev.hnaderi.k8s.generator
 
-import DataModel.{Resource, SubResource, MetaResource, Primitive}
+import DataModel.{Resource, SubResource, MetaResource, EmptyObject, Primitive}
 
 object PointerGenerator {
   private def pkgName(model: DataModel) = model.pkg.replace('-', '_')
@@ -71,8 +71,10 @@ $pointables
   }
 
   def write(scg: SourceCodeGenerator)(models: Iterable[DataModel]) = {
-    val blackboxTypes = models.collect { case p: Primitive =>
-      p.fullName
+    // Types without any addressable field; a pointer cannot descend into them.
+    val blackboxTypes = models.collect {
+      case p: Primitive   => p.fullName
+      case e: EmptyObject => e.fullName
     }.toSet
     val m = models.collect {
       case r: Resource      => r

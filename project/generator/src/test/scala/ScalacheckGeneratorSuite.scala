@@ -177,4 +177,22 @@ class ScalacheckGeneratorSuite extends FunSuite {
       unmanaged("PrimitiveGenerators")
     )
   }
+
+  test("EmptyObject appears in NonPrimitiveGenerators as a constant") {
+    val (managed, _) = generate(Seq(allDisruptionMode))
+    assert(
+      managed("NonPrimitiveGenerators").contains(
+        "Arbitrary(Gen.const(io.k8s.api.scheduling.v1beta1.AllDisruptionMode()))"
+      ),
+      managed("NonPrimitiveGenerators")
+    )
+  }
+
+  test("EmptyObject does not appear in PrimitiveGenerators") {
+    val (_, unmanaged) = generate(Seq(allDisruptionMode))
+    assert(
+      !unmanaged("PrimitiveGenerators").contains("AllDisruptionMode"),
+      unmanaged("PrimitiveGenerators")
+    )
+  }
 }
