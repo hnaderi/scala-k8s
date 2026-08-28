@@ -3,7 +3,7 @@ import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
 import dev.hnaderi.k8s.generator.KubernetesAPIGeneratorPlugin
 import sbtcrossproject.CrossProject
 
-ThisBuild / tlBaseVersion := "0.32"
+ThisBuild / tlBaseVersion := "0.33"
 
 ThisBuild / organization := "dev.hnaderi"
 ThisBuild / organizationName := "Hossein Naderi"

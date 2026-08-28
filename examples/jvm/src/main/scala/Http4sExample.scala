@@ -39,11 +39,17 @@ object Http4sExample extends IOApp {
       .list()
       .listen(cl)
       .flatMap(ev =>
-        exec(
-          IO.println(ev.event) >> IO.println(
-            ev.payload.metadata.flatMap(_.name)
-          )
-        )
+        exec(ev match {
+          case WatchEvent.Added(node) =>
+            IO.println(s"added: ${node.metadata.flatMap(_.name)}")
+          case WatchEvent.Modified(node) =>
+            IO.println(s"modified: ${node.metadata.flatMap(_.name)}")
+          case WatchEvent.Deleted(node) =>
+            IO.println(s"deleted: ${node.metadata.flatMap(_.name)}")
+          case WatchEvent.Bookmark(_) | WatchEvent.Other(_) => IO.unit
+          case WatchEvent.Error(status)                     =>
+            IO.println(s"watch failed: ${status.message}")
+        })
       )
       .compile
       .drain

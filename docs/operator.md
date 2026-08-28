@@ -143,21 +143,31 @@ object MyAppsAPI
 ## 3. The watch loop
 
 `list().listen(client)` opens a long-running watch stream.
-Each element is a `WatchEvent[MyApp]` with an `event` field of type `WatchEventType`:
-`ADDED`, `MODIFIED`, `DELETED`, `BOOKMARK`, or `ERROR`.
+Not every event carries your resource, so each element is one of:
+
+| Case | Carries |
+|------|---------|
+| `Added`, `Modified`, `Deleted` | the resource itself |
+| `Bookmark` | only a `resourceVersion`, to resume the watch from |
+| `Error` | a `v1.Status` saying why the watch failed |
+| `Other` | an event type this client does not know about |
 
 ```scala mdoc:compile-only
 def reconcile(event: WatchEvent[MyApp]): IO[Unit] =
-  event.event match {
-    case WatchEventType.ADDED | WatchEventType.MODIFIED =>
-      IO.println(s"Reconciling ${event.payload.spec.image}")
-    case WatchEventType.DELETED =>
+  event match {
+    case WatchEvent.Added(app) =>
+      IO.println(s"Reconciling ${app.spec.image}")
+    case WatchEvent.Modified(app) =>
+      IO.println(s"Reconciling ${app.spec.image}")
+    case WatchEvent.Deleted(_) =>
       IO.println("Resource deleted")
-    case WatchEventType.BOOKMARK =>
+    case WatchEvent.Bookmark(_) =>
       IO.unit
-    case WatchEventType.ERROR =>
-      IO.raiseError(new RuntimeException("watch error"))
-    case _ =>
+    case WatchEvent.Error(status) =>
+      IO.raiseError(
+        new RuntimeException(status.message.getOrElse("watch error"))
+      )
+    case WatchEvent.Other(_) =>
       IO.unit
   }
 
@@ -235,6 +245,11 @@ Use a Kubernetes `Lease` object in `coordination.k8s.io/v1` as a distributed loc
 the correct `resourceVersion`. Server-side apply handles this automatically.
 
 **Watch reconnect:** The API server closes watch streams after a timeout.
+It also ends a stream with a `WatchEvent.Error` carrying a `410 Gone` status
+(`reason: Expired`) when the resource version it was resuming from has aged out of the
+watch cache, so a robust operator restarts on that event as well as on stream errors.
+Requesting `allowWatchBookmarks` gives you `WatchEvent.Bookmark` checkpoints whose
+`resourceVersion` is a safe point to resume from.
 Reconnect automatically by recursing on error:
 
 ```scala

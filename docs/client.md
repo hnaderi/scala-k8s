@@ -99,7 +99,7 @@ val watchPods: ZIO[Scope, Throwable, Unit] =
       .pods
       .list()
       .listen(client)
-      .runForeach(evt => Console.printLine(evt.event.toString))
+      .runForeach(evt => Console.printLine(evt.eventType.toString))
   }
 ```
 

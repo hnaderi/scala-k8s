@@ -17,20 +17,81 @@
 package dev.hnaderi.k8s.client
 
 import dev.hnaderi.k8s.utils._
+import io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta
+import io.k8s.apimachinery.pkg.apis.meta.v1.Status
 
-final case class WatchEvent[+T](
-    event: WatchEventType,
-    payload: T
-)
+/** A single event of a watch stream.
+  *
+  * The `object` field of a watch event does not always hold the watched
+  * resource; its shape depends on the event type, so each case carries only
+  * what kubernetes actually sends:
+  *
+  *   - `ADDED`, `MODIFIED` and `DELETED` carry the resource itself
+  *   - `BOOKMARK` carries a stub object holding nothing but a resource version
+  *   - `ERROR` carries a [[io.k8s.apimachinery.pkg.apis.meta.v1.Status]]
+  */
+sealed trait WatchEvent[+T] extends Serializable with Product {
+  def eventType: WatchEventType
+}
+
 object WatchEvent {
+
+  /** The watched resource was created, or already existed when the watch
+    * started.
+    */
+  final case class Added[+T](payload: T) extends WatchEvent[T] {
+    def eventType: WatchEventType = WatchEventType.ADDED
+  }
+
+  /** The watched resource was modified. */
+  final case class Modified[+T](payload: T) extends WatchEvent[T] {
+    def eventType: WatchEventType = WatchEventType.MODIFIED
+  }
+
+  /** The watched resource was deleted; the payload is its last known state. */
+  final case class Deleted[+T](payload: T) extends WatchEvent[T] {
+    def eventType: WatchEventType = WatchEventType.DELETED
+  }
+
+  /** A checkpoint, sent only when `allowWatchBookmarks` is requested.
+    *
+    * It carries no resource; kubernetes sends an otherwise empty object of the
+    * watched kind, whose only purpose is to report a resource version that the
+    * watch can later be resumed from.
+    */
+  final case class Bookmark(metadata: ObjectMeta) extends WatchEvent[Nothing] {
+    def eventType: WatchEventType = WatchEventType.BOOKMARK
+    def resourceVersion: Option[String] = metadata.resourceVersion
+  }
+
+  /** The watch failed, typically with a `410 Gone` status when the requested
+    * resource version is too old to resume from.
+    */
+  final case class Error(status: Status) extends WatchEvent[Nothing] {
+    def eventType: WatchEventType = WatchEventType.ERROR
+  }
+
+  /** An event type that this client does not know about; its object is ignored,
+    * as its shape cannot be known.
+    */
+  final case class Other(eventType: WatchEventType.Unknown)
+      extends WatchEvent[Nothing]
+
   implicit def encoder[A: Encoder]: Encoder[WatchEvent[A]] =
     new Encoder[WatchEvent[A]] {
       def apply[T: Builder](r: WatchEvent[A]): T = {
-        val obj = ObjectWriter[T]()
-        obj
-          .write("type", r.event)
-          .write("object", r.payload)
-          .build
+        val payload: T = r match {
+          case Added(p)    => p.encodeTo[T]
+          case Modified(p) => p.encodeTo[T]
+          case Deleted(p)  => p.encodeTo[T]
+          case Bookmark(m) => ObjectWriter[T]().write("metadata", m).build
+          case Error(s)    => s.encodeTo[T]
+          case Other(_)    => ObjectWriter[T]().build
+        }
+
+        Builder[T].obj(
+          List("type" -> r.eventType.encodeTo[T], "object" -> payload)
+        )
       }
     }
 
@@ -39,8 +100,25 @@ object WatchEvent {
       def apply[T: Reader](t: T): Either[String, WatchEvent[A]] = for {
         obj <- ObjectReader(t)
         tpe <- obj.read[WatchEventType]("type")
-        pl <- obj.read[A]("object")
-      } yield WatchEvent(tpe, pl)
+        ev <- eventFrom(obj, tpe)
+      } yield ev
+
+      private def eventFrom[T: Reader](
+          obj: ObjectReader[T],
+          tpe: WatchEventType
+      ): Either[String, WatchEvent[A]] = tpe match {
+        case WatchEventType.ADDED    => obj.read[A]("object").map(Added(_))
+        case WatchEventType.MODIFIED => obj.read[A]("object").map(Modified(_))
+        case WatchEventType.DELETED  => obj.read[A]("object").map(Deleted(_))
+        case WatchEventType.BOOKMARK =>
+          obj
+            .get("object")
+            .flatMap(ObjectReader(_))
+            .flatMap(_.readOpt[ObjectMeta]("metadata"))
+            .map(meta => Bookmark(meta.getOrElse(ObjectMeta())))
+        case WatchEventType.ERROR => obj.read[Status]("object").map(Error(_))
+        case u: WatchEventType.Unknown => Right(Other(u))
+      }
     }
 }
 
