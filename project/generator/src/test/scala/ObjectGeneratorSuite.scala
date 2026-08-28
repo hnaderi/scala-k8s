@@ -84,6 +84,36 @@ class ObjectGeneratorSuite extends FunSuite {
     assert(c.contains("Decoder"), c)
   }
 
+  // ---- EmptyObject ----
+
+  test("EmptyObject generates a nullary case class") {
+    val c = code(allDisruptionMode)
+    assert(c.contains("final case class AllDisruptionMode()"), c)
+    assert(!c.contains("trait AllDisruptionMode"), c)
+  }
+
+  test("EmptyObject codec round trips through an empty json object") {
+    val c = code(allDisruptionMode)
+    assert(
+      c.contains(
+        "implicit val encoder : Encoder[AllDisruptionMode] = Encoder.emptyObj"
+      ),
+      c
+    )
+    assert(
+      c.contains(
+        "implicit val decoder : Decoder[AllDisruptionMode] = Decoder.const(AllDisruptionMode())"
+      ),
+      c
+    )
+  }
+
+  test("EmptyObject has no builder methods") {
+    val c = code(allDisruptionMode)
+    assert(!c.contains("def with"), c)
+    assert(!c.contains("def map"), c)
+  }
+
   // ---- builder methods ----
 
   test("every property gets a with* builder") {
@@ -158,5 +188,15 @@ class ObjectGeneratorSuite extends FunSuite {
       s"expected IntOrString in unmanaged: ${unmanaged.keys}"
     )
     assert(!managed.contains("IntOrString"))
+  }
+
+  test("write puts EmptyObject into managed directory") {
+    val (managed, unmanaged) =
+      withScg(scg => ObjectGenerator.write(scg)(allDisruptionMode))
+    assert(
+      managed.contains("AllDisruptionMode"),
+      s"expected AllDisruptionMode in managed: ${managed.keys}"
+    )
+    assert(!unmanaged.contains("AllDisruptionMode"))
   }
 }

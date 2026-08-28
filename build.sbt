@@ -3,7 +3,7 @@ import dev.hnaderi.k8s.generator.KubernetesScalacheckGeneratorPlugin
 import dev.hnaderi.k8s.generator.KubernetesAPIGeneratorPlugin
 import sbtcrossproject.CrossProject
 
-ThisBuild / tlBaseVersion := "0.31"
+ThisBuild / tlBaseVersion := "0.32"
 
 ThisBuild / organization := "dev.hnaderi"
 ThisBuild / organizationName := "Hossein Naderi"
@@ -72,7 +72,7 @@ ThisBuild / githubWorkflowAddedJobs += {
     javas = List(PrimaryJava)
   )
 }
-ThisBuild / kubernetesVersion := "1.36.4"
+ThisBuild / kubernetesVersion := "1.37.0"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
   new NodeJSEnv(

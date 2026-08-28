@@ -60,15 +60,6 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
       : Arbitrary[io.k8s.apimachinery.pkg.runtime.RawExtension] =
     Arbitrary(Gen.const(io.k8s.apimachinery.pkg.runtime.RawExtension()))
 
-  implicit lazy val arbitrary_io_k8s_apiextensions_apiserver_pkg_apis_apiextensions_v1CustomResourceSubresourceStatus
-      : Arbitrary[
-        io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1.CustomResourceSubresourceStatus
-      ] = Arbitrary(
-    Gen.const(
-      io.k8s.apiextensions_apiserver.pkg.apis.apiextensions.v1
-        .CustomResourceSubresourceStatus()
-    )
-  )
   implicit lazy val arbitrary_io_k8s_apimachinery_pkg_apis_meta_v1Time
       : Arbitrary[io.k8s.apimachinery.pkg.apis.meta.v1.Time] =
     Arbitrary(Gen.resultOf(io.k8s.apimachinery.pkg.apis.meta.v1.Time(_)))
@@ -76,12 +67,6 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
   implicit lazy val arbitrary_io_k8s_apimachinery_pkg_apis_meta_v1MicroTime
       : Arbitrary[io.k8s.apimachinery.pkg.apis.meta.v1.MicroTime] =
     Arbitrary(Gen.resultOf(io.k8s.apimachinery.pkg.apis.meta.v1.MicroTime(_)))
-
-  implicit lazy val arbitrary_io_k8s_api_apiserverinternal_v1alpha1StorageVersionSpec
-      : Arbitrary[io.k8s.api.apiserverinternal.v1alpha1.StorageVersionSpec] =
-    Arbitrary(
-      Gen.const(io.k8s.api.apiserverinternal.v1alpha1.StorageVersionSpec())
-    )
 
   implicit lazy val arbitrary_io_k8s_apimachinery_pkg_util_intstrIntOrString
       : Arbitrary[io.k8s.apimachinery.pkg.util.intstr.IntOrString] = Arbitrary(
@@ -97,18 +82,6 @@ private[scalacheck] trait PrimitiveGenerators { self: NonPrimitiveGenerators =>
   implicit lazy val arbitrary_io_k8s_apimachinery_pkg_apis_meta_v1FieldsV1
       : Arbitrary[io.k8s.apimachinery.pkg.apis.meta.v1.FieldsV1] =
     Arbitrary(Gen.const(io.k8s.apimachinery.pkg.apis.meta.v1.FieldsV1()))
-
-  implicit lazy val arbitrary_io_k8s_api_scheduling_v1alpha1_BasicSchedulingPolicy
-      : Arbitrary[io.k8s.api.scheduling.v1alpha1.BasicSchedulingPolicy] =
-    Arbitrary(
-      Gen.const(io.k8s.api.scheduling.v1alpha1.BasicSchedulingPolicy())
-    )
-
-  implicit lazy val arbitrary_io_k8s_api_scheduling_v1alpha2_BasicSchedulingPolicy
-      : Arbitrary[io.k8s.api.scheduling.v1alpha2.BasicSchedulingPolicy] =
-    Arbitrary(
-      Gen.const(io.k8s.api.scheduling.v1alpha2.BasicSchedulingPolicy())
-    )
 
   private def genJSONSchemaPropsOrArray(
       jsp: JSONSchemaProps

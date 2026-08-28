@@ -1,6 +1,6 @@
 package dev.hnaderi.k8s.generator
 
-import DataModel.{Resource, SubResource, MetaResource, Primitive}
+import DataModel.{Resource, SubResource, MetaResource, EmptyObject, Primitive}
 
 object ObjectGenerator {
   private implicit class HeaderWriter(val obj: DataModel) extends AnyVal {
@@ -124,13 +124,24 @@ ${DecoderGenerator(t)}
 """
   }
 
+  private val emptyObject: CodeGeneratorFor[EmptyObject] = { t =>
+    import t._
+    s"""${t.header("dev.hnaderi.k8s.utils._")}
+final case class $name()
+object $name {
+  implicit val encoder : Encoder[$name] = Encoder.emptyObj
+  implicit val decoder : Decoder[$name] = Decoder.const($name())
+}
+"""
+  }
+
   private val primitive: CodeGeneratorFor[Primitive] = { t =>
     import t._
     s"""${t.header("dev.hnaderi.k8s.utils._")}
 trait $name
 object $name {
-  implicit def encoder[T](implicit builder : Builder[T]) : Encoder[$name, T] = ???
-  implicit def decoder[T : Reader] : Decoder[T, $name] = ???
+  implicit val encoder : Encoder[$name] = ???
+  implicit val decoder : Decoder[$name] = ???
 }
 """
   }
@@ -139,10 +150,13 @@ object $name {
     case o: Resource     => resource(o)
     case o: SubResource  => subResource(o)
     case o: MetaResource => metaResource(o)
+    case o: EmptyObject  => emptyObject(o)
     case o: Primitive    => primitive(o)
   }
 
   def write(scg: SourceCodeGenerator)(data: DataModel) = data match {
+    // Only genuine primitives are hand written; everything else is derivable
+    // from the specification alone.
     case p: Primitive =>
       scg.unmanaged(pkg = p.pkg, name = p.name).write(print(p))
     case other =>

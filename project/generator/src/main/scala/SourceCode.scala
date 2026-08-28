@@ -35,16 +35,27 @@ final class SourceCodeGenerator(
   def managed(pkg: String, name: String): SourceCode = {
     val file = fileName(managed, pkg, name)
     _createdFiles = _createdFiles :+ file
-    new SourceCodeImpl(file)
+    new ManagedSourceCode(file)
   }
   def unmanaged(pkg: String, name: String): SourceCode =
-    new SourceCodeImpl(fileName(unmanaged, pkg, name))
+    new UnmanagedSourceCode(fileName(unmanaged, pkg, name))
 }
 
 trait SourceCode {
   def write(code: String): Unit
 }
-final class SourceCodeImpl(file: File) extends SourceCode {
+
+/** Managed sources are owned by the generator, so stale output is always
+  * replaced.
+  */
+final class ManagedSourceCode(file: File) extends SourceCode {
+  def write(code: String): Unit = Utils.writeOutput(file, code)
+}
+
+/** Unmanaged sources are only seeded; once one exists it belongs to the
+  * developer and is never overwritten.
+  */
+final class UnmanagedSourceCode(file: File) extends SourceCode {
   def write(code: String): Unit =
     if (!file.exists()) Utils.writeOutput(file, code)
 }

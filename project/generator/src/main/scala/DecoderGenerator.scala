@@ -1,6 +1,6 @@
 package dev.hnaderi.k8s.generator
 
-import DataModel.{Resource, SubResource, MetaResource, Primitive}
+import DataModel.{Resource, SubResource, MetaResource, EmptyObject, Primitive}
 
 object DecoderGenerator {
   def apply(model: DataModel): String = {
@@ -52,6 +52,7 @@ $indent$constructFields
       Ordering.by(k => (k.group, k.kind, k.version))
     private implicit val dataModelOrdering: Ordering[DataModel] = Ordering.by {
       case _: DataModel.Primitive    => 0
+      case _: DataModel.EmptyObject  => 0
       case _: DataModel.SubResource  => 1
       case _: DataModel.Resource     => 2
       case _: DataModel.MetaResource => 3
