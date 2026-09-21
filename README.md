@@ -75,6 +75,3 @@ also please drop a ⭐ if this project interests you. I need encouragement.
 
 ## sbt integration
 see [this project](https://github.com/hnaderi/sbt-k8s)
-
-## Future plans
-- more integrations (akka-http, ...)!
