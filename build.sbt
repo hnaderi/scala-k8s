@@ -448,7 +448,7 @@ lazy val jawn = module("jawn") {
     .settings(
       description := "jawn facade for kubernetes data models parsing",
       libraryDependencies ++= Seq(
-        "org.typelevel" %%% "jawn-parser" % "1.7.0"
+        "org.typelevel" %%% "jawn-parser" % "1.8.0"
       )
     )
     .dependsOn(objects)
