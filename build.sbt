@@ -72,7 +72,7 @@ ThisBuild / githubWorkflowAddedJobs += {
     javas = List(PrimaryJava)
   )
 }
-ThisBuild / kubernetesVersion := "1.37.2"
+ThisBuild / kubernetesVersion := "1.37.3"
 ThisBuild / jsEnv := {
   import org.scalajs.jsenv.nodejs.NodeJSEnv
   new NodeJSEnv(
